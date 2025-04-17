@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="Desarrolla las habilidades más demandadas con nuestros cursos de Excel, Power BI y tecnología">
+    <title>Innovative Solutions</title>
+    <style>
+      /* Estilos generales */
+		html, body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			overflow-x: hidden; /* Evita el desplazamiento horizontal */
+			background-color: #000; /* Fondo blanco */
+			text-align: center;
+			font-family: Arial, sans-serif;
+		}
+
+		/* Pantalla de carga */
+		#preloader {
+			position: fixed;
+			width: 100%;
+			height: 100%;
+			background-color: #000; /* Fondo blanco */
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 1000;
+			transition: opacity 1s ease-out;
+		}
+
+		/* Animación del logo en la carga */
+		#preloader img {
+			max-width: 400px;
+			height: auto;
+			animation: fadeInZoom 1s ease-in-out;
+		}
+
+		/* Animación de entrada */
+		@keyframes fadeInZoom {
+			0% { transform: scale(0); opacity: 0; }
+			100% { transform: scale(1); opacity: 1; }
+		}
+
+		/* Contenedor del contenido principal */
+		#main-content {
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			opacity: 0; /* Inicialmente oculto */
+			transform: translateX(-100%); /* Se mueve fuera de la pantalla hacia la izquierda */
+			transition: opacity 1s ease-in, transform 1s ease-in-out;
+		}
+
+		/* Animación para hacer que el contenido entre desde la izquierda */
+		@keyframes slideInLeft {
+			0% { transform: translateX(-100%); opacity: 0; }
+			100% { transform: translateX(0); opacity: 1; }
+		}
+
+		/* Estilo del logo principal */
+		#main-logo {
+			width: 400px;
+			height: auto;
+			margin-bottom: 20px; /* Espacio entre el logo y el texto */
+		}
+
+		/* Texto */
+		h1 {
+			font-size: 2rem;
+			margin: 0px 0 1px 0; /* Espacio para evitar superposición */
+			color: #fff; /* Texto negro */
+		}
+
+		p {
+			font-size: 1.2rem;
+			margin: 0;
+			color: #fff; /* Texto negro */
+		}
+
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla de carga -->
+    <div id="preloader">
+        <img src="logo.png" alt="Logo Innovative">
+    </div>
+
+    <!-- Contenido principal con el logo y texto -->
+    <div id="main-content">
+		<img id="main-logo" src="logo.png" alt="Logo Innovative">	
+        <h1>Estamos trabajando en algo increíble</h1>
+        <p>¡Pronto estaremos en línea!</p>
+		
+    </div>
+
+    <script>
+		document.addEventListener("DOMContentLoaded", function() {
+		setTimeout(function() {
+			document.getElementById("preloader").style.opacity = "0";
+			setTimeout(function() {
+				document.getElementById("preloader").style.display = "none";
+				let mainContent = document.getElementById("main-content");
+				mainContent.style.opacity = "1";
+				mainContent.style.transform = "translateX(0)";
+			}, 1000); // Tiempo de desvanecimiento del preloader
+		}, 2000); // Duración que el preloader permanece visible
+	});
+    </script>
+
+</body>
+</html>
