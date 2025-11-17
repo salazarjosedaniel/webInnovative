@@ -32,6 +32,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error("❌ Error leyendo KV:", err);
-    res.status(500).json({ error: "Error de servidor leyendo firmware" });
+    res.status(500).json({ error: "Error de servidor leyendo firmware" + err });
   }
 }
