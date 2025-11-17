@@ -1,37 +1,38 @@
-import { kv } from "@vercel/kv";
+import { redis } from "../../redisClient.js";
 
 export default async function handler(req, res) {
   const { deviceId } = req.query;
 
   try {
-    // === 1. Intentar leer firmware personalizado desde KV ===
-    // Clave: fw:BCV001, fw:BCV002...
-    let firmware = await kv.hgetall(`fw:${deviceId}`);
+    // 1. Intentar leer versión específica
+    const key = `fw:${deviceId}`;
+    let firmware = await redis.hGetAll(key);
 
-    // === 2. Si no existe un firmware para ese deviceId ===
+    // 2. Si no existe, leer default
     if (!firmware || Object.keys(firmware).length === 0) {
-      firmware = await kv.hgetall("fw:default");
+      firmware = await redis.hGetAll("fw:default");
     }
 
-    // === 3. Si tampoco hay default, crear uno básico ===
-    if (!firmware) {
+    // 3. Si tampoco existe, crear uno básico
+    if (!firmware || Object.keys(firmware).length === 0) {
       firmware = {
         version: "1.0.0",
-        force: false,
+        force: "false",
         url: "",
-        notes: "Sin configuración de firmware"
+        notes: "Sin configuración"
       };
     }
 
-    // === 4. Responder ===
     res.status(200).json({
-      deviceId: deviceId || "unknown",
+      deviceId,
       ...firmware,
       timestamp: new Date().toISOString()
     });
 
-  } catch (err) {
-    console.error("❌ Error leyendo KV:", err);
-    res.status(500).json({ error: "Error de servidor leyendo firmware" + err });
+  } catch (e) {
+    res.status(500).json({
+      error: "Error de servidor leyendo firmware",
+      details: e.message
+    });
   }
 }
