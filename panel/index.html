@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>BCV Display - Panel de Control</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>⚙️ Panel de Control - BCV Display</h1>
+
+  <section>
+    <button id="reload">🔄 Cargar dispositivos</button>
+    <button id="newDevice">➕ Nuevo dispositivo</button>
+  </section>
+
+  <table id="devicesTable">
+    <thead>
+      <tr>
+        <th>Device ID</th>
+        <th>Versión</th>
+        <th>URL Firmware</th>
+        <th>Force</th>
+        <th>Notas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script src="app.js"></script>
+</body>
+</html>
