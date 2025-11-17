@@ -1,0 +1,434 @@
+/***************************************************
+ *  Tasa Automática - ESP32 + 2x MAX7219 (USD / EUR)
+ *  Backend propio (opción C):
+ *     GET  /api/tasas
+ *     {
+ *       "usd": "36.72",
+ *       "eur": "38.90",
+ *       "fecha": "2025-11-16T13:00:21.201Z"
+ *     }
+ *
+ *  Funcionalidades:
+ *   - Portal WiFi (WiFiManager) + URL de API configurable
+ *   - Watchdog (API nueva ESP32)
+ *   - LED interno de estado (GPIO 2)
+ *       NET_OK          -> LED fijo
+ *       NET_NO_INTERNET -> parpadeo lento
+ *       NET_NO_WIFI     -> parpadeo rápido
+ *   - Auto-reconexión WiFi
+ *   - Si pierde WiFi > 30s -> borra credenciales y reinicia
+ ***************************************************/
+
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <WiFiManager.h>    // https://github.com/tzapu/WiFiManager
+#include <esp_task_wdt.h>
+
+/************ Pines MAX7219 ************/
+const uint8_t DIN_PIN    = 23;
+const uint8_t CLK_PIN    = 18;
+const uint8_t CS_USD_PIN = 5;   // Módulo superior (USD)
+const uint8_t CS_EUR_PIN = 4;   // Módulo inferior (EUR)
+
+/************ LED de estado ************/
+const uint8_t LED_PIN = 2;
+
+/************ Watchdog ************/
+const int WDT_TIMEOUT_SECONDS = 10;
+
+/************ Configuración API ************/
+String apiUrl = "";  // se llenará desde WiFiManager
+
+/************ Estados de red ************/
+enum NetState {
+  NET_NO_WIFI,
+  NET_NO_INTERNET,
+  NET_OK
+};
+
+NetState netState = NET_NO_WIFI;
+
+/************ Timers ************/
+unsigned long lastLedToggle = 0;
+bool ledOn = false;
+
+unsigned long lastCall = 0;
+const unsigned long INTERVALO_API = 10000;   // 10s (ajusta luego a 60s o más)
+
+unsigned long wifiFallidaDesde = 0;
+const unsigned long TIEMPO_MAX_SIN_WIFI = 30000; // 30s
+
+bool shouldRebootAfterConfig = false;
+
+/************ Valores últimos ************/
+String lastUsd  = "--.--";
+String lastEur  = "--.--";
+String lastFecha = "";
+
+/************************************************
+ *  Funciones básicas para MAX7219
+ *  (2 módulos independientes, comparten DIN/CLK)
+ ************************************************/
+
+void maxTransfer(uint8_t csPin, uint8_t address, uint8_t value)
+{
+  digitalWrite(csPin, LOW);
+  shiftOut(DIN_PIN, CLK_PIN, MSBFIRST, address);
+  shiftOut(DIN_PIN, CLK_PIN, MSBFIRST, value);
+  digitalWrite(csPin, HIGH);
+}
+
+void initModule(uint8_t csPin)
+{
+  pinMode(csPin, OUTPUT);
+  digitalWrite(csPin, HIGH);
+
+  // Apagar test
+  maxTransfer(csPin, 0x0F, 0x00);
+  // Decode mode: BCD en los 8 dígitos
+  maxTransfer(csPin, 0x09, 0xFF);
+  // Escanear los 8 dígitos (0–7)
+  maxTransfer(csPin, 0x0B, 0x07);
+  // Intensidad (0x00–0x0F)
+  maxTransfer(csPin, 0x0A, 0x08);  // brillo medio
+  // Salir de shutdown (encender)
+  maxTransfer(csPin, 0x0C, 0x01);
+
+  // Limpiar dígitos
+  for (uint8_t d = 1; d <= 8; d++)
+    maxTransfer(csPin, d, 0x0F);   // 0x0F = “blank” en decode mode
+}
+
+void clearModule(uint8_t csPin)
+{
+  for (uint8_t d = 1; d <= 8; d++)
+    maxTransfer(csPin, d, 0x0F);
+}
+
+/**
+ * Muestra un número en un módulo, formato texto, ej: "236.46"
+ * MAX7219 en decode mode BCD:
+ *  - 0–9 -> dígitos
+ *  - 0x0F -> en blanco
+ *  - 0x0A -> guión
+ *  - bit 7 (0x80) -> punto decimal
+ *
+ * Usamos solo los 6 dígitos de la derecha, el módulo tiene 8.
+ */
+void showNumberOnModule(uint8_t csPin, String num)
+{
+  clearModule(csPin);
+
+  // Asegurar que no supere 8 caracteres (por seguridad)
+  if (num.length() > 8)
+    num = num.substring(num.length() - 8);
+
+  // Para tasa usamos máx 6 posiciones: "236.46"
+  while (num.length() < 6) {
+    num = " " + num;  // rellenar con espacios a la izquierda
+  }
+
+  bool dpNext = false;   // el próximo dígito llevará decimal point
+  uint8_t digitPos = 1;  // MAX7219 usa direcciones 1–8 (derecha a izquierda)
+
+  for (int i = num.length() - 1; i >= 0 && digitPos <= 8; i--) {
+    char c = num[i];
+
+    if (c == '.') {
+      dpNext = true;   // el punto se aplica al dígito anterior
+      continue;
+    }
+
+    uint8_t value;
+
+    if (c >= '0' && c <= '9') {
+      value = (uint8_t)(c - '0');
+    } else if (c == ' ') {
+      value = 0x0F;  // en blanco
+    } else if (c == '-') {
+      value = 0x0A;  // guión
+    } else {
+      value = 0x0F;  // cualquier otra cosa: blanco
+    }
+
+    if (dpNext) {
+      value |= 0x80; // bit de decimal point
+      dpNext = false;
+    }
+
+    maxTransfer(csPin, digitPos, value);
+    digitPos++;
+  }
+}
+
+/************************************************
+ *  Callbacks WiFiManager
+ ************************************************/
+void saveConfigCallback() {
+  Serial.println("💾 WiFiManager: configuración guardada.");
+  shouldRebootAfterConfig = true;
+}
+
+/************************************************
+ *  Watchdog
+ ************************************************/
+void initWatchdog() {
+  esp_task_wdt_config_t wdt_config = {
+    .timeout_ms = WDT_TIMEOUT_SECONDS * 1000,
+    .idle_core_mask = (1 << 0),
+    .trigger_panic = true
+  };
+
+  esp_task_wdt_init(&wdt_config);
+  esp_task_wdt_add(NULL);
+}
+
+/************************************************
+ *  LED indicador
+ ************************************************/
+void actualizarLed() {
+  unsigned long now = millis();
+
+  switch (netState) {
+    case NET_OK:
+      digitalWrite(LED_PIN, HIGH); // fijo
+      break;
+
+    case NET_NO_INTERNET:
+    {
+      // parpadeo lento
+      const unsigned long intervalo = 500;
+      if (now - lastLedToggle >= intervalo) {
+        lastLedToggle = now;
+        ledOn = !ledOn;
+        digitalWrite(LED_PIN, ledOn ? HIGH : LOW);
+      }
+      break;
+    }
+
+    case NET_NO_WIFI:
+    {
+      // parpadeo rápido
+      const unsigned long intervalo = 150;
+      if (now - lastLedToggle >= intervalo) {
+        lastLedToggle = now;
+        ledOn = !ledOn;
+        digitalWrite(LED_PIN, ledOn ? HIGH : LOW);
+      }
+      break;
+    }
+  }
+}
+
+/************************************************
+ *  Verificar WiFi + auto resetSettings
+ ************************************************/
+void verificarWiFi() {
+
+  if (WiFi.SSID() == "") {
+    netState = NET_NO_WIFI;
+    return;
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
+
+    if (wifiFallidaDesde == 0) {
+      wifiFallidaDesde = millis();
+    }
+
+    netState = NET_NO_WIFI;
+    Serial.println("⚠️ WiFi desconectado. Intentando reconectar...");
+
+    WiFi.reconnect();
+    delay(500);
+
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("✔ WiFi reconectado.");
+      wifiFallidaDesde = 0;
+      return;
+    }
+
+    Serial.println("❌ No se pudo reconectar.");
+
+    if (millis() - wifiFallidaDesde > TIEMPO_MAX_SIN_WIFI) {
+      Serial.println("\n⛔ WiFi perdido >30s. Borrando configuración y reiniciando...");
+      WiFiManager wm;
+      wm.resetSettings();
+      delay(1500);
+      ESP.restart();
+    }
+
+  } else {
+    wifiFallidaDesde = 0;
+  }
+}
+
+/************************************************
+ *  Consulta a la API
+ ************************************************/
+bool consultarAPI() {
+
+  verificarWiFi();
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("❌ Sin WiFi");
+    netState = NET_NO_WIFI;
+    return false;
+  }
+
+  if (apiUrl == "") {
+    Serial.println("❌ URL API vacía");
+    netState = NET_NO_INTERNET;
+    return false;
+  }
+
+  Serial.println("\n🌐 Consultando API de tasas...");
+
+  HTTPClient http;
+  http.setTimeout(4000);
+  http.begin(apiUrl);
+
+  int httpCode = http.GET();
+
+  if (httpCode == 200) {
+    String payload = http.getString();
+    Serial.println("📥 Respuesta API:");
+    Serial.println(payload);
+
+    StaticJsonDocument<256> doc;
+    DeserializationError err = deserializeJson(doc, payload);
+
+    if (err) {
+      Serial.print("❌ ERROR JSON: ");
+      Serial.println(err.c_str());
+      netState = NET_NO_INTERNET;
+      http.end();
+      return false;
+    }
+
+    lastUsd   = doc["usd"].as<String>();
+    lastEur   = doc["eur"].as<String>();
+    lastFecha = doc["fecha"].as<String>();
+
+    Serial.println("\n📌 TASAS RECIBIDAS");
+    Serial.print("USD: ");
+    Serial.println(lastUsd);
+    Serial.print("EUR: ");
+    Serial.println(lastEur);
+    Serial.print("Fecha: ");
+    Serial.println(lastFecha);
+
+    netState = NET_OK;
+    http.end();
+    return true;
+
+  } else {
+    Serial.print("❌ ERROR HTTP: ");
+    Serial.println(httpCode);
+    netState = NET_NO_INTERNET;
+    http.end();
+    return false;
+  }
+}
+
+/************************************************
+ *  SETUP
+ ************************************************/
+void setup() {
+  Serial.begin(115200);
+  delay(500);
+
+  Serial.println();
+  Serial.println("=====================================");
+  Serial.println("🚀 INICIANDO TASA AUTOMÁTICA v1.0");
+  Serial.println("=====================================");
+
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  pinMode(DIN_PIN, OUTPUT);
+  pinMode(CLK_PIN, OUTPUT);
+
+  // Inicializar módulos MAX7219
+  initModule(CS_USD_PIN);
+  initModule(CS_EUR_PIN);
+
+  // Mensaje inicial: guiones
+  showNumberOnModule(CS_USD_PIN, "--.--");
+  showNumberOnModule(CS_EUR_PIN, "--.--");
+
+  // ------ Portal WiFi (sin watchdog) ------
+  WiFiManager wm;
+
+  WiFiManagerParameter apiField(
+    "apiurl",
+    "URL API",
+    "https://web-innovative.vercel.app/api/tasas",   // <-- reemplázala por la tuya si quieres
+    200
+  );
+  wm.addParameter(&apiField);
+
+  wm.setSaveConfigCallback(saveConfigCallback);
+
+  Serial.println("📡 Iniciando portal WiFi (BCV-TasaAutomatica) si no hay config...");
+
+  if (!wm.autoConnect("Tasa-Automatica")) {
+    Serial.println("❌ Fallo en portal. Reiniciando...");
+    delay(1500);
+    ESP.restart();
+  }
+
+  Serial.println("✔ WiFi configurado / conectado.");
+  Serial.print("📡 IP: ");
+  Serial.println(WiFi.localIP());
+
+  apiUrl = apiField.getValue();
+  Serial.print("🔗 API URL: ");
+  Serial.println(apiUrl);
+
+  if (shouldRebootAfterConfig) {
+    Serial.println("✔ Nueva configuración guardada.");
+    Serial.println("⏳ Esperando 15s antes de reiniciar...");
+
+    for (int i = 15; i > 0; i--) {
+      Serial.print("   Reinicio en ");
+      Serial.print(i);
+      Serial.println("s");
+      delay(1000);
+    }
+    ESP.restart();
+  }
+
+  // A partir de aquí: modo RUN
+  initWatchdog();
+  netState = NET_NO_INTERNET; // hasta primera respuesta OK
+}
+
+/************************************************
+ *  LOOP
+ ************************************************/
+void loop() {
+
+  esp_task_wdt_reset();  // alimentar watchdog
+
+  if (millis() - lastCall > INTERVALO_API) {
+    lastCall = millis();
+
+    bool ok = consultarAPI();
+
+    if (ok) {
+      // Mostrar en displays
+      showNumberOnModule(CS_USD_PIN, lastUsd);
+      showNumberOnModule(CS_EUR_PIN, lastEur);
+    } else {
+      // Error: mostrar guiones
+      showNumberOnModule(CS_USD_PIN, "--.--");
+      showNumberOnModule(CS_EUR_PIN, "--.--");
+    }
+  }
+
+  actualizarLed();
+  delay(20);
+}
+
