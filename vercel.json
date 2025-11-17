@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/tasas.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/tasas", "dest": "/api/tasas.js" }
+  ]
+}
