@@ -1,38 +1,40 @@
-import { redis } from "../../redisClient.js";
+import { getRedisClient } from "../../lib/redis";
 
 export default async function handler(req, res) {
-  const { deviceId } = req.query;
-
   try {
-    // 1. Intentar leer versión específica
-    const key = `fw:${deviceId}`;
-    let firmware = await redis.hGetAll(key);
+    const { deviceId } = req.query;
 
-    // 2. Si no existe, leer default
-    if (!firmware || Object.keys(firmware).length === 0) {
-      firmware = await redis.hGetAll("fw:default");
+    const redis = await getRedisClient();
+
+    // 1. Buscar firmware específico
+    let data = await redis.hGetAll(`fw:${deviceId}`);
+
+    // 2. Si no existe, usar "default"
+    if (!data || Object.keys(data).length === 0) {
+      data = await redis.hGetAll("fw:default");
     }
 
-    // 3. Si tampoco existe, crear uno básico
-    if (!firmware || Object.keys(firmware).length === 0) {
-      firmware = {
+    // 3. Si tampoco existe, crear fallback
+    if (!data || Object.keys(data).length === 0) {
+      data = {
         version: "1.0.0",
-        force: "false",
         url: "",
-        notes: "Sin configuración"
+        force: "false",
+        notes: "Sin firmware registrado"
       };
     }
 
     res.status(200).json({
       deviceId,
-      ...firmware,
+      version: data.version,
+      url: data.url,
+      force: data.force === "true",
+      notes: data.notes,
       timestamp: new Date().toISOString()
     });
 
   } catch (e) {
-    res.status(500).json({
-      error: "Error de servidor leyendo firmware",
-      details: e.message
-    });
+    console.error("Error FW:", e);
+    res.status(500).json({ error: "Error de servidor leyendo firmware" });
   }
 }
