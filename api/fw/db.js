@@ -1,6 +1,9 @@
-import { createClient } from "../../lib/redis";
+import { createClient } from "redis";
 
-const redis = await createClient();
+const redis = createClient({
+  url: process.env.REDIS_URL
+});
+redis.connect();
 
 export default async function handler(req, res) {
   try {
