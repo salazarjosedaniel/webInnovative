@@ -1,32 +1,37 @@
-import { kv } from '@vercel/kv';
+import { kv } from "@vercel/kv";
 
 export default async function handler(req, res) {
   const { deviceId } = req.query;
 
-  // 1. Leer firmware desde KV
-  // Ejemplo de storage:
-  // kv.hset("fw:BCV001", { version: "1.0.3", url: "...", force: false, notes: "..." })
-  let firmware = await kv.hgetall(`fw:${deviceId}`);
+  try {
+    // === 1. Intentar leer firmware personalizado desde KV ===
+    // Clave: fw:BCV001, fw:BCV002...
+    let firmware = await kv.hgetall(`fw:${deviceId}`);
 
-  // 2. Si no existe en KV, cargar firmware default
-  if (!firmware || Object.keys(firmware).length === 0) {
-    firmware = await kv.hgetall("fw:default");
+    // === 2. Si no existe un firmware para ese deviceId ===
+    if (!firmware || Object.keys(firmware).length === 0) {
+      firmware = await kv.hgetall("fw:default");
+    }
+
+    // === 3. Si tampoco hay default, crear uno básico ===
+    if (!firmware) {
+      firmware = {
+        version: "1.0.0",
+        force: false,
+        url: "",
+        notes: "Sin configuración de firmware"
+      };
+    }
+
+    // === 4. Responder ===
+    res.status(200).json({
+      deviceId: deviceId || "unknown",
+      ...firmware,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (err) {
+    console.error("❌ Error leyendo KV:", err);
+    res.status(500).json({ error: "Error de servidor leyendo firmware" });
   }
-
-  // 3. Si tampoco hay default, crear respuesta básica
-  if (!firmware) {
-    firmware = {
-      version: "1.0.0",
-      force: false,
-      url: "",
-      notes: "Sin configuración en KV"
-    };
-  }
-
-  // 4. Respuesta JSON final
-  res.status(200).json({
-    deviceId,
-    ...firmware,
-    timestamp: new Date().toISOString()
-  });
 }
