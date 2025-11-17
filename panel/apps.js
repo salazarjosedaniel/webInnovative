@@ -1,4 +1,7 @@
 const API = "/api/fw/db";
+const API_SAVE   = "/api/fw/save";
+const API_DELETE = "/api/fw/delete";
+const API_TEST   = "/api/fw/test";
 
 document.getElementById("reload").onclick = loadDevices;
 
@@ -30,23 +33,36 @@ async function loadDevices() {
 }
 
 async function save(id) {
-  const body = {
-    version: document.getElementById("v_" + id).value,
-    url: document.getElementById("u_" + id).value,
-    force: document.getElementById("f_" + id).checked,
-    notes: document.getElementById("n_" + id).value
-  };
+  const version = document.getElementById("v_" + id).value;
+  const url     = document.getElementById("u_" + id).value;
+  const force   = document.getElementById("f_" + id).checked;
+  const notes   = document.getElementById("n_" + id).value;
 
-  await fetch(API + "/" + id, {
-    method: "PUT",
-    body: JSON.stringify(body),
+  await fetch(API_SAVE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, version, url, force, notes })
   });
 
-  alert("Guardado.");
+  alert("Guardado");
 }
 
-function test(id) {
-  window.open(`/api/fw/info?deviceId=${id}`);
+async function remove(id) {
+  if (!confirm(`¿Eliminar config para ${id}?`)) return;
+
+  await fetch(API_DELETE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id })
+  });
+
+  await loadDevices();
+}
+
+async function test(id) {
+  const res = await fetch(`${API_TEST}?id=${encodeURIComponent(id)}`);
+  const data = await res.json();
+  alert(`Firmware para ${id}:\n\nVersion: ${data.version}\nURL: ${data.url}\nForce: ${data.force}`);
 }
 
 document.getElementById("newDevice").onclick = async () => {
