@@ -11,7 +11,13 @@ export default async function handler(req, res) {
 
       for (const key of keys) {
         const id = key.replace("fw:", "");
-        result[id] = await redis.hGetAll(key);
+        const fw = await redis.hGetAll(key);
+        const paidGlobal = await redis.get(`paid:${id}`);
+
+        result[id] = {
+          ...fw,
+          paidGlobal: paidGlobal === "true"
+        };
       }
 
       return res.status(200).json(result);
