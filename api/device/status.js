@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     res.status(200).json({
       deviceId,
       exists: Object.keys(fw).length > 0,
-      paid: paid === "true",
+      paid: paid == true,
       firmware: fw
     });
 
