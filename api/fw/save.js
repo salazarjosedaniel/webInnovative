@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { id, version, url, force, notes } = req.body || {};
+    const { id, version, url, paid, force, notes } = req.body || {};
 
     if (!id) {
       return res.status(400).json({ error: "El campo 'id' es obligatorio" });
@@ -20,6 +20,7 @@ export default async function handler(req, res) {
     await client.hSet(key, {
       version: version ?? "",
       url: url ?? "",
+      paid: paid ? "true" : "false",
       force: force ? "true" : "false",
       notes: notes ?? ""
     });

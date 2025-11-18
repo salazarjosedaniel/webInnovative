@@ -3,38 +3,40 @@ import { getRedisClient } from "../../lib/redis";
 export default async function handler(req, res) {
   try {
     const { deviceId } = req.query;
-
     const redis = await getRedisClient();
 
-    // 1. Buscar firmware específico
-    let data = await redis.hGetAll(`fw:${deviceId}`);
+    // Leer config del dispositivo
+    const data = await redis.hGetAll(`fw:${deviceId}`);
 
-    // 2. Si no existe, usar "default"
-    if (!data || Object.keys(data).length === 0) {
-      data = await redis.hGetAll("fw:default");
+    // Si no existe, buscar el default
+    let firmware = data;
+    if (!firmware || Object.keys(firmware).length === 0) {
+      firmware = await redis.hGetAll("fw:default");
     }
 
-    // 3. Si tampoco existe, crear fallback
-    if (!data || Object.keys(data).length === 0) {
-      data = {
+    // Si tampoco hay default → crear uno básico
+    if (!firmware || Object.keys(firmware).length === 0) {
+      firmware = {
         version: "1.0.0",
         url: "",
-        force: "false",
-        notes: "Sin firmware registrado"
+        force: false,
+        notes: "",
+        paid: false
       };
     }
 
+    // Convertir booleanos (Redis siempre guarda strings)
+    firmware.force = firmware.force === "true";
+    firmware.paid = firmware.paid === "true";
+
     res.status(200).json({
       deviceId,
-      version: data.version,
-      url: data.url,
-      force: data.force === "true",
-      notes: data.notes,
+      ...firmware,
       timestamp: new Date().toISOString()
     });
 
-  } catch (e) {
-    console.error("Error FW:", e);
-    res.status(500).json({ error: "Error de servidor leyendo firmware" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error del servidor" });
   }
 }

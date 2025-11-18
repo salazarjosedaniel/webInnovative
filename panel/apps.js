@@ -20,6 +20,7 @@ async function loadDevices() {
         <td>${id}</td>
         <td><input value="${fw.version}" id="v_${id}"></td>
         <td><input value="${fw.url}" id="u_${id}"></td>
+        <td><input type="checkbox" id="p_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
         <td><input type="checkbox" ${fw.force ? "checked" : ""} id="f_${id}"></td>
         <td><input value="${fw.notes}" id="n_${id}"></td>
         <td>
@@ -37,11 +38,12 @@ async function save(id) {
   const url     = document.getElementById("u_" + id).value;
   const force   = document.getElementById("f_" + id).checked;
   const notes   = document.getElementById("n_" + id).value;
+  const paid    = document.getElementById("p_" + id).checked;
 
   await fetch(API_SAVE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, version, url, force, notes })
+    body: JSON.stringify({ id, version, url, paid, force, notes })
   });
 
   alert("Guardado");
