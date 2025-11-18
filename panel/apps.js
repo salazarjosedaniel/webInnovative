@@ -25,6 +25,7 @@ async function loadDevices() {
         <td><input value="${fw.notes}" id="n_${id}"></td>
         <td>
           <button onclick="save('${id}')">💾 Guardar</button>
+          <button onclick="remove('${id}')"> Eliminar</button>
           <button onclick="test('${id}')">🧪 Probar</button>
         </td>
       </tr>
