@@ -72,7 +72,7 @@ document.getElementById("newDevice").onclick = async () => {
   const id = prompt("ID del nuevo dispositivo:");
   if (!id) return;
 
-  await fetch(API + "/" + id, { method: "POST" });
+  await fetch(`${API}?device=${encodeURIComponent(id)}`, { method: "POST" });
 
   loadDevices();
 };
