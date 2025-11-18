@@ -1,46 +1,36 @@
 import { getRedisClient } from "../../lib/redis";
 
 export default async function handler(req, res) {
+  if (req.method !== "POST")
+    return res.status(405).json({ error: "Método no permitido" });
+
   try {
-    const { deviceId } = req.query;
-    if (!deviceId) return res.status(400).json({ error: "deviceId requerido" });
+    const { deviceId, firmware, ip } = req.body;
+
+    if (!deviceId)
+      return res.status(400).json({ error: "deviceId es obligatorio" });
 
     const redis = await getRedisClient();
 
-    // Ver si existe
-    const fw = await redis.hGetAll(`fw:${deviceId}`);
-    const paid = await redis.get(`paid:${deviceId}`);
-
-    if (Object.keys(fw).length === 0) {
-      // Crear configuración base
-      await redis.hSet(`fw:${deviceId}`, {
-        version: "1.0.0",
-        url: "",
-        force: "false",
-        notes: "Dispositivo recién creado"
-      });
-
-      await redis.set(`paid:${deviceId}`, "false");
-
-      return res.status(200).json({
-        deviceId,
-        created: true,
-        paid: false,
-        version: "1.0.0",
-        url: ""
-      });
-    }
-
-    // Ya existe
-    return res.status(200).json({
-      deviceId,
-      created: false,
-      paid: paid === "true",
-      ...fw
+    // Crear si no existe
+    await redis.hSet(`fw:${deviceId}`, {
+      version: firmware || "unknown",
+      url: "",
+      force: "false",
+      notes: "",
     });
 
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Server error" });
+    // Guardar estado reciente
+    await redis.hSet(`device:${deviceId}`, {
+      lastSeen: new Date().toISOString(),
+      firmware,
+      ip
+    });
+
+    res.status(200).json({ ok: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error interno" });
   }
 }
