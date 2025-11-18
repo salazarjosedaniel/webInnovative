@@ -15,9 +15,9 @@ export default async function handler(req, res) {
     // Crear si no existe
     await redis.hSet(`fw:${deviceId}`, {
       version: firmware || "unknown",
-      url: "",
+      url: "https://web-innovative.vercel.app/fw/firmware-" + firmware + '.bin',
       force: "false",
-      notes: "",
+      notes: "Creado automaticamente",
     });
 
     // Guardar estado reciente
