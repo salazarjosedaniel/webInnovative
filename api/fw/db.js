@@ -1,13 +1,10 @@
-// api/fw/db.js
 import { getRedisClient } from "../../lib/redis";
-
-const redis = createClient({
-  url: process.env.REDIS_URL
-});
-redis.connect();
 
 export default async function handler(req, res) {
   try {
+    const redis = await getRedisClient();
+
+    // GET → listar todos
     if (req.method === "GET") {
       const keys = await redis.keys("fw:*");
       let result = {};
@@ -20,20 +17,24 @@ export default async function handler(req, res) {
       return res.status(200).json(result);
     }
 
-    // Crear nuevo dispositivo
+    // POST → crear nuevo dispositivo
     if (req.method === "POST") {
       const id = req.query.device || req.url.split("/").pop();
+
       await redis.hSet(`fw:${id}`, {
         version: "1.0.0",
         url: "",
         force: "false",
-        notes: "",
-        paid: "false"
+        notes: ""
       });
+
+      // crear paid:false por defecto
+      await redis.set(`paid:${id}`, "false");
+
       return res.status(200).json({ ok: true });
     }
 
-    // Actualizar firmware de un equipo
+    // PUT → actualizar firmware
     if (req.method === "PUT") {
       const id = req.query.device || req.url.split("/").pop();
       const body = JSON.parse(req.body);
@@ -42,9 +43,13 @@ export default async function handler(req, res) {
         version: body.version,
         url: body.url,
         force: body.force,
-        notes: body.notes,
-        paid: body.paid
+        notes: body.notes
       });
+
+      // paid debe ir *fuera* del fw
+      if (body.paid !== undefined) {
+        await redis.set(`paid:${id}`, body.paid);
+      }
 
       return res.status(200).json({ ok: true });
     }
