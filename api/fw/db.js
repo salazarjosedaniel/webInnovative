@@ -1,3 +1,4 @@
+// api/fw/db.js
 import { getRedisClient } from "../../lib/redis";
 
 const redis = createClient({
@@ -27,7 +28,7 @@ export default async function handler(req, res) {
         url: "",
         force: "false",
         notes: "",
-        paid: false
+        paid: "false"
       });
       return res.status(200).json({ ok: true });
     }
@@ -42,7 +43,7 @@ export default async function handler(req, res) {
         url: body.url,
         force: body.force,
         notes: body.notes,
-        padi:body.paid
+        paid: body.paid
       });
 
       return res.status(200).json({ ok: true });
