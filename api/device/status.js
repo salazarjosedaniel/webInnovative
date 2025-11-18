@@ -1,4 +1,4 @@
-import { getRedisClient } from "../../redis";
+import { getRedisClient } from "../../redis.js";
 
 export default async function handler(req, res) {
   try {
@@ -9,24 +9,22 @@ export default async function handler(req, res) {
     }
 
     const redis = await getRedisClient();
-    const data = await redis.hGetAll(`fw:${deviceId}`);
 
-    if (!data || Object.keys(data).length === 0) {
-      return res.status(404).json({
-        deviceId,
-        paid: false,
-        message: "Dispositivo no registrado"
-      });
-    }
+    // Intentar leer info del dispositivo (si existe)
+    const fw = await redis.hGetAll(`fw:${deviceId}`);
+    
+    // Leer estado de pago
+    const paid = await redis.get(`paid:${deviceId}`);
 
-    return res.status(200).json({
+    res.status(200).json({
       deviceId,
-      paid: data.paid === "true",
-      info: data
+      exists: Object.keys(fw).length > 0,
+      paid: paid === "true",
+      firmware: fw
     });
 
-  } catch (error) {
-    console.error("Error en /api/device/status:", error);
-    res.status(500).json({ error: "Error consultando estado del dispositivo" });
+  } catch (err) {
+    console.error("❌ Error en /api/device/status:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 }
