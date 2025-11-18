@@ -1,4 +1,4 @@
-import { createClient } from "redis";
+import { getRedisClient } from "../../lib/redis";
 
 const redis = createClient({
   url: process.env.REDIS_URL
@@ -26,7 +26,8 @@ export default async function handler(req, res) {
         version: "1.0.0",
         url: "",
         force: "false",
-        notes: ""
+        notes: "",
+        paid: false
       });
       return res.status(200).json({ ok: true });
     }
@@ -40,7 +41,8 @@ export default async function handler(req, res) {
         version: body.version,
         url: body.url,
         force: body.force,
-        notes: body.notes
+        notes: body.notes,
+        padi:body.paid
       });
 
       return res.status(200).json({ ok: true });
