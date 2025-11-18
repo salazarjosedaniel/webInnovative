@@ -1,5 +1,5 @@
 // api/fw/test.js
-import { getRedisClient } from "../../redis.js";
+import { getRedisClient } from "../../lib/redis";
 
 async function resolveFirmware(deviceId) {
   const client = await getRedisClient();
