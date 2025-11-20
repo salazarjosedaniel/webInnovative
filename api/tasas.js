@@ -27,17 +27,16 @@ export default async function handler(req, res) {
     // 2) EUR (Yahoo Finance)
     // =========================================
     try {
-      const r2 = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/EURVES=X");
-      const eur_json = await r2.json();
+      const eur_api = await fetch("https://api.exchangerate.host/latest?base=EUR&symbols=VES");
+      const eur_json = await eur_api.json();
 
-      const price =
-        eur_json?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      const eur_rate = eur_json.rates.VES.toFixed(2);
 
-      if (price) {
-        eur_rate = price.toFixed(2);
-      } else {
-        console.error("❌ Yahoo Finance JSON incompleto:", eur_json);
-      }
+      return res.status(200).json({
+        usd: usd_rate,
+        eur: eur_rate,
+        fecha: fecha
+      });
     } catch (err) {
       console.error("❌ Error YahooFinance:", err);
     }
@@ -52,7 +51,7 @@ export default async function handler(req, res) {
         eur: eur_rate
       });
     }
-
+    res.setHeader("Cache-Control", "s-maxage=60");
     return res.status(200).json({
       usd: usd_rate,
       eur: eur_rate,
