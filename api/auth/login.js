@@ -7,8 +7,8 @@ export default function handler(req, res) {
   const { user, pass } = req.body;
 
   // Puedes cambiar esto por credenciales reales.
-  const ADMIN_USER = process.env.ADMIN_USER || "admin";
-  const ADMIN_PASS = process.env.ADMIN_PASS || "1234";
+  const ADMIN_USER =  "admin";
+  const ADMIN_PASS =  "1234";
 
   if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
     return res.status(200).json({ ok: false });
