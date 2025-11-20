@@ -33,6 +33,13 @@ async function loadDevices() {
   Object.keys(data).forEach(id => {
     const fw = data[id];
 
+        const lastSeenText = fw.lastseen
+        ? new Date(fw.lastseen).toLocaleString() : "—";
+
+    const statusBadge = fw.online
+        ? `<span class="badge online">🟢 Online</span>`
+        : `<span class="badge offline">🔴 Offline</span>`;
+
     const row = `
       <tr>
         <td>${id}</td>
@@ -41,6 +48,8 @@ async function loadDevices() {
         <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
         <td><input id="n_${id}" value="${fw.notes}"></td>
+        <td>${lastSeenText}</td>
+        <td>${statusBadge}</td>
 
         <td>
           <button class="btn primary" onclick="save('${id}')">Guardar</button>

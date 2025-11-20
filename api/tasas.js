@@ -7,6 +7,16 @@ export default async function handler(req, res) {
     const eur = json.current.eur.toFixed(2);
     const fecha = json.current.date;
 
+    // Registrar PING del dispositivo
+      const redis = await getRedisClient();
+      const deviceId = req.headers["x-device-id"]; // Lo mandaremos desde el ESP32
+
+    if (deviceId) {
+       await redis.hSet(`fw:${deviceId}`, {
+       lastSeen: new Date().toISOString()
+       });
+    }
+
     return res.status(200).json({
       usd,
       eur,
