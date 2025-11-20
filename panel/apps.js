@@ -73,6 +73,13 @@ async function save(id) {
     body: JSON.stringify(body)
   });
 
+  // 2) Guardar pagado global
+  await fetch("/api/device/pay", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, paid: paidGlobal })
+  });
+
   alert("Guardado");
 }
 
