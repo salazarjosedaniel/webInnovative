@@ -30,16 +30,9 @@ async function loadDevices() {
 
         <td><input value="${fw.version}" id="v_${id}"></td>
         <td><input value="${fw.url}"     id="u_${id}"></td>
-
-        <td>
-          <input type="checkbox" id="pg_${id}" ${paidGlobal}>
-          <label>PAGADO</label>
-        </td>
-
+        <td><input type="checkbox" id="pg_${id}" ${paidGlobal}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
-
         <td><input value="${fw.notes}" id="n_${id}"></td>
-
         <td>
           <button onclick="save('${id}')">💾 Guardar</button>
           <button onclick="removeDevice('${id}')">🗑 Eliminar</button>
