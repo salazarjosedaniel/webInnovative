@@ -1,34 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>BCV Display - Panel de Control</title>
-<link rel="stylesheet" href="/panel/style.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BCV Display – Panel de Control</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
-<body>
 
-  <h1>⚙️ Panel de Control - BCV Display</h1>
+<body class="bg-gray-100">
 
-  <section>
-    <button id="reload">🔄 Cargar dispositivos</button>
-    <button id="newDevice">➕ Nuevo dispositivo</button>
-  </section>
+  <!-- SIDEBAR -->
+  <div class="flex">
 
-  <table id="devicesTable">
-    <thead>
-      <tr>
-        <th>Device ID</th>
-        <th>Versión</th>
-        <th>URL Firmware</th>
-        <th>Pagado</th>
-        <th>Force</th>
-        <th>Notas</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <aside class="w-64 h-screen bg-gray-900 text-white p-5">
+      <h2 class="text-2xl font-bold mb-8">BCV Display</h2>
+
+      <nav class="space-y-3">
+        <a class="block p-3 rounded bg-gray-700 hover:bg-gray-600 cursor-pointer">
+          <i class="bi bi-speedometer2 mr-2"></i> Panel de Control
+        </a>
+        <a class="block p-3 rounded hover:bg-gray-700 cursor-pointer">
+          <i class="bi bi-cpu mr-2"></i> Dispositivos
+        </a>
+        <a class="block p-3 rounded hover:bg-gray-700 cursor-pointer">
+          <i class="bi bi-bar-chart mr-2"></i> Logs
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-10">
+
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Panel de Control</h1>
+
+        <div class="flex gap-3">
+          <button id="reload" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+            <i class="bi bi-arrow-repeat mr-2"></i> Recargar
+          </button>
+
+          <button id="newDevice" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
+            <i class="bi bi-plus-lg mr-2"></i> Nuevo dispositivo
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="bg-white shadow-lg rounded-xl p-6">
+
+        <table class="w-full text-left" id="devicesTable">
+          <thead>
+            <tr class="border-b">
+              <th class="pb-3">Device ID</th>
+              <th>Versión</th>
+              <th>URL Firmware</th>
+              <th>Pagado</th>
+              <th>Force</th>
+              <th>Notas</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y" id="tbody">
+            <!-- Se llena dinámicamente -->
+          </tbody>
+        </table>
+
+      </div>
+
+    </main>
+  </div>
 
   <script src="/panel/apps.js"></script>
+
 </body>
 </html>
