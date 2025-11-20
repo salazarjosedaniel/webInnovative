@@ -33,8 +33,8 @@ async function loadDevices() {
   Object.keys(data).forEach(id => {
     const fw = data[id];
 
-        const lastSeenText = fw.lastseen
-        ? new Date(fw.lastseen).toLocaleString() : "—";
+        const lastSeenText = fw.lastSeen
+        ? new Date(fw.lastSeen).toLocaleString() : "—";
 
     const statusBadge = fw.online
         ? `<span class="badge online">🟢 Online</span>`
