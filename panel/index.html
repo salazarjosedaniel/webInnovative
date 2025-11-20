@@ -2,146 +2,53 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>BCV Display - Panel de Administración</title>
-  <link rel="stylesheet" href="/panel/style.css">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f3f4f7;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background: #1b396a;
-      padding: 20px;
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    #tabs {
-      display: flex;
-      background: #ddd;
-      border-bottom: 2px solid #999;
-    }
-
-    .tab {
-      padding: 12px 20px;
-      cursor: pointer;
-      background: #ccc;
-      border-right: 1px solid #bbb;
-    }
-
-    .tab.active {
-      background: white;
-      border-bottom: 3px solid #1b396a;
-      font-weight: bold;
-    }
-
-    .content {
-      display: none;
-      padding: 20px;
-    }
-
-    .content.active {
-      display: block;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      background: white;
-    }
-
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background: #1b396a;
-      color: white;
-    }
-
-    button {
-      padding: 8px 12px;
-      margin-right: 5px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      background: #1b396a;
-      color: white;
-    }
-
-    button.delete {
-      background: #b02a37;
-    }
-
-    button.test {
-      background: #198754;
-    }
-
-    #logsBox {
-      background: black;
-      color: #00ff1e;
-      padding: 15px;
-      height: 400px;
-      overflow-y: scroll;
-      font-family: monospace;
-      border-radius: 8px;
-    }
-
-  </style>
+  <title>Panel BCV Display</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<header>🔧 Panel Administrativo - BCV Display</header>
+  <div class="container">
+    <h1>⚙️ Panel de Control – BCV Display</h1>
 
-<div id="tabs">
-  <div class="tab active" data-tab="devices">📟 Dispositivos</div>
-  <div class="tab" data-tab="logs">📜 Logs</div>
-</div>
+    <div class="tabs">
+      <button class="tab-button active" data-tab="devices">📟 Dispositivos</button>
+      <button class="tab-button" data-tab="logs">📜 Logs</button>
+    </div>
 
-<!-- TAB: DISPOSITIVOS -->
-<div id="devices" class="content active">
-  <h2>Dispositivos Registrados</h2>
+    <!-- TAB DISPOSITIVOS -->
+    <div id="devices" class="tab-content active">
 
-  <button id="reload">🔄 Cargar dispositivos</button>
-  <button id="newDevice">➕ Nuevo dispositivo</button>
+      <section class="actions">
+        <button id="reload">🔄 Cargar dispositivos</button>
+        <button id="newDevice">➕ Nuevo dispositivo</button>
+      </section>
 
-  <table id="devicesTable">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Versión</th>
-        <th>URL Firmware</th>
-        <th>Pagado</th>
-        <th>Force</th>
-        <th>Notas</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+      <table id="devicesTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Versión</th>
+            <th>Firmware</th>
+            <th>Pagado</th>
+            <th>Forzar</th>
+            <th>Notas</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
 
-<!-- TAB: LOGS -->
-<div id="logs" class="content">
-  <h2>Logs del Sistema</h2>
-  <p>Logs generados por dispositivos y backend.</p>
+    <!-- TAB LOGS -->
+    <div id="logs" class="tab-content">
+      <h2>Últimos Logs</h2>
 
-  <button id="clearLogs">🧽 Limpiar logs</button>
+      <pre id="logsOutput">Cargando logs...</pre>
+    </div>
 
-  <div id="logsBox">
-    Cargando logs...
   </div>
-</div>
 
-<script src="/panel/apps.js"></script>
+  <script src="apps.js"></script>
 
 </body>
 </html>
