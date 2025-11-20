@@ -13,10 +13,14 @@ export default async function handler(req, res) {
         const id = key.replace("fw:", "");
         const fw = await redis.hGetAll(key);
         const paidGlobal = await redis.get(`paid:${id}`);
+        const lastseen = await redis.get(`lastseen:${id}`);
+        const online = await redis.get(`online:${id}`) === "1";
 
         result[id] = {
           ...fw,
-          paidGlobal: paidGlobal === "true"
+          paidGlobal: paidGlobal === "true",
+          lastseen: lastseen,
+          online: online
         };
       }
 

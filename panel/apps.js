@@ -82,6 +82,13 @@ function renderTable(data) {
   Object.keys(data).forEach(id => {
     const fw = data[id];
 
+    const lastSeenText = fw.lastseen
+        ? new Date(fw.lastseen).toLocaleString() : "—";
+
+    const statusBadge = fw.online
+        ? `<span class="badge online">🟢 Online</span>`
+        : `<span class="badge offline">🔴 Offline</span>`;
+
     const row = `
       <tr>
         <td>${id}</td>
@@ -90,6 +97,8 @@ function renderTable(data) {
         <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
         <td><input value="${fw.notes || ""}" id="n_${id}"></td>
+        <td>${lastSeenText}</td>
+        <td>${statusBadge}</td>
         <td>
           <button onclick="save('${id}')">💾</button>
           <button onclick="removeDevice('${id}')">🗑</button>

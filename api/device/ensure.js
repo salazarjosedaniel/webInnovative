@@ -27,6 +27,12 @@ export default async function handler(req, res) {
       ip
     });
 
+    // Registrar última conexión
+    await redis.set(`lastseen:${deviceId}`, Date.now().toString());
+
+    // Registrar online (expira en 90 segundos)
+    await redis.set(`online:${deviceId}`, "1", { EX: 90 });
+
     res.status(200).json({ ok: true });
 
   } catch (err) {
