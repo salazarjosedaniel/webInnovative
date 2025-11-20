@@ -4,6 +4,7 @@ const API_SAVE   = "/api/fw/save";
 const API_DELETE = "/api/fw/delete";
 const API_TEST   = "/api/fw/test";
 const API_LOGS   = "/api/device/logs";
+const API_PAY    = "/api/device/pay";
 
 // ---------------------
 //   CAMBIAR SECCIONES
@@ -37,7 +38,7 @@ async function loadDevices() {
         <td>${id}</td>
         <td><input id="v_${id}" value="${fw.version}"></td>
         <td><input id="u_${id}" value="${fw.url}"></td>
-        <td><input type="checkbox" id="p_${id}" ${fw.paid === "true" ? "checked":""}></td>
+        <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
         <td><input id="n_${id}" value="${fw.notes}"></td>
 
@@ -67,6 +68,8 @@ async function save(id) {
     notes:   document.getElementById("n_"+id).value
   };
 
+  const paidGlobal = document.getElementById(`pg_${id}`).checked;
+  
   await fetch(API_SAVE, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
@@ -74,7 +77,7 @@ async function save(id) {
   });
 
   // 2) Guardar pagado global
-  await fetch("/api/device/pay", {
+  await fetch(API_PAY, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, paid: paidGlobal })
