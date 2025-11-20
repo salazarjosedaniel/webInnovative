@@ -1,65 +1,35 @@
-// api/tasas.js
+import * as cheerio from "cheerio";
 
 export default async function handler(req, res) {
   try {
-    let usd_rate = null;
-    let eur_rate = null;
-    let fecha = null;
+    const html = await fetch("https://www.bcv.org.ve/tasas-cambio").then(r => r.text());
 
-    // =========================================
-    // 1) USD BCV
-    // =========================================
-    try {
-      const bc = await fetch("https://ve.dolarapi.com/v1/dolares/oficial");
-      const usd_json = await bc.json();
+    const $ = cheerio.load(html);
 
-      if (usd_json && usd_json.promedio) {
-        usd_rate = usd_json.promedio.toFixed(2);
-        fecha = usd_json.fechaActualizacion;
-      } else {
-        console.error("❌ DolarAPI: JSON incompleto", usd_json);
-      }
-    } catch (err) {
-      console.error("❌ Error DolarAPI:", err);
-    }
+    // USD 👉 busca el elemento oficial
+    const usd = $("div.views-field.views-field-field-tasa-del-dolar .field-content")
+      .first()
+      .text()
+      .trim()
+      .replace(",", ".");
 
-    // =========================================
-    // 2) EUR (Yahoo Finance)
-    // =========================================
-    try {
-      const eur_api = await fetch("https://api.exchangerate.host/latest?base=EUR&symbols=VES");
-      const eur_json = await eur_api.json();
+    // EUR 👉 BCV lo publica en otra sección
+    const eur = $("div.views-field.views-field-field-tasa-del-euro .field-content")
+      .first()
+      .text()
+      .trim()
+      .replace(",", ".");
 
-      const eur_rate = eur_json.rates.VES.toFixed(2);
+    const fecha = new Date().toISOString();
 
-      return res.status(200).json({
-        usd: usd_rate,
-        eur: eur_rate,
-        fecha: fecha
-      });
-    } catch (err) {
-      console.error("❌ Error YahooFinance:", err);
-    }
-
-    // =========================================
-    // Validación final
-    // =========================================
-    if (!usd_rate || !eur_rate) {
-      return res.status(500).json({
-        error: "No se pudieron obtener todas las tasas",
-        usd: usd_rate,
-        eur: eur_rate
-      });
-    }
-    res.setHeader("Cache-Control", "s-maxage=60");
     return res.status(200).json({
-      usd: usd_rate,
-      eur: eur_rate,
+      usd,
+      eur,
       fecha
     });
 
-  } catch (error) {
-    console.error("🔥 ERROR GENERAL /api/tasas:", error);
-    return res.status(500).json({ error: "API error" });
+  } catch (err) {
+    console.error("SCRAPER BCV ERROR:", err);
+    return res.status(500).json({ error: "Scraper error" });
   }
 }
