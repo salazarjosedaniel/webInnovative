@@ -63,7 +63,7 @@ async function save(id) {
     id,
     version: document.getElementById("v_"+id).value,
     url:     document.getElementById("u_"+id).value,
-    paid:    document.getElementById("p_"+id).checked,
+    paid:    document.getElementById("pg_"+id).checked,
     force:   document.getElementById("f_"+id).checked,
     notes:   document.getElementById("n_"+id).value
   };
