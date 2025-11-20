@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>BCV Display — Dashboard</title>
+  <link rel="stylesheet" href="/panel/style.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__left">
+      <span class="logo-icon">📊</span>
+      <span class="logo-text">BCV Display — Dashboard</span>
+    </div>
+    <nav class="topbar__right">
+      <a href="/panel/index.html" class="topbar-link">Panel</a>
+      <a href="/panel/dashboard.html" class="topbar-link topbar-link--active">Dashboard</a>
+      <button id="logoutBtn" class="btn btn-secondary btn-sm">Cerrar sesión</button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <!-- Tarjetas resumen -->
+    <section class="cards-row">
+      <div class="card kpi-card">
+        <h3>Total dispositivos</h3>
+        <p class="kpi-value" id="kpiTotal">—</p>
+      </div>
+      <div class="card kpi-card">
+        <h3>Pagando</h3>
+        <p class="kpi-value kpi-value--green" id="kpiPaid">—</p>
+      </div>
+      <div class="card kpi-card">
+        <h3>No pagado</h3>
+        <p class="kpi-value kpi-value--red" id="kpiUnpaid">—</p>
+      </div>
+      <div class="card kpi-card">
+        <h3>Online</h3>
+        <p class="kpi-value kpi-value--green" id="kpiOnline">—</p>
+      </div>
+      <div class="card kpi-card">
+        <h3>Offline</h3>
+        <p class="kpi-value kpi-value--gray" id="kpiOffline">—</p>
+      </div>
+    </section>
+
+    <!-- Fila de gráficas -->
+    <section class="charts-row">
+      <div class="card chart-card">
+        <h3>Estado de pago</h3>
+        <canvas id="chartPaid"></canvas>
+      </div>
+
+      <div class="card chart-card">
+        <h3>Estado de conexión</h3>
+        <canvas id="chartStatus"></canvas>
+      </div>
+    </section>
+
+    <section class="charts-row">
+      <div class="card chart-card">
+        <h3>Distribución de firmware</h3>
+        <canvas id="chartFirmware"></canvas>
+      </div>
+    </section>
+
+    <section class="card">
+      <small id="dashboardMeta" class="dashboard-meta">Cargando datos…</small>
+    </section>
+  </main>
+
+  <script src="/panel/dashboard.js"></script>
+</body>
+</html>

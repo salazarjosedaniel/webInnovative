@@ -83,6 +83,13 @@ function filterDevices() {
   renderTable(filtered);
 }
 
+function isOnline(lastSeen) {
+  if (!lastSeen) return false;
+  const diff = Date.now() - new Date(lastSeen).getTime();
+  return diff < 180000; // 3 minutos
+}
+
+
 function renderTable(data) {
   const tbody = document.querySelector("#devicesTable tbody");
   tbody.innerHTML = "";
@@ -92,8 +99,7 @@ function renderTable(data) {
 
     const lastSeenText = fw.lastseen
         ? new Date(fw.lastseen).toLocaleString() : "—";
-
-    const statusBadge = fw.online
+    const statusBadge = isOnline(fw.lastSeen)
         ? `<span class="badge online">🟢 Online</span>`
         : `<span class="badge offline">🔴 Offline</span>`;
 
