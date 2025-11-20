@@ -1,54 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Panel BCV Display</title>
-  <link rel="stylesheet" href="/panel/style.css">
+  <meta charset="UTF-8" />
+  <title>BCV Display • Panel Administrativo</title>
+  <link rel="stylesheet" href="/panel/style.css" />
 </head>
+
 <body>
 
-  <div class="container">
-    <h1>⚙️ Panel de Control – BCV Display</h1>
+  <header class="topbar">
+    <h1>📊 BCV Display — Panel Administrativo</h1>
+  </header>
 
-    <div class="tabs">
-      <button class="tab-button active" data-tab="devices">📟 Dispositivos</button>
-      <button class="tab-button" data-tab="logs">📜 Logs</button>
-    </div>
+  <main class="container">
 
-    <!-- TAB DISPOSITIVOS -->
-    <div id="devices" class="tab-content active">
+    <section class="controls">
+      <button id="reload" class="btn primary">🔄 Recargar dispositivos</button>
+      <button id="newDevice" class="btn success">➕ Nuevo dispositivo</button>
+    </section>
 
-      <section class="actions">
-        <button id="reload">🔄 Cargar dispositivos</button>
-        <button id="newDevice">➕ Nuevo dispositivo</button>
-      </section>
+    <section class="card">
+      <h2>📟 Dispositivos registrados</h2>
 
-      <table id="devicesTable">
+      <table id="devicesTable" class="styled-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Device ID</th>
             <th>Versión</th>
-            <th>Firmware</th>
+            <th>URL Firmware</th>
             <th>Pagado</th>
-            <th>Forzar</th>
+            <th>Force</th>
             <th>Notas</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
-    </div>
+    </section>
 
-    <!-- TAB LOGS -->
-    <div id="logs" class="tab-content">
-      <h2>Últimos Logs</h2>
+  </main>
 
-      <pre id="logsOutput">Cargando logs...</pre>
-    </div>
-
-  </div>
+  <footer class="footer">
+    © 2025 BCV Display — Dashboard de administración
+  </footer>
 
   <script src="/panel/apps.js"></script>
-
 </body>
+
 </html>

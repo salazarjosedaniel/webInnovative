@@ -1,41 +1,139 @@
+/* ───────────────────────────────────────────────
+   GLOBAL
+────────────────────────────────────────────────── */
 body {
-  font-family: Arial;
-  background: #f6f6f6;
-  padding: 20px;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  background: #f4f6f8;
+  margin: 0;
+  padding: 0;
+  color: #333;
 }
 
-h1 {
+/* ───────────────────────────────────────────────
+   TOP BAR
+────────────────────────────────────────────────── */
+.topbar {
+  background: #1f3c88;
+  color: white;
+  padding: 18px 30px;
+  font-size: 22px;
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+/* ───────────────────────────────────────────────
+   CONTAINER
+────────────────────────────────────────────────── */
+.container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 10px;
+}
+
+/* ───────────────────────────────────────────────
+   CONTROLS
+────────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
-.toolbar button {
-  padding: 8px 12px;
-  margin-right: 10px;
-}
-
-table {
-  width: 100%;
-  background: #fff;
-  border-collapse: collapse;
-}
-
-th {
-  background: #333;
-  color: white;
-  padding: 8px;
-}
-
-td {
-  padding: 8px;
-  border-bottom: 1px solid #ccc;
-}
-
-input {
-  width: 100%;
-  padding: 6px;
-}
-
-button {
+/* ───────────────────────────────────────────────
+   BUTTONS
+────────────────────────────────────────────────── */
+.btn {
+  padding: 10px 18px;
+  border-radius: 6px;
+  border: none;
   cursor: pointer;
-  margin-right: 5px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.btn.primary { background: #0059b3; color: white; }
+.btn.primary:hover { background: #003d80; }
+
+.btn.success { background: #28a745; color: white; }
+.btn.success:hover { background: #1e7f34; }
+
+.btn.danger { background: #dc3545; color: white; }
+.btn.danger:hover { background: #b52a37; }
+
+.btn.light {
+  background: #e7e7e7;
+  color: #333;
+}
+.btn.light:hover {
+  background: #d5d5d5;
+}
+
+/* ───────────────────────────────────────────────
+   CARD
+────────────────────────────────────────────────── */
+.card {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #1f3c88;
+}
+
+/* ───────────────────────────────────────────────
+   TABLE
+────────────────────────────────────────────────── */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.styled-table thead tr {
+  background: #1f3c88;
+  color: #fff;
+  text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+  padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+  background: #f3f4f6;
+}
+
+.styled-table tbody tr:hover {
+  background: #dbe2f7;
+}
+
+/* Inputs dentro de la tabla */
+table input[type="text"],
+table input[type="url"],
+table input[type="checkbox"] {
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* ───────────────────────────────────────────────
+   FOOTER
+────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 15px;
+  background: #1f3c88;
+  color: white;
+  margin-top: 40px;
 }
