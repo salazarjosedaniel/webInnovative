@@ -2,11 +2,13 @@
   "version": 2,
   "builds": [
     { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "panel/**", "use": "@vercel/static" }
+    { "src": "panel/**", "use": "@vercel/static" },
+    { "src": "**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/panel", "dest": "/panel/index.html" },
-    { "src": "/panel/(.*)", "dest": "/panel/$1" }
+    { "src": "/panel/(.*)", "dest": "/panel/$1" },
+    { "src": "/(.*)", "dest": "/$1.js" }
   ]
 }
