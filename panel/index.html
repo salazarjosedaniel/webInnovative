@@ -1,68 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <title>BCV Display - Panel de Control</title>
-  <link rel="stylesheet" href="/panel/style.css"/>
+  <meta charset="UTF-8" />
+  <title>BCV Display • Panel Administrativo</title>
+  <link rel="stylesheet" href="/panel/style.css" />
 </head>
+
 <body>
 
-  <h1>⚙️ Panel de Control - BCV Display</h1>
+  <header class="topbar">
+    <h1>📊 BCV Display — Panel Administrativo</h1>
+  </header>
 
-  <!-- 🔍 BUSCADOR -->
-  <section class="search-section">
-    <input type="text" id="searchInput" placeholder="Buscar por DeviceID...">
-    <button id="searchBtn">Buscar</button>
-    <button id="reload">🔄 Recargar</button>
-    <button id="newDevice">➕ Nuevo dispositivo</button>
-  </section>
+  <main class="container">
 
-  <!-- 📊 DASHBOARD -->
-  <section id="dashboard">
-    <h2>📊 Dashboard General</h2>
+    <section class="controls">
+      <button id="reload" class="btn primary">🔄 Recargar dispositivos</button>
+      <button id="newDevice" class="btn success">➕ Nuevo dispositivo</button>
+      <input id="searchBox" type="text" placeholder="🔍 Buscar DeviceID..." />
+    </section>
 
-    <div id="cards">
-      <div class="card">
-        <h3>Total Dispositivos</h3>
-        <p id="totalDevices">0</p>
-      </div>
+    <section class="card">
+      <h2>📟 Dispositivos registrados</h2>
 
-      <div class="card">
-        <h3>Pagados</h3>
-        <p id="totalPaid">0</p>
-      </div>
+      <table id="devicesTable" class="styled-table">
+        <thead>
+          <tr>
+            <th>Device ID</th>
+            <th>Versión</th>
+            <th>URL Firmware</th>
+            <th>Pagado</th>
+            <th>Force</th>
+            <th>Notas</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
 
-      <div class="card">
-        <h3>No Pagados</h3>
-        <p id="totalUnpaid">0</p>
-      </div>
-    </div>
+  </main>
 
-    <div id="charts">
-      <canvas id="piePaid" width="300" height="300"></canvas>
-      <canvas id="barFirmware" width="400" height="300"></canvas>
-    </div>
-  </section>
+  <footer class="footer">
+    © 2025 BCV Display — Dashboard de administración
+  </footer>
 
-  <!-- 📋 TABLA DE DISPOSITIVOS -->
-  <table id="devicesTable">
-    <thead>
-      <tr>
-        <th>Device ID</th>
-        <th>Versión</th>
-        <th>URL Firmware</th>
-        <th>Pagado</th>
-        <th>Force</th>
-        <th>Notas</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/panel/app.js"></script>
-
+  <script src="/panel/apps.js"></script>
 </body>
+
 </html>
