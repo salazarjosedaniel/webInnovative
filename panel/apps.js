@@ -1,77 +1,95 @@
-const API        = "/api/fw/db";
+// =======================
+//  ENDPOINTS DEL BACKEND
+// =======================
+const API_DEVICES = "/api/fw/db";
 const API_SAVE   = "/api/fw/save";
 const API_DELETE = "/api/fw/delete";
 const API_TEST   = "/api/fw/test";
-const API_STATUS = "/api/device/status";
+const API_LOGS   = "/api/logs/list";
+const API_CLEAR  = "/api/logs/clear";
 
+
+// =======================
+//        TABS
+// =======================
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+
+    t.classList.add("active");
+    document.getElementById(t.dataset.tab).classList.add("active");
+
+    if (t.dataset.tab === "logs") loadLogs();
+  });
+});
+
+
+// =======================
+//      CARGAR DISPOSITIVOS
+// =======================
 document.getElementById("reload").onclick = loadDevices;
 
 async function loadDevices() {
-  const res = await fetch(API);
-  const devices = await res.json();
+  const res = await fetch(API_DEVICES);
+  const data = await res.json();
 
   const tbody = document.querySelector("#devicesTable tbody");
   tbody.innerHTML = "";
 
-  for (const id of Object.keys(devices)) {
-
-    // Obtener FW
-    const fw = devices[id];
-
-    // Obtener estado de pago global
-    const statusRes = await fetch(`${API_STATUS}?deviceId=${id}`);
-    const status = await statusRes.json();
-
-    const paidGlobal = status.paid ? "checked" : "";
+  Object.keys(data).forEach(id => {
+    const fw = data[id];
 
     const row = `
       <tr>
         <td>${id}</td>
-
         <td><input value="${fw.version}" id="v_${id}"></td>
-        <td><input value="${fw.url}"     id="u_${id}"></td>
-        <td><input type="checkbox" id="pg_${id}" ${paidGlobal}></td>
+        <td><input value="${fw.url}" id="u_${id}"></td>
+        <td><input type="checkbox" id="p_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
         <td><input value="${fw.notes}" id="n_${id}"></td>
+
         <td>
-          <button onclick="save('${id}')">💾 Guardar</button>
-          <button onclick="removeDevice('${id}')">🗑 Eliminar</button>
-          <button onclick="test('${id}')">🧪 Test</button>
+          <button onclick="save('${id}')">💾</button>
+          <button class="delete" onclick="removeDevice('${id}')">🗑️</button>
+          <button class="test" onclick="testDevice('${id}')">🧪</button>
         </td>
       </tr>
     `;
-
     tbody.innerHTML += row;
-  }
+  });
 }
 
+
+// =======================
+//        GUARDAR
+// =======================
 async function save(id) {
-  const version = document.getElementById(`v_${id}`).value;
-  const url     = document.getElementById(`u_${id}`).value;
-  const force   = document.getElementById(`f_${id}`).checked;
-  const notes   = document.getElementById(`n_${id}`).value;
+  const payload = {
+    id,
+    version: document.getElementById("v_" + id).value,
+    url:     document.getElementById("u_" + id).value,
+    paid:    document.getElementById("p_" + id).checked,
+    force:   document.getElementById("f_" + id).checked,
+    notes:   document.getElementById("n_" + id).value
+  };
 
-  const paidGlobal = document.getElementById(`pg_${id}`).checked;
-
-  // 1) Guardar firmware
   await fetch(API_SAVE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, version, url, force, notes })
+    body: JSON.stringify(payload)
   });
 
-  // 2) Guardar pagado global
-  await fetch("/api/device/pay", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, paid: paidGlobal })
-  });
-
-  alert("✔ Datos guardados correctamente");
+  alert("Guardado correctamente");
+  loadDevices();
 }
 
+
+// =======================
+//        ELIMINAR
+// =======================
 async function removeDevice(id) {
-  if (!confirm(`¿Eliminar config de ${id}?`)) return;
+  if (!confirm(`¿Eliminar dispositivo ${id}?`)) return;
 
   await fetch(API_DELETE, {
     method: "POST",
@@ -79,27 +97,49 @@ async function removeDevice(id) {
     body: JSON.stringify({ id })
   });
 
-  alert("Eliminado");
   loadDevices();
 }
 
-async function test(id) {
-  const res = await fetch(`${API_TEST}?id=${id}`);
+
+// =======================
+//         TEST
+// =======================
+async function testDevice(id) {
+  const res = await fetch(`${API_TEST}?id=${encodeURIComponent(id)}`);
   const data = await res.json();
 
-  alert(`ID: ${id}
-Versión: ${data.version}
-URL: ${data.url}
-Force: ${data.force}`);
+  alert(`Test Firmware\n\nVersión: ${data.version}\nURL: ${data.url}`);
 }
 
+
+// =======================
+//        NUEVO DEVICE
+// =======================
 document.getElementById("newDevice").onclick = async () => {
-  const id = prompt("ID del nuevo dispositivo:");
+  const id = prompt("Ingrese nuevo Device ID:");
   if (!id) return;
 
-  await fetch(`${API}?device=${encodeURIComponent(id)}`, { method: "POST" });
+  await fetch(`${API_DEVICES}?device=${encodeURIComponent(id)}`, {
+    method: "POST"
+  });
 
   loadDevices();
 };
 
-loadDevices();
+
+// =======================
+//         LOGS
+// =======================
+async function loadLogs() {
+  const res = await fetch(API_LOGS);
+  const logs = await res.json();
+
+  const box = document.getElementById("logsBox");
+  box.innerHTML = logs.join("\n");
+  box.scrollTop = box.scrollHeight;
+}
+
+document.getElementById("clearLogs").onclick = async () => {
+  await fetch(API_CLEAR, { method: "POST" });
+  loadLogs();
+};

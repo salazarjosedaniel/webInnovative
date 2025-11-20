@@ -1,82 +1,147 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BCV Display – Panel de Control</title>
+  <meta charset="UTF-8">
+  <title>BCV Display - Panel de Administración</title>
+  <link rel="stylesheet" href="/panel/style.css">
 
-  <!-- TailwindCSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f7;
+      margin: 0;
+      padding: 0;
+    }
 
-  <!-- Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    header {
+      background: #1b396a;
+      padding: 20px;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #tabs {
+      display: flex;
+      background: #ddd;
+      border-bottom: 2px solid #999;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      background: #ccc;
+      border-right: 1px solid #bbb;
+    }
+
+    .tab.active {
+      background: white;
+      border-bottom: 3px solid #1b396a;
+      font-weight: bold;
+    }
+
+    .content {
+      display: none;
+      padding: 20px;
+    }
+
+    .content.active {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #1b396a;
+      color: white;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #1b396a;
+      color: white;
+    }
+
+    button.delete {
+      background: #b02a37;
+    }
+
+    button.test {
+      background: #198754;
+    }
+
+    #logsBox {
+      background: black;
+      color: #00ff1e;
+      padding: 15px;
+      height: 400px;
+      overflow-y: scroll;
+      font-family: monospace;
+      border-radius: 8px;
+    }
+
+  </style>
 </head>
 
-<body class="bg-gray-100">
+<body>
 
-  <!-- SIDEBAR -->
-  <div class="flex">
+<header>🔧 Panel Administrativo - BCV Display</header>
 
-    <aside class="w-64 h-screen bg-gray-900 text-white p-5">
-      <h2 class="text-2xl font-bold mb-8">BCV Display</h2>
+<div id="tabs">
+  <div class="tab active" data-tab="devices">📟 Dispositivos</div>
+  <div class="tab" data-tab="logs">📜 Logs</div>
+</div>
 
-      <nav class="space-y-3">
-        <a class="block p-3 rounded bg-gray-700 hover:bg-gray-600 cursor-pointer">
-          <i class="bi bi-speedometer2 mr-2"></i> Panel de Control
-        </a>
-        <a class="block p-3 rounded hover:bg-gray-700 cursor-pointer">
-          <i class="bi bi-cpu mr-2"></i> Dispositivos
-        </a>
-        <a class="block p-3 rounded hover:bg-gray-700 cursor-pointer">
-          <i class="bi bi-bar-chart mr-2"></i> Logs
-        </a>
-      </nav>
-    </aside>
+<!-- TAB: DISPOSITIVOS -->
+<div id="devices" class="content active">
+  <h2>Dispositivos Registrados</h2>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 p-10">
+  <button id="reload">🔄 Cargar dispositivos</button>
+  <button id="newDevice">➕ Nuevo dispositivo</button>
 
-      <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold">Panel de Control</h1>
+  <table id="devicesTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Versión</th>
+        <th>URL Firmware</th>
+        <th>Pagado</th>
+        <th>Force</th>
+        <th>Notas</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
-        <div class="flex gap-3">
-          <button id="reload" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-            <i class="bi bi-arrow-repeat mr-2"></i> Recargar
-          </button>
+<!-- TAB: LOGS -->
+<div id="logs" class="content">
+  <h2>Logs del Sistema</h2>
+  <p>Logs generados por dispositivos y backend.</p>
 
-          <button id="newDevice" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
-            <i class="bi bi-plus-lg mr-2"></i> Nuevo dispositivo
-          </button>
-        </div>
-      </div>
+  <button id="clearLogs">🧽 Limpiar logs</button>
 
-      <!-- TABLE -->
-      <div class="bg-white shadow-lg rounded-xl p-6">
-
-        <table class="w-full text-left" id="devicesTable">
-          <thead>
-            <tr class="border-b">
-              <th class="pb-3">Device ID</th>
-              <th>Versión</th>
-              <th>URL Firmware</th>
-              <th>Pagado</th>
-              <th>Force</th>
-              <th>Notas</th>
-              <th class="text-center">Acciones</th>
-            </tr>
-          </thead>
-
-          <tbody class="divide-y" id="tbody">
-            <!-- Se llena dinámicamente -->
-          </tbody>
-        </table>
-
-      </div>
-
-    </main>
+  <div id="logsBox">
+    Cargando logs...
   </div>
+</div>
 
-  <script src="/panel/apps.js"></script>
+<script src="/panel/app.js"></script>
 
 </body>
 </html>
