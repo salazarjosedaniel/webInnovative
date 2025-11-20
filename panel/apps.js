@@ -139,6 +139,5 @@ async function loadLogs() {
 }
 
 document.getElementById("clearLogs").onclick = async () => {
-  await fetch(API_CLEAR, { method: "POST" });
   loadLogs();
 };
