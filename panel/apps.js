@@ -1,38 +1,31 @@
-// =======================
-//  ENDPOINTS DEL BACKEND
-// =======================
-const API_DEVICES = "/api/fw/db";
+// Rutas API
+const API_DB     = "/api/fw/db";
 const API_SAVE   = "/api/fw/save";
 const API_DELETE = "/api/fw/delete";
 const API_TEST   = "/api/fw/test";
 const API_LOGS   = "/api/device/logs";
 
+// ---------------------
+//   CAMBIAR SECCIONES
+// ---------------------
+document.querySelectorAll(".tab-button").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
 
-// =======================
-//        TABS
-// =======================
-document.querySelectorAll(".tab").forEach(t => {
-  t.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
-    document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
 
-    t.classList.add("active");
-    document.getElementById(t.dataset.tab).classList.add("active");
-
-    if (t.dataset.tab === "logs") loadLogs();
-  });
+    if (btn.dataset.tab === "logs") loadLogs();
+  };
 });
 
-
-// =======================
-//      CARGAR DISPOSITIVOS
-// =======================
-document.getElementById("reload").onclick = loadDevices;
-
+// ---------------------
+//   CARGAR DEVICES
+// ---------------------
 async function loadDevices() {
-  const res = await fetch(API_DEVICES);
+  const res = await fetch(API_DB);
   const data = await res.json();
-
   const tbody = document.querySelector("#devicesTable tbody");
   tbody.innerHTML = "";
 
@@ -42,16 +35,16 @@ async function loadDevices() {
     const row = `
       <tr>
         <td>${id}</td>
-        <td><input value="${fw.version}" id="v_${id}"></td>
-        <td><input value="${fw.url}" id="u_${id}"></td>
-        <td><input type="checkbox" id="p_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
-        <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
-        <td><input value="${fw.notes}" id="n_${id}"></td>
+        <td><input id="v_${id}" value="${fw.version}"></td>
+        <td><input id="u_${id}" value="${fw.url}"></td>
+        <td><input type="checkbox" id="p_${id}" ${fw.paid === "true" ? "checked":""}></td>
+        <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
+        <td><input id="n_${id}" value="${fw.notes}"></td>
 
         <td>
           <button onclick="save('${id}')">💾</button>
-          <button class="delete" onclick="removeDevice('${id}')">🗑️</button>
-          <button class="test" onclick="testDevice('${id}')">🧪</button>
+          <button onclick="removeDevice('${id}')">🗑️</button>
+          <button onclick="test('${id}')">🧪</button>
         </td>
       </tr>
     `;
@@ -59,85 +52,73 @@ async function loadDevices() {
   });
 }
 
+document.getElementById("reload").onclick = loadDevices;
 
-// =======================
-//        GUARDAR
-// =======================
+// ---------------------
+//   GUARDAR DEVICE
+// ---------------------
 async function save(id) {
-  const payload = {
+  const body = {
     id,
-    version: document.getElementById("v_" + id).value,
-    url:     document.getElementById("u_" + id).value,
-    paid:    document.getElementById("p_" + id).checked,
-    force:   document.getElementById("f_" + id).checked,
-    notes:   document.getElementById("n_" + id).value
+    version: document.getElementById("v_"+id).value,
+    url:     document.getElementById("u_"+id).value,
+    paid:    document.getElementById("p_"+id).checked,
+    force:   document.getElementById("f_"+id).checked,
+    notes:   document.getElementById("n_"+id).value
   };
 
   await fetch(API_SAVE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(body)
   });
 
-  alert("Guardado correctamente");
-  loadDevices();
+  alert("Guardado");
 }
 
-
-// =======================
-//        ELIMINAR
-// =======================
+// ---------------------
+//   ELIMINAR DEVICE
+// ---------------------
 async function removeDevice(id) {
-  if (!confirm(`¿Eliminar dispositivo ${id}?`)) return;
+  if (!confirm("¿Eliminar "+id+"?")) return;
 
   await fetch(API_DELETE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id })
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({id})
   });
 
   loadDevices();
 }
 
-
-// =======================
-//         TEST
-// =======================
-async function testDevice(id) {
-  const res = await fetch(`${API_TEST}?id=${encodeURIComponent(id)}`);
-  const data = await res.json();
-
-  alert(`Test Firmware\n\nVersión: ${data.version}\nURL: ${data.url}`);
+// ---------------------
+//   TEST
+// ---------------------
+async function test(id) {
+  const res = await fetch(`${API_TEST}?id=${id}`);
+  const d = await res.json();
+  alert(JSON.stringify(d,null,2));
 }
 
-
-// =======================
-//        NUEVO DEVICE
-// =======================
+// ---------------------
+//   NUEVO DEVICE
+// ---------------------
 document.getElementById("newDevice").onclick = async () => {
-  const id = prompt("Ingrese nuevo Device ID:");
+  const id = prompt("ID del nuevo dispositivo:");
   if (!id) return;
 
-  await fetch(`${API_DEVICES}?device=${encodeURIComponent(id)}`, {
-    method: "POST"
-  });
-
+  await fetch(`/api/fw/db?device=${encodeURIComponent(id)}`, { method:"POST" });
   loadDevices();
 };
 
-
-// =======================
-//         LOGS
-// =======================
+// ---------------------
+//   LOGS
+// ---------------------
 async function loadLogs() {
   const res = await fetch(API_LOGS);
-  const logs = await res.json();
-
-  const box = document.getElementById("logsBox");
-  box.innerHTML = logs.join("\n");
-  box.scrollTop = box.scrollHeight;
+  const logs = await res.text();
+  document.getElementById("logsOutput").textContent = logs;
 }
 
-document.getElementById("clearLogs").onclick = async () => {
-  loadLogs();
-};
+// Cargar al inicio
+loadDevices();
