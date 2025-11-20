@@ -1,17 +1,18 @@
 .badge {
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
+  font-size: 0.8rem;
   color: white;
-  font-size: 12px;
 }
 
-.online {
-  background: #28a745;
+.badge.online {
+  background-color: #28a745;
 }
 
-.offline {
-  background: #dc3545;
+.badge.offline {
+  background-color: #dc3545;
 }
+
 
 /* ───────────────────────────────────────────────
    GLOBAL
