@@ -1,35 +1,12 @@
-import * as cheerio from "cheerio";
+import { getBCV_USD, getBCV_EUR } from "../../lib/bcv";
 
 export default async function handler(req, res) {
-  try {
-    const html = await fetch("https://www.bcv.org.ve/tasas-cambio").then(r => r.text());
+  const usd = await getBCV_USD();
+  const eur = await getBCV_EUR();
 
-    const $ = cheerio.load(html);
-
-    // USD 👉 busca el elemento oficial
-    const usd = $("div.views-field.views-field-field-tasa-del-dolar .field-content")
-      .first()
-      .text()
-      .trim()
-      .replace(",", ".");
-
-    // EUR 👉 BCV lo publica en otra sección
-    const eur = $("div.views-field.views-field-field-tasa-del-euro .field-content")
-      .first()
-      .text()
-      .trim()
-      .replace(",", ".");
-
-    const fecha = new Date().toISOString();
-
-    return res.status(200).json({
-      usd,
-      eur,
-      fecha
-    });
-
-  } catch (err) {
-    console.error("SCRAPER BCV ERROR:", err);
-    return res.status(500).json({ error: "Scraper error" });
-  }
+  res.status(200).json({
+    usd,
+    eur,
+    fecha: new Date().toISOString()
+  });
 }
