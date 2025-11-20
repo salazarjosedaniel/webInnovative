@@ -48,14 +48,13 @@ async function loadDevices() {
         <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
         <td><input id="n_${id}" value="${fw.notes}"></td>
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
-
         <td>
           <button class="btn primary" onclick="save('${id}')">Guardar</button>
           <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
           <button class="btn light" onclick="test('${id}')">Probar</button>
-        </td>
+        </td> 
+        <td>${lastSeenText}</td>
+        <td>${statusBadge}</td>
       </tr>
     `;
     tbody.innerHTML += row;
@@ -106,13 +105,13 @@ function renderTable(data) {
         <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
         <td><input value="${fw.notes || ""}" id="n_${id}"></td>
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
         <td>
           <button onclick="save('${id}')">💾</button>
           <button onclick="removeDevice('${id}')">🗑</button>
           <button onclick="test('${id}')">🧪</button>
         </td>
+        <td>${lastSeenText}</td>
+        <td>${statusBadge}</td>
       </tr>
     `;
     tbody.innerHTML += row;
