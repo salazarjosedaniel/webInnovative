@@ -5,8 +5,7 @@ const API_DEVICES = "/api/fw/db";
 const API_SAVE   = "/api/fw/save";
 const API_DELETE = "/api/fw/delete";
 const API_TEST   = "/api/fw/test";
-const API_LOGS   = "/api/logs";
-const API_CLEAR  = "/api/logs";
+const API_LOGS   = "/api/device/logs";
 
 
 // =======================
