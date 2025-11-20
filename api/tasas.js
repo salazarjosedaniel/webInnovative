@@ -1,3 +1,5 @@
+import { getRedisClient } from "../../lib/redis";
+
 export default async function handler(req, res) {
   try {
     const r = await fetch("https://api.dolarvzla.com/public/exchange-rate");
