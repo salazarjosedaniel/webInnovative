@@ -99,7 +99,7 @@ function renderTable(data) {
 
     const lastSeenText = fw.lastseen
         ? new Date(fw.lastseen).toLocaleString() : "—";
-    const statusBadge = isOnline(fw.lastSeen)
+    const statusBadge = isOnline(fw.lastseen)
         ? `<span class="badge online">🟢 Online</span>`
         : `<span class="badge offline">🔴 Offline</span>`;
 
