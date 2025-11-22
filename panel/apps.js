@@ -36,7 +36,7 @@ async function loadDevices() {
         const lastSeenText = fw.lastSeen
         ? new Date(fw.lastSeen).toLocaleString() : "—";
 
-    const statusBadge = fw.online
+    const statusBadge = isOnline(fw.lastSeen)
         ? `<span class="badge online">🟢 Online</span>`
         : `<span class="badge offline">🔴 Offline</span>`;
 
@@ -97,9 +97,9 @@ function renderTable(data) {
   Object.keys(data).forEach(id => {
     const fw = data[id];
 
-    const lastSeenText = fw.lastseen
-        ? new Date(fw.lastseen).toLocaleString() : "—";
-    const statusBadge = isOnline(fw.lastseen)
+    const lastSeenText = fw.lastSeen
+        ? new Date(fw.lastSeen).toLocaleString() : "—";
+    const statusBadge = isOnline(fw.lastSeen)
         ? `<span class="badge online">🟢 Online</span>`
         : `<span class="badge offline">🔴 Offline</span>`;
 
