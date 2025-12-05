@@ -21,6 +21,12 @@ export default async function handler(req, res) {
         url: "",
         force: false,
         notes: "",
+        name: "",
+        slogan: "",
+        instagram: "",
+        tlf: "",
+        banco:"",
+        rif: "",
         paid: false
       };
     }
