@@ -18,6 +18,12 @@ export default async function handler(req, res) {
       url: "https://web-innovative.vercel.app/fw/firmware-" + firmware + '.bin',
       force: "false",
       notes: "Creado automaticamente",
+      name:"",
+      slogan: "",
+      instagram: "",
+      tlf: "",
+      banco:"",
+      rif:""
     });
 
     // Guardar estado reciente
