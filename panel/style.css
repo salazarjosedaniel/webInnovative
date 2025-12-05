@@ -41,9 +41,9 @@ body {
    CONTAINER
 ────────────────────────────────────────────────── */
 .container {
-  max-width: 1400px;
-  margin: 30px auto;
-  padding: 10px;
+  max-width: 1800px;
+  margin: 10px auto;
+  padding: 5px;
 }
 
 /* ───────────────────────────────────────────────
