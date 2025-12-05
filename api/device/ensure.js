@@ -11,19 +11,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "deviceId es obligatorio" });
 
     const redis = await getRedisClient();
-
     // Crear si no existe
     await redis.hSet(`fw:${deviceId}`, {
       version: firmware || "unknown",
       url: "https://web-innovative.vercel.app/fw/firmware-" + firmware + '.bin',
       force: "false",
       notes: "Creado automaticamente",
-      name: "Name",
-      slogan: "Slogan",
-      instagram: "Instagram",
-      tlf: "Tlf",
-      banco: "Banco",
-      rif: "Rif"
+      name: "",
+      slogan: "",
+      instagram: "",
+      tlf: "",
+      banco: "",
+      rif: ""
     });
 
     // Guardar estado reciente
