@@ -48,6 +48,12 @@ async function loadDevices() {
         <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
         <td><input id="n_${id}" value="${fw.notes}"></td>
+        <td><input value="${fw.name  || ""}" id="e_${id}"></td>
+        <td><input value="${fw.slogan || ""}" id="s_${id}"></td>
+        <td><input value="${fw.instagram || ""}" id="i_${id}"></td>
+        <td><input value="${fw.tlf       || ""}" id="t_${id}"></td>
+        <td><input value="${fw.baco || ""}" id="b_${id}"></td>
+        <td><input value="${fw.rif || ""}" id="r_${id}"></td>
         <td>
           <button class="btn primary" onclick="save('${id}')">Guardar</button>
           <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
@@ -111,6 +117,12 @@ function renderTable(data) {
         <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
         <td><input value="${fw.notes || ""}" id="n_${id}"></td>
+        <td><input value="${fw.name  || ""}" id="e_${id}"></td>
+        <td><input value="${fw.slogan || ""}" id="s_${id}"></td>
+        <td><input value="${fw.instagram || ""}" id="i_${id}"></td>
+        <td><input value="${fw.tlf       || ""}" id="t_${id}"></td>
+        <td><input value="${fw.baco || ""}" id="b_${id}"></td>
+        <td><input value="${fw.rif || ""}" id="r_${id}"></td>
         <td>
           <button onclick="save('${id}')">💾</button>
           <button onclick="removeDevice('${id}')">🗑</button>
@@ -134,7 +146,13 @@ async function save(id) {
     url:     document.getElementById("u_"+id).value,
     paid:    document.getElementById("pg_"+id).checked,
     force:   document.getElementById("f_"+id).checked,
-    notes:   document.getElementById("n_"+id).value
+    notes:   document.getElementById("n_"+id).value,
+    name:   document.getElementById("e_"+id).value,
+    slogan:   document.getElementById("s_"+id).value,
+    instagram:   document.getElementById("i_"+id).value,
+    telf:   document.getElementById("t_"+id).value,
+    banco:   document.getElementById("b_"+id).value,
+    rif:   document.getElementById("r_"+id).value
   };
 
   const paidGlobal = document.getElementById(`pg_${id}`).checked;
