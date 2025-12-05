@@ -35,7 +35,13 @@ export default async function handler(req, res) {
         version: "1.0.0",
         url: "",
         force: "false",
-        notes: ""
+        notes: "",
+        name: "",
+        slogan: "",
+        instagram: "",
+        tlf: "",
+        banco: "",
+        rif: ""
       });
 
       // crear paid:false por defecto
@@ -53,7 +59,13 @@ export default async function handler(req, res) {
         version: body.version,
         url: body.url,
         force: body.force,
-        notes: body.notes
+        notes: body.notes,
+        name: body.name,
+        slogan: body.slogan,
+        instagram: body.instagram,
+        tlf: body.tlf,
+        banco: body.banco,
+        rif: body.rif
       });
 
       // paid debe ir *fuera* del fw
