@@ -48,12 +48,12 @@ async function loadDevices() {
         <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
         <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
         <td><input id="n_${id}" value="${fw.notes}"></td>
-        <td><input value="${fw.name  || ""}" id="e_${id}"></td>
-        <td><input value="${fw.slogan || ""}" id="s_${id}"></td>
-        <td><input value="${fw.instagram || ""}" id="i_${id}"></td>
-        <td><input value="${fw.tlf       || ""}" id="t_${id}"></td>
-        <td><input value="${fw.baco || ""}" id="b_${id}"></td>
-        <td><input value="${fw.rif || ""}" id="r_${id}"></td>
+        <td><input id="e_${id}" value="${fw.name  || ""}"></td>
+        <td><input id="s_${id}" value="${fw.slogan || ""}"></td>
+        <td><input id="i_${id}" value="${fw.instagram || ""}"></td>
+        <td><input id="t_${id}" value="${fw.tlf       || ""}"></td>
+        <td><input id="b_${id}" value="${fw.banco || ""}"></td>
+        <td><input id="r_${id}" value="${fw.rif || ""}"></td>
         <td>
           <button class="btn primary" onclick="save('${id}')">Guardar</button>
           <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
@@ -121,7 +121,7 @@ function renderTable(data) {
         <td><input value="${fw.slogan || ""}" id="s_${id}"></td>
         <td><input value="${fw.instagram || ""}" id="i_${id}"></td>
         <td><input value="${fw.tlf       || ""}" id="t_${id}"></td>
-        <td><input value="${fw.baco || ""}" id="b_${id}"></td>
+        <td><input value="${fw.banco || ""}" id="b_${id}"></td>
         <td><input value="${fw.rif || ""}" id="r_${id}"></td>
         <td>
           <button onclick="save('${id}')">💾</button>
