@@ -35,8 +35,10 @@ body {
   font-size: 22px;
   font-weight: 600;
   box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  width: 2800px;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 
 /* ───────────────────────────────────────────────
    CONTAINER
@@ -95,8 +97,10 @@ body {
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   margin-bottom: 30px;
-  width: 2800px;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 
 .card h2 {
   margin-top: 0;
@@ -154,5 +158,6 @@ table input[type="checkbox"] {
   background: #1f3c88;
   color: white;
   margin-top: 40px;
-  width: 2800px;
+  width: 100%;
+  box-sizing: border-box;
 }
