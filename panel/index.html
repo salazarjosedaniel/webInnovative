@@ -9,92 +9,45 @@
 
 <body>
 
-  <!-- TOP BAR -->
   <header class="topbar">
-    <h1>BCV Display — Panel Administrativo</h1>
+    <h1>📊 BCV Display — Panel Administrativo</h1>
   </header>
 
   <main class="container">
 
-    <!-- CONTROLES -->
     <section class="controls">
       <button id="reload" class="btn primary">🔄 Recargar dispositivos</button>
       <button id="newDevice" class="btn success">➕ Nuevo dispositivo</button>
       <input id="searchBox" type="text" placeholder="🔍 Buscar DeviceID..." />
     </section>
 
-    <!-- TARJETAS -->
     <section class="card">
       <h2>📟 Dispositivos registrados</h2>
 
-      <!-- GRID DONDE SE RENDERIZAN LAS TARJETAS -->
-      <div id="devicesContainer" class="device-grid"></div>
+      <table id="devicesTable" class="styled-table">
+        <thead>
+          <tr>
+            <th>Device ID</th>
+            <th>Versión</th>
+            <th>URL Firmware</th>
+            <th>Pagado</th>
+            <th>Force</th>
+            <th>Notas</th>
+            <th>Name</th>
+            <th>Slogan</th>
+            <th>Instagram</th>
+            <th>Tlf</th>
+            <th>Banco</th>
+            <th>Rif</th>
+            <th>Última conexión</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
   </main>
-
-  <!-- MODAL PREMIUM -->
-  <div id="deviceModal" class="modal-overlay">
-    <div class="modal-container">
-
-      <div class="modal-header">
-        <h3 id="modalTitle">Editar dispositivo</h3>
-        <span class="modal-close" onclick="closeModal()">×</span>
-      </div>
-
-      <div class="modal-body">
-
-        <label>Device ID</label>
-        <input type="text" id="m_deviceId" class="modal-input" disabled />
-
-        <label>Versión</label>
-        <input type="text" id="m_version" class="modal-input" />
-
-        <label>URL Firmware</label>
-        <input type="text" id="m_firmwareUrl" class="modal-input" />
-
-        <label>Pagado</label>
-        <select id="m_paid" class="modal-input">
-          <option value="true">Sí</option>
-          <option value="false">No</option>
-        </select>
-
-        <label>Force</label>
-        <select id="m_force" class="modal-input">
-          <option value="true">Sí</option>
-          <option value="false">No</option>
-        </select>
-
-        <label>Notas</label>
-        <input type="text" id="m_notes" class="modal-input" />
-
-        <label>Name</label>
-        <input type="text" id="m_name" class="modal-input" />
-
-        <label>Slogan</label>
-        <input type="text" id="m_slogan" class="modal-input" />
-
-        <label>Instagram</label>
-        <input type="text" id="m_instagram" class="modal-input" />
-
-        <label>Teléfono</label>
-        <input type="text" id="m_tlf" class="modal-input" />
-
-        <label>Banco</label>
-        <input type="text" id="m_banco" class="modal-input" />
-
-        <label>RIF</label>
-        <input type="text" id="m_rif" class="modal-input" />
-
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn primary" onclick="saveDevice()">Guardar</button>
-        <button class="btn light" onclick="closeModal()">Cerrar</button>
-      </div>
-
-    </div>
-  </div>
 
   <footer class="footer">
     © 2025 BCV Display — Dashboard de administración
