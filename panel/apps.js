@@ -31,13 +31,13 @@ async function loadDevices() {
   const data = await res.json();
   cachedDevices = data;
 
-  renderTable(data);
+  renderCards(data);
 }
 
 // ======================================================
 //   NUEVO RENDER PREMIUM CON CARDS
 // ======================================================
-function renderTable(data) {
+function renderCards(data) {
   const container = document.getElementById("devicesContainer");
   container.innerHTML = "";
 
@@ -106,7 +106,7 @@ async function toggleForceCard(id) {
   });
 
   cachedDevices[id].force = newForce.toString();
-  renderTable(cachedDevices);
+  renderCards(cachedDevices);
 }
 
 async function togglePaidCard(id) {
@@ -119,7 +119,7 @@ async function togglePaidCard(id) {
   });
 
   cachedDevices[id].paid = newPaid.toString();
-  renderTable(cachedDevices);
+  renderCards(cachedDevices);
 }
 
 // ======================================================
@@ -131,7 +131,7 @@ function filterDevices() {
   const query = document.getElementById("searchBox").value.toLowerCase();
 
   if (query.trim() === "") {
-    return renderTable(cachedDevices);
+    return renderCards(cachedDevices);
   }
 
   const filtered = {};
@@ -142,7 +142,7 @@ function filterDevices() {
     }
   });
 
-  renderTable(filtered);
+  renderCards(filtered);
 }
 
 function isOnline(lastSeen) {
