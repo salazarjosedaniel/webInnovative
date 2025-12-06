@@ -86,64 +86,65 @@ body {
   background: #d5d5d5;
 }
 
-/* ───────────────────────────────────────────────
-   CARD
-────────────────────────────────────────────────── */
+/* CONTENEDOR GENERAL */
 .card {
-  background: white;
-  padding: 25px;
+  background: #fff;
+  padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  margin-bottom: 30px;
-  width: 2800px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  overflow: hidden;
 }
 
-.card h2 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #1f3c88;
+/* CONTENEDOR DE TABLA — IMPORTANTE */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* ───────────────────────────────────────────────
-   TABLE
-────────────────────────────────────────────────── */
+/* TABLA */
 .styled-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  table-layout: auto; /* La tabla se ajusta al contenido */
+  font-size: 14px;
 }
 
-.styled-table thead tr {
+.styled-table thead {
   background: #1f3c88;
-  color: #fff;
-  text-align: left;
+  color: white;
 }
 
 .styled-table th,
 .styled-table td {
-  padding: 12px 15px;
+  padding: 6px 8px; /* MÁS COMPACTO */
+  white-space: nowrap; /* Evita que el texto se rompa */
+  border-bottom: 1px solid #ddd;
 }
 
-.styled-table tbody tr {
-  border-bottom: 1px solid #dddddd;
-}
-
-.styled-table tbody tr:nth-of-type(even) {
-  background: #f3f4f6;
+.styled-table tbody tr:nth-child(even) {
+  background: #f5f7fa;
 }
 
 .styled-table tbody tr:hover {
-  background: #dbe2f7;
+  background: #e6edff;
 }
 
 /* Inputs dentro de la tabla */
-table input[type="text"],
-table input[type="url"],
-table input[type="checkbox"] {
-  padding: 6px;
-  border-radius: 4px;
+.styled-table input[type="text"],
+.styled-table input[type="url"] {
+  width: 140px;         /* MÁS COMPACTO */
+  padding: 3px 6px;
+  font-size: 13px;
   border: 1px solid #ccc;
+  border-radius: 4px;
 }
+
+.styled-table input[type="checkbox"] {
+  transform: scale(1.1);
+}
+
 
 /* ───────────────────────────────────────────────
    FOOTER
