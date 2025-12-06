@@ -150,7 +150,7 @@ async function save(id) {
     name:   document.getElementById("e_"+id).value,
     slogan:   document.getElementById("s_"+id).value,
     instagram:   document.getElementById("i_"+id).value,
-    telf:   document.getElementById("t_"+id).value,
+    tlf:   document.getElementById("t_"+id).value,
     banco:   document.getElementById("b_"+id).value,
     rif:   document.getElementById("r_"+id).value
   };

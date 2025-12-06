@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { id, version, url, paid, force, notes, name, slogan, instagram } = req.body || {};
+    const { id, version, url, paid, force, notes, name, slogan, instagram, banco, tlf, rif } = req.body || {};
 
     if (!id) {
       return res.status(400).json({ error: "El campo 'id' es obligatorio" });
@@ -25,7 +25,10 @@ export default async function handler(req, res) {
       notes: notes ?? "",
       name: name ?? "",
       slogan: slogan ?? "",
-      instagram: instagram ?? ""
+      instagram: instagram ?? "",
+      banco: banco ?? "",
+      tlf: tlf ?? "",
+      rif: rif ?? ""
     });
 
     return res.status(200).json({ ok: true });
