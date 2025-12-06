@@ -37,9 +37,15 @@ async function loadDevices() {
 // ======================================================
 //   NUEVO RENDER PREMIUM CON CARDS
 // ======================================================
+
 function renderCards(data) {
   const container = document.getElementById("devicesContainer");
   container.innerHTML = "";
+
+  if (!data || Object.keys(data).length === 0) {
+    container.innerHTML = "<p>No hay dispositivos registrados.</p>";
+    return;
+  }
 
   Object.keys(data).forEach(id => {
     const fw = data[id];
@@ -48,24 +54,17 @@ function renderCards(data) {
       ? new Date(fw.lastSeen).toLocaleString()
       : "—";
 
-    const online = isOnline(fw.lastSeen);
+    const isOnline = fw.lastSeen && (Date.now() - new Date(fw.lastSeen).getTime() < 180000);
 
-    const statusBadge = online
-      ? `<span class="badge online">🟢 Online</span>`
-      : `<span class="badge offline">🔴 Offline</span>`;
-
-    // ================================
-    //   CARD HTML
-    // ================================
     const card = document.createElement("div");
     card.className = "device-card";
 
     card.innerHTML = `
       <div class="device-title">${id}</div>
 
-      <div class="device-field"><span class="device-label">Versión:</span> ${fw.version}</div>
-      <div class="device-field"><span class="device-label">Firmware:</span> ${fw.url}</div>
-      <div class="device-field"><span class="device-label">Notas:</span> ${fw.notes || ""}</div>
+      <div class="device-field"><span class="device-label">Versión:</span> ${fw.version || "-"}</div>
+      <div class="device-field"><span class="device-label">Firmware:</span> ${fw.url || "-"}</div>
+      <div class="device-field"><span class="device-label">Notas:</span> ${fw.notes || "-"}</div>
       <div class="device-field"><span class="device-label">Última conexión:</span> ${lastSeenText}</div>
 
       <div class="device-badges">
@@ -77,11 +76,13 @@ function renderCards(data) {
           Force: ${fw.force === "true" ? "Sí" : "No"}
         </span>
 
-        ${statusBadge}
+        <span class="badge ${isOnline ? "online" : "offline"}">
+          ${isOnline ? "Online" : "Offline"}
+        </span>
       </div>
 
       <div class="device-actions">
-        <button class="btn primary" onclick='openModal(${JSON.stringify({id, ...fw})})'>Editar</button>
+        <button class="btn primary" onclick='openModal(${JSON.stringify({ id, ...fw })})'>Editar</button>
         <button class="btn primary" onclick="toggleForceCard('${id}')">Force</button>
         <button class="btn success" onclick="togglePaidCard('${id}')">Pagado</button>
         <button class="btn light" onclick="test('${id}')">Probar</button>
@@ -92,6 +93,7 @@ function renderCards(data) {
     container.appendChild(card);
   });
 }
+
 
 // ======================================================
 //   TOGGLE desde CARD (usa tu misma API SAVE / PAY)
