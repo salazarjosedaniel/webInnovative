@@ -21,55 +21,111 @@ document.querySelectorAll(".tab-button").forEach(btn => {
   };
 });
 
-// ---------------------
-//   CARGAR DEVICES
-// ---------------------
+// ======================================================
+//   CARGAR DEVICES — AHORA GENERA TARJETAS (no tabla)
+// ======================================================
+let cachedDevices = {};
+
 async function loadDevices() {
   const res = await fetch(API_DB);
   const data = await res.json();
-  const tbody = document.querySelector("#devicesTable tbody");
-  tbody.innerHTML = "";
+  cachedDevices = data;
+
+  renderTable(data);
+}
+
+// ======================================================
+//   NUEVO RENDER PREMIUM CON CARDS
+// ======================================================
+function renderTable(data) {
+  const container = document.getElementById("devicesContainer");
+  container.innerHTML = "";
 
   Object.keys(data).forEach(id => {
     const fw = data[id];
 
-        const lastSeenText = fw.lastSeen
-        ? new Date(fw.lastSeen).toLocaleString() : "—";
+    const lastSeenText = fw.lastSeen
+      ? new Date(fw.lastSeen).toLocaleString()
+      : "—";
 
-    const statusBadge = isOnline(fw.lastSeen)
-        ? `<span class="badge online">🟢 Online</span>`
-        : `<span class="badge offline">🔴 Offline</span>`;
+    const online = isOnline(fw.lastSeen);
 
-    const row = `
-      <tr>
-        <td>${id}</td>
-        <td><input id="v_${id}" value="${fw.version}"></td>
-        <td><input id="u_${id}" value="${fw.url}"></td>
-        <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
-        <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
-        <td><input id="n_${id}" value="${fw.notes}"></td>
-        <td><input id="e_${id}" value="${fw.name}"></td>
-        <td><input id="s_${id}" value="${fw.slogan}"></td>
-        <td><input id="i_${id}" value="${fw.instagram}"></td>
-        <td><input id="t_${id}" value="${fw.tlf}"></td>
-        <td><input id="b_${id}" value="${fw.banco}"></td>
-        <td><input id="r_${id}" value="${fw.rif}"></td>
-        <td>
-          <button class="btn primary" onclick="save('${id}')">Guardar</button>
-          <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
-          <button class="btn light" onclick="test('${id}')">Probar</button>
-        </td> 
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
-      </tr>
+    const statusBadge = online
+      ? `<span class="badge online">🟢 Online</span>`
+      : `<span class="badge offline">🔴 Offline</span>`;
+
+    // ================================
+    //   CARD HTML
+    // ================================
+    const card = document.createElement("div");
+    card.className = "device-card";
+
+    card.innerHTML = `
+      <div class="device-title">${id}</div>
+
+      <div class="device-field"><span class="device-label">Versión:</span> ${fw.version}</div>
+      <div class="device-field"><span class="device-label">Firmware:</span> ${fw.url}</div>
+      <div class="device-field"><span class="device-label">Notas:</span> ${fw.notes || ""}</div>
+      <div class="device-field"><span class="device-label">Última conexión:</span> ${lastSeenText}</div>
+
+      <div class="device-badges">
+        <span class="badge ${fw.paid === "true" ? "badge-paid" : "badge-unpaid"}">
+          Pagado: ${fw.paid === "true" ? "Sí" : "No"}
+        </span>
+
+        <span class="badge ${fw.force === "true" ? "badge-force" : "badge-unpaid"}">
+          Force: ${fw.force === "true" ? "Sí" : "No"}
+        </span>
+
+        ${statusBadge}
+      </div>
+
+      <div class="device-actions">
+        <button class="btn primary" onclick='openModal(${JSON.stringify({id, ...fw})})'>Editar</button>
+        <button class="btn primary" onclick="toggleForceCard('${id}')">Force</button>
+        <button class="btn success" onclick="togglePaidCard('${id}')">Pagado</button>
+        <button class="btn light" onclick="test('${id}')">Probar</button>
+        <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
+      </div>
     `;
-    tbody.innerHTML += row;
+
+    container.appendChild(card);
   });
 }
 
-document.getElementById("reload").onclick = loadDevices;
-document.getElementById("searchBox").oninput = filterDevices;
+// ======================================================
+//   TOGGLE desde CARD (usa tu misma API SAVE / PAY)
+// ======================================================
+async function toggleForceCard(id) {
+  const newForce = !(cachedDevices[id].force === "true");
 
+  await fetch(API_SAVE, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ id, force: newForce })
+  });
+
+  cachedDevices[id].force = newForce.toString();
+  renderTable(cachedDevices);
+}
+
+async function togglePaidCard(id) {
+  const newPaid = !(cachedDevices[id].paid === "true");
+
+  await fetch(API_PAY, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ id, paid: newPaid })
+  });
+
+  cachedDevices[id].paid = newPaid.toString();
+  renderTable(cachedDevices);
+}
+
+// ======================================================
+//   BÚSQUEDA FILTRADA
+// ======================================================
+document.getElementById("searchBox").oninput = filterDevices;
 
 function filterDevices() {
   const query = document.getElementById("searchBox").value.toLowerCase();
@@ -95,75 +151,33 @@ function isOnline(lastSeen) {
   return diff < 180000; // 3 minutos
 }
 
-
-function renderTable(data) {
-  const tbody = document.querySelector("#devicesTable tbody");
-  tbody.innerHTML = "";
-
-  Object.keys(data).forEach(id => {
-    const fw = data[id];
-
-    const lastSeenText = fw.lastSeen
-        ? new Date(fw.lastSeen).toLocaleString() : "—";
-    const statusBadge = isOnline(fw.lastSeen)
-        ? `<span class="badge online">🟢 Online</span>`
-        : `<span class="badge offline">🔴 Offline</span>`;
-
-    const row = `
-      <tr>
-        <td>${id}</td>
-        <td><input value="${fw.version}" id="v_${id}"></td>
-        <td><input value="${fw.url}" id="u_${id}"></td>
-        <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
-        <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
-        <td><input value="${fw.notes}" id="n_${id}"></td>
-        <td><input value="${fw.name}" id="e_${id}"></td>
-        <td><input value="${fw.slogan}" id="s_${id}"></td>
-        <td><input value="${fw.instagram}" id="i_${id}"></td>
-        <td><input value="${fw.tlf}" id="t_${id}"></td>
-        <td><input value="${fw.banco}" id="b_${id}"></td>
-        <td><input value="${fw.rif}" id="r_${id}"></td>
-        <td>
-          <button onclick="save('${id}')">💾</button>
-          <button onclick="removeDevice('${id}')">🗑</button>
-          <button onclick="test('${id}')">🧪</button>
-        </td>
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
-      </tr>
-    `;
-    tbody.innerHTML += row;
-  });
-}
-
-// ---------------------
-//   GUARDAR DEVICE
-// ---------------------
+// ======================================================
+//   GUARDAR (igual que estaba, sin cambios)
+// ======================================================
 async function save(id) {
   const body = {
     id,
-    version: document.getElementById("v_"+id).value,
-    url:     document.getElementById("u_"+id).value,
-    paid:    document.getElementById("pg_"+id).checked,
-    force:   document.getElementById("f_"+id).checked,
-    notes:   document.getElementById("n_"+id).value,
-    name:   document.getElementById("e_"+id).value,
-    slogan:   document.getElementById("s_"+id).value,
-    instagram:   document.getElementById("i_"+id).value,
-    tlf:   document.getElementById("t_"+id).value,
-    banco:   document.getElementById("b_"+id).value,
-    rif:   document.getElementById("r_"+id).value
+    version: document.getElementById("v_"+id)?.value,
+    url:     document.getElementById("u_"+id)?.value,
+    paid:    document.getElementById("pg_"+id)?.checked,
+    force:   document.getElementById("f_"+id)?.checked,
+    notes:   document.getElementById("n_"+id)?.value,
+    name:    document.getElementById("e_"+id)?.value,
+    slogan:  document.getElementById("s_"+id)?.value,
+    instagram: document.getElementById("i_"+id)?.value,
+    tlf: document.getElementById("t_"+id)?.value,
+    banco: document.getElementById("b_"+id)?.value,
+    rif: document.getElementById("r_"+id)?.value
   };
 
-  const paidGlobal = document.getElementById(`pg_${id}`).checked;
-  
+  const paidGlobal = document.getElementById(`pg_${id}`)?.checked;
+
   await fetch(API_SAVE, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify(body)
   });
 
-  // 2) Guardar pagado global
   await fetch(API_PAY, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -173,9 +187,9 @@ async function save(id) {
   alert("Guardado");
 }
 
-// ---------------------
-//   ELIMINAR DEVICE
-// ---------------------
+// ======================================================
+//   ELIMINAR
+// ======================================================
 async function removeDevice(id) {
   if (!confirm("¿Eliminar "+id+"?")) return;
 
@@ -188,18 +202,18 @@ async function removeDevice(id) {
   loadDevices();
 }
 
-// ---------------------
+// ======================================================
 //   TEST
-// ---------------------
+// ======================================================
 async function test(id) {
   const res = await fetch(`${API_TEST}?id=${id}`);
   const d = await res.json();
   alert(JSON.stringify(d,null,2));
 }
 
-// ---------------------
-//   NUEVO DEVICE
-// ---------------------
+// ======================================================
+//   NUEVO DEVICE (igual que estaba)
+// ======================================================
 document.getElementById("newDevice").onclick = async () => {
   const id = prompt("ID del nuevo dispositivo:");
   if (!id) return;
@@ -208,9 +222,9 @@ document.getElementById("newDevice").onclick = async () => {
   loadDevices();
 };
 
-// ---------------------
+// ======================================================
 //   LOGS
-// ---------------------
+// ======================================================
 async function loadLogs() {
   const res = await fetch(API_LOGS);
   const logs = await res.text();
