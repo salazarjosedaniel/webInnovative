@@ -76,3 +76,6 @@ body {
 .btn.primary:hover { background: #003d80; }
 
 .btn.suc
+{
+  width: 100%;
+}
