@@ -103,13 +103,11 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* TABLA */
+
 .styled-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: auto; /* La tabla se ajusta al contenido */
-  font-size: 14px;
+    table-layout: auto !important;
 }
+
 
 .styled-table thead {
   background: #1f3c88;
@@ -131,18 +129,51 @@ body {
   background: #e6edff;
 }
 
-/* Inputs dentro de la tabla */
-.styled-table input[type="text"],
-.styled-table input[type="url"] {
-  width: 140px;         /* MÁS COMPACTO */
-  padding: 3px 6px;
-  font-size: 13px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+/* Device ID */
+.styled-table td:nth-child(1),
+.styled-table th:nth-child(1) {
+    white-space: nowrap;
+    width: 120px;
+}
+
+/* Versión */
+.styled-table td:nth-child(2),
+.styled-table th:nth-child(2) {
+    width: 80px;
+}
+
+/* URL firmware (muy larga → permitimos scroll interno) */
+.styled-table td:nth-child(3),
+.styled-table th:nth-child(3) {
+    width: 250px;
+}
+
+/* Checkbox: Pagado y Force */
+.styled-table td:nth-child(4),
+.styled-table th:nth-child(4),
+.styled-table td:nth-child(5),
+.styled-table th:nth-child(5) {
+    width: 50px;
+    text-align: center;
+}
+
+/* Notas, Name, Slogan */
+.styled-table td:nth-child(6),
+.styled-table td:nth-child(7),
+.styled-table td:nth-child(8) {
+    width: 180px;
 }
 
 .styled-table input[type="checkbox"] {
   transform: scale(1.1);
+}
+
+
+.styled-table td input[type="text"] {
+    width: 100%;
+    min-width: 120px;
+    max-width: 250px;
+    overflow-x: auto;
 }
 
 
