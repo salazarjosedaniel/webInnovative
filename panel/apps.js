@@ -54,13 +54,13 @@ async function loadDevices() {
         <td><input id="t_${id}" value="${fw.tlf}"></td>
         <td><input id="b_${id}" value="${fw.banco}"></td>
         <td><input id="r_${id}" value="${fw.rif}"></td>
+        <td>${lastSeenText}</td>
+        <td>${statusBadge}</td>
         <td>
           <button class="btn primary" onclick="save('${id}')">Guardar</button>
           <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
           <button class="btn light" onclick="test('${id}')">Probar</button>
         </td> 
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
       </tr>
     `;
     tbody.innerHTML += row;
@@ -123,13 +123,13 @@ function renderTable(data) {
         <td><input value="${fw.tlf}" id="t_${id}"></td>
         <td><input value="${fw.banco}" id="b_${id}"></td>
         <td><input value="${fw.rif}" id="r_${id}"></td>
+        <td>${lastSeenText}</td>
+        <td>${statusBadge}</td>
         <td>
           <button onclick="save('${id}')">💾</button>
           <button onclick="removeDevice('${id}')">🗑</button>
           <button onclick="test('${id}')">🧪</button>
         </td>
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
       </tr>
     `;
     tbody.innerHTML += row;
