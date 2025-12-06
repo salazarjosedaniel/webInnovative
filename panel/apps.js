@@ -34,31 +34,52 @@ async function loadDevices() {
   renderTable(data);
 }
 
-function renderCards(data) {
+// ======================================================
+//   NUEVO RENDER PREMIUM CON CARDS
+// ======================================================
+function renderTable(data) {
   const container = document.getElementById("devicesContainer");
   container.innerHTML = "";
 
   Object.keys(data).forEach(id => {
     const fw = data[id];
 
+    const lastSeenText = fw.lastSeen
+      ? new Date(fw.lastSeen).toLocaleString()
+      : "—";
+
+    const online = isOnline(fw.lastSeen);
+
+    const statusBadge = online
+      ? `<span class="badge online">🟢 Online</span>`
+      : `<span class="badge offline">🔴 Offline</span>`;
+
+    // ================================
+    //   CARD HTML
+    // ================================
     const card = document.createElement("div");
     card.className = "device-card";
 
     card.innerHTML = `
       <div class="device-title">${id}</div>
+
       <div class="device-field"><span class="device-label">Versión:</span> ${fw.version}</div>
       <div class="device-field"><span class="device-label">Firmware:</span> ${fw.url}</div>
-      <div class="device-field"><span class="device-label">Última conexión:</span> 
-        ${fw.lastSeen ? new Date(fw.lastSeen).toLocaleString() : "—"}
-      </div>
+      <div class="device-field"><span class="device-label">Notas:</span> ${fw.notes || ""}</div>
+      <div class="device-field"><span class="device-label">Última conexión:</span> ${lastSeenText}</div>
+
       <div class="device-badges">
         <span class="badge ${fw.paid === "true" ? "badge-paid" : "badge-unpaid"}">
           Pagado: ${fw.paid === "true" ? "Sí" : "No"}
         </span>
+
         <span class="badge ${fw.force === "true" ? "badge-force" : "badge-unpaid"}">
           Force: ${fw.force === "true" ? "Sí" : "No"}
         </span>
+
+        ${statusBadge}
       </div>
+
       <div class="device-actions">
         <button class="btn primary" onclick='openModal(${JSON.stringify({id, ...fw})})'>Editar</button>
         <button class="btn primary" onclick="toggleForceCard('${id}')">Force</button>
@@ -71,7 +92,6 @@ function renderCards(data) {
     container.appendChild(card);
   });
 }
-
 
 // ======================================================
 //   TOGGLE desde CARD (usa tu misma API SAVE / PAY)
