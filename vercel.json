@@ -3,12 +3,16 @@
   "builds": [
     { "src": "api/**/*.js", "use": "@vercel/node" },
     { "src": "panel/**", "use": "@vercel/static" },
-    { "src": "**", "use": "@vercel/static" }
+    { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
+
     { "src": "/panel", "dest": "/panel/index.html" },
     { "src": "/panel/(.*)", "dest": "/panel/$1" },
-    { "src": "/(.*)", "dest": "/$1.js" }
+
+    { "src": "/fw/(.*)", "dest": "/public/fw/$1" },
+
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
