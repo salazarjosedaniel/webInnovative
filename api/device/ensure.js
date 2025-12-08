@@ -33,7 +33,7 @@ export default async function handler(req, res) {
             lastSeen: new Date().toISOString(),
             ip: ip || existing.ip || ""
         };
-
+       
         // guardar sin borrar datos anteriores
         await redis.hSet(`fw:${deviceId}`, updated);
 
