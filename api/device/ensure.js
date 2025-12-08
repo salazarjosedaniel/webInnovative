@@ -1,81 +1,52 @@
 import { getRedisClient } from "../../lib/redis";
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "1mb"
-    }
-  }
-};
-
-// Función para evitar undefined
-const safe = v => (v === undefined || v === null ? "" : v.toString());
-
 export default async function handler(req, res) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "Método no permitido" });
 
-  try {
-    console.log("📩 BODY RECIBIDO:", req.body);
+    try {
+        const { deviceId, firmware, ip } = req.body;
 
-    const { deviceId, firmware, ip } = req.body;
+        if (!deviceId) {
+            return res.status(400).json({ error: "deviceId es obligatorio" });
+        }
 
-    if (!deviceId) {
-      console.log("❌ deviceId faltante en request");
-      return res.status(400).json({ error: "deviceId es obligatorio" });
-    }
+        const redis = await getRedisClient();
 
-    const redis = await getRedisClient();
+        // leer registro existente (si existe)
+        const existing = await redis.hGetAll(`fw:${deviceId}`);
+        const isNew = Object.keys(existing).length === 0;
 
-    // --- Leer registro existente ---
-    const key = `fw:${deviceId}`;
-    const existing = await redis.hGetAll(key);
-    const isNew = Object.keys(existing).length === 0;
+        // crear objeto actualizado
+        const updated = {
+            version: firmware || existing.version || "unknown",
+            url: `https://web-innovative.vercel.app/fw/firmware-${firmware}.bin`,
+            force: existing.force || "false",
+            notes: existing.notes || (isNew ? "Creado automáticamente" : ""),
+            // estos campos SOLO se escriben si están vacíos antes
+            name: existing.name || "",
+            slogan: existing.slogan || "",
+            instagram: existing.instagram || "",
+            tlf: existing.tlf || "",
+            banco: existing.banco || "",
+            rif: existing.rif || "",
+            lastSeen: new Date().toISOString(),
+            ip: ip || existing.ip || ""
+        };
 
-    console.log("📌 EXISTING:", existing);
+        // guardar sin borrar datos anteriores
+        await redis.hset(`fw:${deviceId}`, updated);
 
-    const fwVersion = safe(firmware) || safe(existing.version) || "1.0.0";
+        // Registrar última conexión
+        await redis.set(`lastseen:${deviceId}`, Date.now().toString());
 
-    // --- IMPORTANTE: aseguramos valores planos ---
-    const updated = {
-      version: fwVersion,
-      url: `https://web-innovative.vercel.app/fw/firmware-${fwVersion}.bin`,
-      force: safe(existing.force) || "false",
-      notes: safe(existing.notes) || (isNew ? "Creado automáticamente" : ""),
-      name: safe(existing.name),
-      slogan: safe(existing.slogan),
-      instagram: safe(existing.instagram),
-      tlf: safe(existing.tlf),
-      banco: safe(existing.banco),
-      rif: safe(existing.rif),
-      lastSeen: safe(new Date().toISOString()),
-      ip: safe(ip) || safe(existing.ip)
-    };
+        // Registrar online (expira en 90 segundos)
+        await redis.set(`online:${deviceId}`, "1", { EX: 90 });
 
-    console.log("📝 UPDATED OBJ:", updated);
+        res.status(200).json({ ok: true });
 
-    // --- Upstash requiere key-value pairs (nunca objeto directo) ---
-    const kvArray = [];
-    for (const [k, v] of Object.entries(updated)) {
-      kvArray.push(k, safe(v));
-    }
-
-    console.log("🧱 KV ARRAY:", kvArray);
-
-    await redis.hset(key, kvArray);
-
-    // Última conexión + online
-    await redis.set(`lastseen:${deviceId}`, Date.now().toString());
-    await redis.set(`online:${deviceId}`, "1", { EX: 90 });
-
-    return res.status(200).json({
-      ok: true,
-      newDevice: isNew,
-      data: updated
-    });
-
-  } catch (err) {
-    console.error("🔥 ERROR EXACTO:", err);
-    return res.status(500).json({ error: "Error interno del servidor" });
-  }
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error interno" });
+      }
 }
