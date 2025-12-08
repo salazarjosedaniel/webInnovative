@@ -17,6 +17,12 @@ export default async function handler(req, res) {
     // Leer estado de pago
     const paid = await redis.get(`paid:${deviceId}`);
 
+    if (deviceId) {
+       await redis.hSet(`fw:${deviceId}`, {
+       lastSeen: new Date().toISOString()
+       });
+    }
+    
     res.status(200).json({
       deviceId,
       exists: Object.keys(fw).length > 0,
