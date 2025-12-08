@@ -35,7 +35,7 @@ export default async function handler(req, res) {
         };
 
         // guardar sin borrar datos anteriores
-        await redis.hset(`fw:${deviceId}`, updated);
+        await redis.hSet(`fw:${deviceId}`, updated);
 
         // Registrar última conexión
         await redis.set(`lastseen:${deviceId}`, Date.now().toString());
