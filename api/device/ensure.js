@@ -40,9 +40,7 @@ export default async function handler(req, res) {
       instagram: safe(existing.instagram),
       tlf: safe(existing.tlf),
       banco: safe(existing.banco),
-      rif: safe(existing.rif),
-      lastSeen: new Date().toISOString(),
-      ip: safe(ip) || safe(existing.ip)
+      rif: safe(existing.rif)
     };
 
     // hset require key-value list, not object
