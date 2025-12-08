@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
     // --- Leer registro existente ---
     const key = `fw:${deviceId}`;
-    const existing = await redis.hgetall(key);
+    const existing = await redis.hGetAll(key);
     const isNew = Object.keys(existing).length === 0;
 
     console.log("📌 EXISTING:", existing);
