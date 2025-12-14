@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>BCV Display • Panel Administrativo</title>
+  <link rel="stylesheet" href="/panel/style.css" />
+</head>
+
+<body>
+
+  <header class="topbar">
+    <h1>📊 IoT — Panel Administrativo</h1>
+  </header>
+
+  <main class="container">
+
+    <section class="controls">
+      <button id="reload" class="btn primary">🔄 Recargar dispositivos</button>
+      <button id="newDevice" class="btn success">➕ Nuevo dispositivo</button>
+      <input id="searchBox" type="text" placeholder="🔍 Buscar DeviceID..." />
+    </section>
+
+    <section class="card">
+      <h2>📟 Dispositivos registrados</h2>
+      <div class="table-wrapper">
+      <table id="devicesTable" class="styled-table">
+        <thead>
+          <tr>
+            <th>Device ID</th>
+            <th>Versión</th>
+            <th>URL Firmware</th>
+            <th>Pagado</th>
+            <th>Force</th>
+            <th>Notas</th>
+            <th>Name</th>
+            <th>Slogan</th>
+            <th>Instagram</th>
+            <th>Tlf</th>
+            <th>Banco</th>
+            <th>Rif</th>
+            <th>Última conexión</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    © 2025 BCV Display — Dashboard de administración
+  </footer>
+
+  <script src="/panel/apps.js"></script>
+</body>
+
+</html>
