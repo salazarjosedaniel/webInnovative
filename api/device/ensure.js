@@ -19,8 +19,8 @@ export default async function handler(req, res) {
 
         // crear objeto actualizado
         const updated = {
-            version: firmware || existing.version || "unknown",
-            url: `https://web-innovative.vercel.app/fw/firmware-${firmware}.bin`,
+            version: existing.version || firmware || "unknown",
+            url: existing.url || `https://web-innovative.vercel.app/fw/firmware-${firmware}.bin`,
             force: existing.force || "false",
             notes: existing.notes || (isNew ? "Creado automáticamente" : ""),
             // estos campos SOLO se escriben si están vacíos antes
