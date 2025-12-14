@@ -32,6 +32,8 @@ async function loadDevices() {
   const deviceID = localStorage.getItem("deviceID");
   Object.keys(data).forEach(id => {
     const fw = data[id];
+    console.log(fw.id);
+    console.log(deviceID);
         if(deviceID == fw.id){
           
               const lastSeenText = fw.lastSeen
