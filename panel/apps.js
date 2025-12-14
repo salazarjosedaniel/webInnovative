@@ -32,7 +32,7 @@ async function loadDevices() {
   const deviceID = localStorage.getItem("deviceID");
   Object.keys(data).forEach(id => {
     const fw = data[id];
-        if(deviceID == fw){
+        if(deviceID == fw.id){
           
               const lastSeenText = fw.lastSeen
               ? new Date(fw.lastSeen).toLocaleString() : "—";
@@ -104,7 +104,7 @@ function renderTable(data) {
   const deviceID = localStorage.getItem("deviceID");
   Object.keys(data).forEach(id => {
     const fw = data[id];
-    if(deviceID == fw){
+    if(deviceID == fw.id){
         const lastSeenText = fw.lastSeen
             ? new Date(fw.lastSeen).toLocaleString() : "—";
         const statusBadge = isOnline(fw.lastSeen)
