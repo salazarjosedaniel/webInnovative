@@ -64,6 +64,9 @@ async function login() {
   const data = await res.json();
 
   if (data.ok) {
+    // Guardar sesión simple
+    localStorage.setItem("deviceID", deviceID);
+    localStorage.setItem("user", user);
     window.location = "/panel/index.html";
   } else {
     document.getElementById("msg").innerText = "Credenciales incorrectas";

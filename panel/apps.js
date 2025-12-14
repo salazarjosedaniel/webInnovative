@@ -29,41 +29,43 @@ async function loadDevices() {
   const data = await res.json();
   const tbody = document.querySelector("#devicesTable tbody");
   tbody.innerHTML = "";
-
+  const deviceID = localStorage.getItem("deviceID");
   Object.keys(data).forEach(id => {
     const fw = data[id];
+        if(deviceID == fw){
+          
+              const lastSeenText = fw.lastSeen
+              ? new Date(fw.lastSeen).toLocaleString() : "—";
 
-        const lastSeenText = fw.lastSeen
-        ? new Date(fw.lastSeen).toLocaleString() : "—";
+          const statusBadge = isOnline(fw.lastSeen)
+              ? `<span class="badge online">🟢 Online</span>`
+              : `<span class="badge offline">🔴 Offline</span>`;
 
-    const statusBadge = isOnline(fw.lastSeen)
-        ? `<span class="badge online">🟢 Online</span>`
-        : `<span class="badge offline">🔴 Offline</span>`;
-
-    const row = `
-      <tr>
-        <td>${id}</td>
-        <td><input id="v_${id}" value="${fw.version}"></td>
-        <td><input id="u_${id}" value="${fw.url}"></td>
-        <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
-        <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
-        <td><input id="n_${id}" value="${fw.notes}"></td>
-        <td><input id="e_${id}" value="${fw.name}"></td>
-        <td><input id="s_${id}" value="${fw.slogan}"></td>
-        <td><input id="i_${id}" value="${fw.instagram}"></td>
-        <td><input id="t_${id}" value="${fw.tlf}"></td>
-        <td><input id="b_${id}" value="${fw.banco}"></td>
-        <td><input id="r_${id}" value="${fw.rif}"></td>
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
-        <td>
-          <button class="btn primary" onclick="save('${id}')">Guardar</button>
-          <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
-          <button class="btn light" onclick="test('${id}')">Probar</button>
-        </td> 
-      </tr>
-    `;
-    tbody.innerHTML += row;
+          const row = `
+            <tr>
+              <td>${id}</td>
+              <td><input id="v_${id}" value="${fw.version}"></td>
+              <td><input id="u_${id}" value="${fw.url}"></td>
+              <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked":""}></td>
+              <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked":""}></td>
+              <td><input id="n_${id}" value="${fw.notes}"></td>
+              <td><input id="e_${id}" value="${fw.name}"></td>
+              <td><input id="s_${id}" value="${fw.slogan}"></td>
+              <td><input id="i_${id}" value="${fw.instagram}"></td>
+              <td><input id="t_${id}" value="${fw.tlf}"></td>
+              <td><input id="b_${id}" value="${fw.banco}"></td>
+              <td><input id="r_${id}" value="${fw.rif}"></td>
+              <td>${lastSeenText}</td>
+              <td>${statusBadge}</td>
+              <td>
+                <button class="btn primary" onclick="save('${id}')">Guardar</button>
+                <button class="btn danger" onclick="removeDevice('${id}')">Eliminar</button>
+                <button class="btn light" onclick="test('${id}')">Probar</button>
+              </td> 
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        }
   });
 }
 
@@ -99,40 +101,41 @@ function isOnline(lastSeen) {
 function renderTable(data) {
   const tbody = document.querySelector("#devicesTable tbody");
   tbody.innerHTML = "";
-
+  const deviceID = localStorage.getItem("deviceID");
   Object.keys(data).forEach(id => {
     const fw = data[id];
+    if(deviceID == fw){
+        const lastSeenText = fw.lastSeen
+            ? new Date(fw.lastSeen).toLocaleString() : "—";
+        const statusBadge = isOnline(fw.lastSeen)
+            ? `<span class="badge online">🟢 Online</span>`
+            : `<span class="badge offline">🔴 Offline</span>`;
 
-    const lastSeenText = fw.lastSeen
-        ? new Date(fw.lastSeen).toLocaleString() : "—";
-    const statusBadge = isOnline(fw.lastSeen)
-        ? `<span class="badge online">🟢 Online</span>`
-        : `<span class="badge offline">🔴 Offline</span>`;
-
-    const row = `
-      <tr>
-        <td>${id}</td>
-        <td><input value="${fw.version}" id="v_${id}"></td>
-        <td><input value="${fw.url}" id="u_${id}"></td>
-        <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
-        <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
-        <td><input value="${fw.notes}" id="n_${id}"></td>
-        <td><input value="${fw.name}" id="e_${id}"></td>
-        <td><input value="${fw.slogan}" id="s_${id}"></td>
-        <td><input value="${fw.instagram}" id="i_${id}"></td>
-        <td><input value="${fw.tlf}" id="t_${id}"></td>
-        <td><input value="${fw.banco}" id="b_${id}"></td>
-        <td><input value="${fw.rif}" id="r_${id}"></td>
-        <td>${lastSeenText}</td>
-        <td>${statusBadge}</td>
-        <td>
-          <button onclick="save('${id}')">💾</button>
-          <button onclick="removeDevice('${id}')">🗑</button>
-          <button onclick="test('${id}')">🧪</button>
-        </td>
-      </tr>
-    `;
-    tbody.innerHTML += row;
+        const row = `
+          <tr>
+            <td>${id}</td>
+            <td><input value="${fw.version}" id="v_${id}"></td>
+            <td><input value="${fw.url}" id="u_${id}"></td>
+            <td><input type="checkbox" id="pg_${id}" ${fw.paid === "true" ? "checked" : ""}></td>
+            <td><input type="checkbox" id="f_${id}" ${fw.force === "true" ? "checked" : ""}></td>
+            <td><input value="${fw.notes}" id="n_${id}"></td>
+            <td><input value="${fw.name}" id="e_${id}"></td>
+            <td><input value="${fw.slogan}" id="s_${id}"></td>
+            <td><input value="${fw.instagram}" id="i_${id}"></td>
+            <td><input value="${fw.tlf}" id="t_${id}"></td>
+            <td><input value="${fw.banco}" id="b_${id}"></td>
+            <td><input value="${fw.rif}" id="r_${id}"></td>
+            <td>${lastSeenText}</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button onclick="save('${id}')">💾</button>
+              <button onclick="removeDevice('${id}')">🗑</button>
+              <button onclick="test('${id}')">🧪</button>
+            </td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+    }
   });
 }
 
