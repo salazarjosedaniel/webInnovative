@@ -44,6 +44,7 @@
   <h2>Iniciar sesión</h2>
   <input id="user" type="text" placeholder="Usuario">
   <input id="pass" type="password" placeholder="Contraseña">
+  <input id="deviceID" type="text" placeholder="deviceID">
   <button onclick="login()">Ingresar</button>
   <p id="msg" style="color:red;"></p>
 </div>
@@ -52,11 +53,12 @@
 async function login() {
   const user = document.getElementById("user").value;
   const pass = document.getElementById("pass").value;
+  const deviceID = document.getElementById("deviceID").value;
 
   const res = await fetch("/api/auth/login", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ user, pass })
+    body: JSON.stringify({ user, pass, deviceID })
   });
 
   const data = await res.json();
