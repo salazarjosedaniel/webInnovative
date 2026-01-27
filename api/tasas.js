@@ -1,7 +1,7 @@
 import { getRedisClient } from "../lib/redis";
 
 const CACHE_KEY = "tasas:bcv";
-const CACHE_TTL = 12*60; // segundos
+const CACHE_TTL = 3600; // segundos
 
 export default async function handler(req, res) {
   try {
