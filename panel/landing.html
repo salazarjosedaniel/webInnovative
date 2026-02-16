@@ -22,17 +22,13 @@
             --shadow-glow: 0 0 40px rgba(0, 245, 255, 0.15);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--primary);
             color: var(--text-primary);
-            padding: 60px 30px;
+            padding: 120px 30px 60px; /* top padding for sticky nav */
             overflow-x: hidden;
             position: relative;
         }
@@ -69,6 +65,53 @@
             margin: 0 auto;
             position: relative;
             z-index: 2;
+        }
+
+        /* Sticky Nav */
+        .sticky-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 14, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            z-index: 999;
+        }
+
+        .sticky-inner {
+            max-width: 1400px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 30px;
+        }
+
+        .nav-logo {
+            font-weight: 800;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .nav-links a {
+            margin-left: 22px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-links a:hover { color: var(--accent-cyan); }
+
+        .nav-cta {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            padding: 8px 18px;
+            border-radius: 20px;
+            color: #000 !important;
+            font-weight: 800 !important;
         }
 
         /* Header Section */
@@ -121,21 +164,47 @@
         }
 
         .header .subtitle {
-            font-size: clamp(1rem, 2vw, 1.3rem);
+            font-size: clamp(1rem, 2vw, 1.25rem);
             color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 16px;
-            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            letter-spacing: 0.3px;
         }
 
         .header .company {
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.85rem;
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 2px;
             text-transform: uppercase;
+            margin-top: 18px;
         }
+
+        .hero-cta { margin-top: 22px; }
+
+        .btn-primary, .btn-secondary {
+            display: inline-block;
+            padding: 14px 28px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 800;
+            margin: 8px;
+            transition: 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #000;
+        }
+        .btn-primary:hover { transform: translateY(-3px); }
+
+        .btn-secondary {
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.02);
+        }
+        .btn-secondary:hover { border-color: var(--accent-cyan); transform: translateY(-3px); }
 
         /* Main Grid */
         .grid {
@@ -165,17 +234,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), 
-                rgba(0, 245, 255, 0.08) 0%, 
-                transparent 40%);
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 245, 255, 0.08) 0%, transparent 40%);
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
         }
-
-        .card:hover::before {
-            opacity: 1;
-        }
+        .card:hover::before { opacity: 1; }
 
         .card:hover {
             transform: translateY(-8px);
@@ -209,7 +273,7 @@
             color: var(--text-muted);
             margin-top: -20px;
             margin-bottom: 28px;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         /* Hero Flow Diagram */
@@ -237,16 +301,10 @@
             animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
         }
 
-        .flow-step:nth-child(1) { animation-delay: 0.2s; }
-        .flow-step:nth-child(2) { animation-delay: 0.3s; }
-        .flow-step:nth-child(3) { animation-delay: 0.4s; }
-        .flow-step:nth-child(4) { animation-delay: 0.5s; }
-        .flow-step:nth-child(5) { animation-delay: 0.6s; }
-
         .flow-number {
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.75rem;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--accent-cyan);
             margin-bottom: 16px;
             letter-spacing: 1px;
@@ -283,9 +341,7 @@
             border-color: var(--accent-cyan);
         }
 
-        .flow-step:hover .flow-icon::before {
-            opacity: 0.3;
-        }
+        .flow-step:hover .flow-icon::before { opacity: 0.3; }
 
         .flow-arrow {
             position: absolute;
@@ -297,12 +353,10 @@
             animation: slideRight 1.5s ease-in-out infinite;
         }
 
-        .flow-step:last-child .flow-arrow {
-            display: none;
-        }
+        .flow-step:last-child .flow-arrow { display: none; }
 
         .flow-label {
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1rem;
             margin-bottom: 8px;
             color: var(--text-primary);
@@ -312,14 +366,11 @@
         .flow-desc {
             font-size: 0.85rem;
             color: var(--text-muted);
-            font-weight: 500;
+            font-weight: 600;
         }
 
         /* Architecture Section */
-        .arch-section {
-            grid-column: 1 / 7;
-            animation-delay: 0.2s;
-        }
+        .arch-section { grid-column: 1 / 7; animation-delay: 0.2s; }
 
         .arch-visual {
             background: rgba(0, 102, 255, 0.05);
@@ -360,7 +411,7 @@
         }
 
         .arch-layer-content h4 {
-            font-weight: 700;
+            font-weight: 800;
             font-size: 0.95rem;
             color: var(--text-primary);
             margin-bottom: 4px;
@@ -370,13 +421,11 @@
             font-size: 0.85rem;
             color: var(--text-secondary);
             line-height: 1.5;
+            font-weight: 600;
         }
 
         /* Specs Grid */
-        .specs-section {
-            grid-column: 7 / -1;
-            animation-delay: 0.3s;
-        }
+        .specs-section { grid-column: 7 / -1; animation-delay: 0.3s; }
 
         .specs-grid {
             display: grid;
@@ -399,15 +448,11 @@
             border-color: var(--accent-purple);
         }
 
-        .spec-icon {
-            font-size: 2rem;
-            margin-bottom: 12px;
-            display: block;
-        }
+        .spec-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
 
         .spec-label {
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -415,8 +460,8 @@
         }
 
         .spec-value {
-            font-weight: 700;
-            font-size: 1.1rem;
+            font-weight: 800;
+            font-size: 1.05rem;
             color: var(--text-primary);
             margin-bottom: 6px;
         }
@@ -425,6 +470,7 @@
             font-size: 0.8rem;
             color: var(--text-secondary);
             line-height: 1.4;
+            font-weight: 600;
         }
 
         /* Security Section */
@@ -472,7 +518,7 @@
         }
 
         .security-content h4 {
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1rem;
             color: var(--accent-orange);
             margin-bottom: 6px;
@@ -482,13 +528,11 @@
             font-size: 0.88rem;
             color: var(--text-secondary);
             line-height: 1.5;
+            font-weight: 600;
         }
 
         /* Benefits Section */
-        .benefits-section {
-            grid-column: 1 / -1;
-            animation-delay: 0.5s;
-        }
+        .benefits-section { grid-column: 1 / -1; animation-delay: 0.5s; }
 
         .benefits-grid {
             display: grid;
@@ -520,9 +564,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .benefit-card:hover::before {
-            opacity: 1;
-        }
+        .benefit-card:hover::before { opacity: 1; }
 
         .benefit-card:hover {
             transform: translateY(-8px);
@@ -538,21 +580,9 @@
             filter: drop-shadow(0 4px 8px rgba(0, 245, 255, 0.3));
         }
 
-        .benefit-card:nth-child(2) .benefit-icon {
-            animation-delay: 0.5s;
-        }
-
-        .benefit-card:nth-child(3) .benefit-icon {
-            animation-delay: 1s;
-        }
-
-        .benefit-card:nth-child(4) .benefit-icon {
-            animation-delay: 1.5s;
-        }
-
         .benefit-title {
             font-family: 'Clash Display', sans-serif;
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1.3rem;
             margin-bottom: 12px;
             color: var(--text-primary);
@@ -563,7 +593,7 @@
             font-size: 0.95rem;
             color: var(--text-secondary);
             line-height: 1.6;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         /* Stats Section */
@@ -590,15 +620,12 @@
             transition: all 0.3s ease;
         }
 
-        .stat-item:hover {
-            transform: scale(1.05);
-            border-color: var(--accent-cyan);
-        }
+        .stat-item:hover { transform: scale(1.05); border-color: var(--accent-cyan); }
 
         .stat-number {
             font-family: 'IBM Plex Mono', monospace;
-            font-size: clamp(2.5rem, 4vw, 3.5rem);
-            font-weight: 700;
+            font-size: clamp(2.2rem, 4vw, 3.2rem);
+            font-weight: 800;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -611,7 +638,7 @@
         .stat-label {
             font-size: 0.95rem;
             color: var(--text-secondary);
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
         }
 
@@ -640,7 +667,7 @@
 
         .business-column h4 {
             font-family: 'Clash Display', sans-serif;
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1.3rem;
             color: var(--text-primary);
             margin-bottom: 24px;
@@ -650,10 +677,7 @@
             letter-spacing: -0.5px;
         }
 
-        .business-column ul {
-            list-style: none;
-            padding: 0;
-        }
+        .business-column ul { list-style: none; padding: 0; }
 
         .business-column li {
             padding: 14px 0 14px 36px;
@@ -661,20 +685,18 @@
             color: var(--text-secondary);
             font-size: 0.95rem;
             line-height: 1.6;
-            font-weight: 500;
+            font-weight: 600;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .business-column li:last-child {
-            border-bottom: none;
-        }
+        .business-column li:last-child { border-bottom: none; }
 
         .business-column li::before {
             content: '✓';
             position: absolute;
             left: 0;
             color: var(--accent-green);
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1.3rem;
         }
 
@@ -704,7 +726,7 @@
         .revenue-highlight .big-number {
             font-family: 'IBM Plex Mono', monospace;
             font-size: clamp(3rem, 8vw, 6rem);
-            font-weight: 700;
+            font-weight: 800;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -717,8 +739,52 @@
         .revenue-highlight .label {
             font-size: 1.2rem;
             color: var(--text-secondary);
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 0.5px;
+        }
+
+        /* Implementation / Trust / Contact */
+        .implementation-section { grid-column: 1 / -1; animation-delay: 0.55s; }
+        .trust-section { grid-column: 1 / -1; animation-delay: 0.6s; }
+
+        .contact-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.06), rgba(139, 92, 246, 0.06));
+            border: 1px solid rgba(0, 245, 255, 0.18);
+            animation-delay: 0.75s;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .contact-grid input, .contact-grid select {
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: white;
+            outline: none;
+            font-weight: 600;
+        }
+
+        .contact-grid input::placeholder { color: rgba(148, 163, 184, 0.8); font-weight: 600; }
+        .contact-grid select option { color: #0A0E27; }
+
+        .contact-grid button {
+            grid-column: 1 / -1;
+            border: none;
+            cursor: pointer;
+        }
+
+        .contact-note {
+            margin-top: 14px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
         /* Footer */
@@ -733,7 +799,7 @@
         .footer-logo {
             font-family: 'IBM Plex Mono', monospace;
             font-size: 1.8rem;
-            font-weight: 700;
+            font-weight: 800;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -757,172 +823,77 @@
             border-radius: 20px;
             font-size: 0.75rem;
             color: var(--text-muted);
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .footer-text {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 16px;
-        }
+        .footer-text { color: var(--text-muted); font-size: 0.9rem; margin-top: 16px; font-weight: 600; }
 
         /* Animations */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-12px);
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.5;
-                transform: scale(1.2);
-            }
-        }
-
-        @keyframes shimmer {
-            0% {
-                background-position: -200% center;
-            }
-            100% {
-                background-position: 200% center;
-            }
-        }
-
-        @keyframes shimmerSlide {
-            0% {
-                left: -100%;
-            }
-            100% {
-                left: 100%;
-            }
-        }
-
-        @keyframes slideRight {
-            0%, 100% {
-                transform: translateX(0);
-                opacity: 0.3;
-            }
-            50% {
-                transform: translateX(8px);
-                opacity: 0.6;
-            }
-        }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-40px);} to { opacity: 1; transform: translateY(0);} }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px);} to { opacity: 1; transform: translateY(0);} }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9);} to { opacity: 1; transform: scale(1);} }
+        @keyframes float { 0%, 100% { transform: translateY(0);} 50% { transform: translateY(-12px);} }
+        @keyframes fadeIn { from { opacity: 0;} to { opacity: 1;} }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.5; transform: scale(1.2);} }
+        @keyframes shimmer { 0% { background-position: -200% center;} 100% { background-position: 200% center;} }
+        @keyframes shimmerSlide { 0% { left: -100%;} 100% { left: 100%;} }
+        @keyframes slideRight { 0%, 100% { transform: translateX(0); opacity: 0.3;} 50% { transform: translateX(8px); opacity: 0.6;} }
 
         /* Responsive */
         @media (max-width: 1024px) {
-            .flow-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .flow-arrow {
-                display: none;
-            }
-
-            .arch-section,
-            .specs-section {
-                grid-column: 1 / -1;
-            }
-
-            .business-grid {
-                grid-template-columns: 1fr;
-            }
+            .flow-container { grid-template-columns: repeat(2, 1fr); }
+            .flow-arrow { display: none; }
+            .arch-section, .specs-section { grid-column: 1 / -1; }
+            .business-grid { grid-template-columns: 1fr; }
+            .nav-links a { margin-left: 14px; }
         }
 
         @media (max-width: 768px) {
-            body {
-                padding: 40px 20px;
-            }
-
-            .card {
-                padding: 30px 24px;
-            }
-
-            .flow-container {
-                grid-template-columns: 1fr;
-            }
-
-            .specs-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .revenue-highlight .big-number {
-                font-size: 4rem;
-            }
-
-            .section-title {
-                font-size: 1.8rem;
-            }
+            body { padding: 110px 20px 40px; }
+            .card { padding: 30px 24px; }
+            .flow-container { grid-template-columns: 1fr; }
+            .specs-grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 1.8rem; }
+            .sticky-inner { padding: 12px 18px; }
+            .nav-links { display: none; }
         }
     </style>
 </head>
 <body>
     <div class="noise"></div>
+
+    <!-- Sticky Navigation -->
+    <div class="sticky-nav">
+        <div class="sticky-inner">
+            <div class="nav-logo">VISOR SaaS</div>
+            <div class="nav-links">
+                <a href="#flujo">Flujo</a>
+                <a href="#arquitectura">Arquitectura</a>
+                <a href="#beneficios">Beneficios</a>
+                <a href="#integradores">Integradores</a>
+                <a href="#contacto" class="nav-cta">Solicitar Demo</a>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="header-badge">
-                <span>PLATAFORMA SaaS</span>
-            </div>
+            <div class="header-badge"><span>PLATAFORMA SaaS</span></div>
             <h1>VISOR INTELIGENTE<br>DE PRECIOS</h1>
-            <p class="subtitle">Sistema de Consulta Automatizada con Pantalla LCD 7"</p>
+            <p class="subtitle">Consulta precio por código en 1–2 segundos · Gestión centralizada · Instalación en 15 minutos</p>
+            <div class="hero-cta">
+                <a href="#contacto" class="btn-primary">Solicitar Demo</a>
+                <a href="#arquitectura" class="btn-secondary">Ver Arquitectura</a>
+            </div>
             <p class="company">INNOVATIVE SOLUTIONS TECNOLÓGICA, C.A.</p>
         </div>
 
         <div class="grid">
             <!-- Hero Flow -->
-            <div class="card hero-section">
+            <div class="card hero-section" id="flujo">
                 <h2 class="section-title">Flujo Operativo del Sistema</h2>
                 <p class="section-subtitle">Arquitectura cliente-servidor con comunicación cifrada en tiempo real</p>
                 <div class="flow-container">
@@ -937,41 +908,41 @@
                         <div class="flow-number">02</div>
                         <div class="flow-icon">📡</div>
                         <div class="flow-label">CONSULTA API</div>
-                        <div class="flow-desc">HTTPS Port 443</div>
+                        <div class="flow-desc">HTTPS (443)</div>
                         <div class="flow-arrow">→</div>
                     </div>
                     <div class="flow-step">
                         <div class="flow-number">03</div>
                         <div class="flow-icon">☁️</div>
                         <div class="flow-label">RESPUESTA CLOUD</div>
-                        <div class="flow-desc">JSON Format</div>
+                        <div class="flow-desc">JSON estandarizado</div>
                         <div class="flow-arrow">→</div>
                     </div>
                     <div class="flow-step">
                         <div class="flow-number">04</div>
                         <div class="flow-icon">💻</div>
                         <div class="flow-label">VISUALIZACIÓN</div>
-                        <div class="flow-desc">LCD 7" Display</div>
+                        <div class="flow-desc">Pantalla LCD 7”</div>
                         <div class="flow-arrow">→</div>
                     </div>
                     <div class="flow-step">
                         <div class="flow-number">05</div>
                         <div class="flow-icon">📊</div>
                         <div class="flow-label">REGISTRO</div>
-                        <div class="flow-desc">Central Logging</div>
+                        <div class="flow-desc">Logs y monitoreo central</div>
                     </div>
                 </div>
             </div>
 
             <!-- Architecture -->
-            <div class="card arch-section">
+            <div class="card arch-section" id="arquitectura">
                 <h2 class="section-title">Arquitectura del Sistema</h2>
                 <div class="arch-visual">
                     <div class="arch-layer">
                         <div class="arch-layer-icon">🎯</div>
                         <div class="arch-layer-content">
                             <h4>Capa de Presentación</h4>
-                            <p>LCD 7" Waveshare con interfaz optimizada para retail</p>
+                            <p>LCD 7” Waveshare con interfaz optimizada para retail</p>
                         </div>
                     </div>
                     <div class="arch-layer">
@@ -985,14 +956,14 @@
                         <div class="arch-layer-icon">🌐</div>
                         <div class="arch-layer-content">
                             <h4>Capa de Comunicación</h4>
-                            <p>WiFi 2.4GHz con protocolo HTTPS cifrado TLS/SSL</p>
+                            <p>WiFi 2.4GHz con protocolo HTTPS (TLS)</p>
                         </div>
                     </div>
                     <div class="arch-layer">
                         <div class="arch-layer-icon">☁️</div>
                         <div class="arch-layer-content">
                             <h4>Capa de Servicios</h4>
-                            <p>Backend SaaS con APIs RESTful y base de datos centralizada</p>
+                            <p>Backend SaaS con APIs REST y base de datos centralizada</p>
                         </div>
                     </div>
                 </div>
@@ -1005,19 +976,19 @@
                     <div class="spec-card">
                         <span class="spec-icon">🖥️</span>
                         <div class="spec-label">Pantalla</div>
-                        <div class="spec-value">LCD 7"</div>
+                        <div class="spec-value">LCD 7”</div>
                         <div class="spec-desc">Waveshare de alta definición</div>
                     </div>
                     <div class="spec-card">
                         <span class="spec-icon">⚡</span>
                         <div class="spec-label">Procesador</div>
                         <div class="spec-value">ESP32-S3</div>
-                        <div class="spec-desc">Dual-core WiFi integrado</div>
+                        <div class="spec-desc">Dual-core con WiFi integrado</div>
                     </div>
                     <div class="spec-card">
                         <span class="spec-icon">🔌</span>
                         <div class="spec-label">Consumo</div>
-                        <div class="spec-value">&lt;15W</div>
+                        <div class="spec-value">&lt; 15W</div>
                         <div class="spec-desc">Operación continua eficiente</div>
                     </div>
                     <div class="spec-card">
@@ -1030,13 +1001,13 @@
                         <span class="spec-icon">📷</span>
                         <div class="spec-label">Escáner</div>
                         <div class="spec-value">USB 2D</div>
-                        <div class="spec-desc">Lectura bidimensional HID</div>
+                        <div class="spec-desc">Lectura bidimensional (HID)</div>
                     </div>
                     <div class="spec-card">
                         <span class="spec-icon">🔋</span>
                         <div class="spec-label">Alimentación</div>
                         <div class="spec-value">110V</div>
-                        <div class="spec-desc">con salida USB TipoC</div>
+                        <div class="spec-desc">Fuente interna + salida USB Tipo‑C</div>
                     </div>
                 </div>
             </div>
@@ -1049,58 +1020,58 @@
                     <div class="security-item">
                         <div class="security-icon">🔒</div>
                         <div class="security-content">
-                            <h4>Cifrado de Extremo a Extremo</h4>
-                            <p>Protocolo HTTPS con certificados TLS/SSL para todas las comunicaciones API</p>
+                            <h4>HTTPS/TLS</h4>
+                            <p>Comunicación cifrada punto a punto en cada consulta (puerto 443).</p>
                         </div>
                     </div>
                     <div class="security-item">
                         <div class="security-icon">🛡️</div>
                         <div class="security-content">
-                            <h4>Arquitectura Zero-Trust</h4>
-                            <p>Sin puertos entrantes requeridos. Conexiones outbound únicamente</p>
+                            <h4>Sin Puertos Entrantes</h4>
+                            <p>Arquitectura outbound-only: el dispositivo solo “sale” a internet.</p>
                         </div>
                     </div>
                     <div class="security-item">
                         <div class="security-icon">✓</div>
                         <div class="security-content">
-                            <h4>Autenticación de Dispositivos</h4>
-                            <p>Validación remota de suscripción activa antes de cada transacción</p>
+                            <h4>Validación de Servicio</h4>
+                            <p>Verificación remota del estado de suscripción por deviceId.</p>
                         </div>
                     </div>
                     <div class="security-item">
                         <div class="security-icon">🔧</div>
                         <div class="security-content">
-                            <h4>Sistema Watchdog Activo</h4>
-                            <p>Monitoreo continuo con recuperación automática ante fallos de conectividad</p>
+                            <h4>Watchdog & Auto‑Recovery</h4>
+                            <p>Recuperación automática ante fallos de conectividad o bloqueo.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Benefits -->
-            <div class="card benefits-section">
+            <div class="card benefits-section" id="beneficios">
                 <h2 class="section-title">Ventajas Competitivas</h2>
                 <p class="section-subtitle">Solución integral que maximiza eficiencia operativa y retorno de inversión</p>
                 <div class="benefits-grid">
                     <div class="benefit-card">
                         <div class="benefit-icon">⚡</div>
                         <h3 class="benefit-title">Despliegue Rápido</h3>
-                        <p class="benefit-desc">Instalación simplificada en 7 pasos con portal WiFi integrado. Operativo en menos de 15 minutos.</p>
+                        <p class="benefit-desc">Puesta en marcha simple con portal WiFi integrado. Operativo en menos de 15 minutos.</p>
                     </div>
                     <div class="benefit-card">
                         <div class="benefit-icon">📈</div>
-                        <h3 class="benefit-title">Escalabilidad Ilimitada</h3>
-                        <p class="benefit-desc">Arquitectura cloud elástica. Gestiona desde una unidad hasta miles de dispositivos simultáneos.</p>
+                        <h3 class="benefit-title">Escalabilidad</h3>
+                        <p class="benefit-desc">Arquitectura cloud elástica. Gestiona desde 1 unidad hasta cientos/miles de dispositivos.</p>
                     </div>
                     <div class="benefit-card">
                         <div class="benefit-icon">💰</div>
-                        <h3 class="benefit-title">TCO Optimizado</h3>
-                        <p class="benefit-desc">Consumo ultra-bajo &lt;15W. Mantenimiento remoto sin costos de desplazamiento técnico.</p>
+                        <h3 class="benefit-title">Costo Total Bajo</h3>
+                        <p class="benefit-desc">Consumo bajo &lt;15W. Mantenimiento remoto (OTA) reduce visitas técnicas y costos.</p>
                     </div>
                     <div class="benefit-card">
                         <div class="benefit-icon">📱</div>
                         <h3 class="benefit-title">Gestión Centralizada</h3>
-                        <p class="benefit-desc">Panel web unificado. Monitoreo en tiempo real, analytics y control total de la flota.</p>
+                        <p class="benefit-desc">Monitoreo en tiempo real, logs y control de flota por sucursal y dispositivo.</p>
                     </div>
                 </div>
             </div>
@@ -1108,31 +1079,102 @@
             <!-- Stats -->
             <div class="card stats-section">
                 <h2 class="section-title">KPIs de Rendimiento</h2>
-                <p class="section-subtitle">Métricas clave que garantizan operación continua y eficiente</p>
+                <p class="section-subtitle">Métricas clave para operación continua y eficiente</p>
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-number">&lt;15W</div>
                         <div class="stat-label">Consumo Energético</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">7 PASOS</div>
-                        <div class="stat-label">Setup Simplificado</div>
+                        <div class="stat-number">15 MIN</div>
+                        <div class="stat-label">Puesta en Marcha</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number">24/7</div>
-                        <div class="stat-label">Uptime Monitoreado</div>
+                        <div class="stat-label">Monitoreo</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">100%</div>
-                        <div class="stat-label">Tráfico Cifrado</div>
+                        <div class="stat-number">HTTPS</div>
+                        <div class="stat-label">Tráfico Cifrado (TLS)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Implementation -->
+            <div class="card implementation-section">
+                <h2 class="section-title">Implementación en 5 Pasos</h2>
+                <p class="section-subtitle">Proceso estándar para instalación en sucursal y activación SaaS</p>
+                <div class="flow-container">
+                    <div class="flow-step">
+                        <div class="flow-number">01</div>
+                        <div class="flow-icon">🔌</div>
+                        <div class="flow-label">Instalación Física</div>
+                        <div class="flow-desc">Empotrado + energía</div>
+                        <div class="flow-arrow">→</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">02</div>
+                        <div class="flow-icon">📶</div>
+                        <div class="flow-label">Configurar WiFi</div>
+                        <div class="flow-desc">Portal integrado</div>
+                        <div class="flow-arrow">→</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">03</div>
+                        <div class="flow-icon">🔗</div>
+                        <div class="flow-label">Configurar URL API</div>
+                        <div class="flow-desc">Catálogo del cliente</div>
+                        <div class="flow-arrow">→</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">04</div>
+                        <div class="flow-icon">📷</div>
+                        <div class="flow-label">Prueba de Escaneo</div>
+                        <div class="flow-desc">Validación inmediata</div>
+                        <div class="flow-arrow">→</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">05</div>
+                        <div class="flow-icon">🚀</div>
+                        <div class="flow-label">Go‑Live</div>
+                        <div class="flow-desc">Operación en piso</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust & Support -->
+            <div class="card trust-section">
+                <h2 class="section-title">Confianza & Soporte</h2>
+                <p class="section-subtitle">Diseñado para operación real en retail (soporte y estabilidad)</p>
+                <div class="security-grid">
+                    <div class="security-item">
+                        <div class="security-icon">🛠️</div>
+                        <div class="security-content">
+                            <h4>Soporte Remoto N2–N3</h4>
+                            <p>Diagnóstico remoto, ajustes de plataforma y acompañamiento a integradores.</p>
+                        </div>
+                    </div>
+                    <div class="security-item">
+                        <div class="security-icon">🔄</div>
+                        <div class="security-content">
+                            <h4>Actualización OTA</h4>
+                            <p>Mejoras y correcciones sin visitas presenciales ni interrupciones prolongadas.</p>
+                        </div>
+                    </div>
+                    <div class="security-item">
+                        <div class="security-icon">📊</div>
+                        <div class="security-content">
+                            <h4>Monitoreo Central</h4>
+                            <p>Estado por deviceId, logs y trazabilidad de eventos para soporte y auditoría.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Business Model -->
-            <div class="card business-section">
+            <div class="card business-section" id="integradores">
                 <h2 class="section-title">Modelo de Colaboración Estratégica</h2>
-                <p class="section-subtitle">Partnership estructurado con distribución clara de responsabilidades y beneficios</p>
+                <p class="section-subtitle">Partnership estructurado con responsabilidades claras y beneficio recurrente</p>
                 <div class="business-grid">
                     <div class="business-column">
                         <h4>🏢 Innovative Solutions</h4>
@@ -1147,7 +1189,7 @@
                     <div class="business-column">
                         <h4>🤝 Integrador Autorizado</h4>
                         <ul>
-                            <li>Instalación física y configuración in-situ</li>
+                            <li>Instalación física y configuración in‑situ</li>
                             <li>Comercialización y adquisición de clientes</li>
                             <li>Soporte técnico presencial nivel 1</li>
                             <li>Gestión de cuenta y relación comercial</li>
@@ -1160,6 +1202,30 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Contact -->
+            <div class="card contact-section" id="contacto">
+                <h2 class="section-title">Solicitar Demo</h2>
+                <p class="section-subtitle">Déjanos tus datos y coordinamos una demo (integradores / retail)</p>
+
+                <form class="contact-grid" onsubmit="return handleDemoRequest(event)">
+                    <input name="nombre" type="text" placeholder="Nombre" required>
+                    <input name="empresa" type="text" placeholder="Empresa" required>
+                    <input name="email" type="email" placeholder="Correo electrónico" required>
+                    <input name="ciudad" type="text" placeholder="Ciudad" required>
+                    <select name="tipo" required>
+                        <option value="" disabled selected>Selecciona tu perfil</option>
+                        <option value="integrador">Soy Integrador</option>
+                        <option value="retail">Soy Retail</option>
+                    </select>
+                    <button class="btn-primary" type="submit">Enviar Solicitud</button>
+                </form>
+
+                <div class="contact-note" id="contactNote">
+                    Nota: Este formulario es demostrativo. Puedes conectarlo a tu backend (Vercel / API) o WhatsApp.
+                </div>
+            </div>
+
         </div>
 
         <!-- Footer -->
@@ -1170,11 +1236,69 @@
                 <span class="footer-tag">SaaS Architecture</span>
                 <span class="footer-tag">Cloud Infrastructure</span>
                 <span class="footer-tag">ESP32-S3</span>
-                <span class="footer-tag">HTTPS Secure</span>
+                <span class="footer-tag">HTTPS/TLS</span>
             </div>
-            <p class="footer-text">Infografía Técnico-Comercial · Febrero 2026</p>
-            <p class="footer-text" style="opacity: 0.5; margin-top: 8px;">Sistema de Gestión Inteligente de Precios para Retail</p>
+            <p class="footer-text">Infografía Técnico‑Comercial · Febrero 2026</p>
+            <p class="footer-text" style="opacity: 0.55; margin-top: 8px;">Sistema de Gestión Inteligente de Precios para Retail</p>
         </div>
     </div>
+
+    <script>
+        // Smooth anchor scroll with header offset
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                const id = a.getAttribute('href').slice(1);
+                const el = document.getElementById(id);
+                if (!el) return;
+                e.preventDefault();
+                const y = el.getBoundingClientRect().top + window.scrollY - 100;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            });
+        });
+
+        // Mouse glow tracking for cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                card.style.setProperty('--mouse-x', x + '%');
+                card.style.setProperty('--mouse-y', y + '%');
+            });
+        });
+
+        // Demo form placeholder handler
+                    async function handleDemoRequest(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const data = Object.fromEntries(new FormData(form).entries());
+            const note = document.getElementById('contactNote');
+
+            try {
+                const response = await fetch('/api/demo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                note.textContent = "✅ Demo solicitada correctamente. Te contactaremos pronto.";
+                form.reset();
+                } else {
+                note.textContent = "❌ Error: " + result.error;
+                }
+
+            } catch (err) {
+                note.textContent = "❌ Error de conexión con el servidor.";
+            }
+
+            return false;
+            }
+    </script>
 </body>
 </html>
