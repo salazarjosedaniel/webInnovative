@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kairo | Simple Business Control</title>
+  <meta name="description" content="Kairo: inventario, compras, ventas, cuentas por cobrar/pagar, reportes y multi-sucursal en una sola plataforma." />
+
+  <style>
+    :root{
+      /* Paleta basada en tu UI (teal principal + fondos claros) */
+      --teal:#089088;
+      --teal-600:#077A73;
+      --teal-700:#06655F;
+
+      --ink:#0f172a;            /* texto principal */
+      --muted:#475569;          /* texto secundario */
+      --muted2:#64748b;
+
+      --bg:#f6f8fb;             /* fondo general tipo Kairo */
+      --card:#ffffff;           /* cards blancas */
+      --line:rgba(15, 23, 42, .10);
+      --shadow: 0 18px 45px rgba(15,23,42,.10);
+      --shadow-soft: 0 10px 25px rgba(15,23,42,.08);
+
+      --radius:18px;
+      --radius-lg:22px;
+      --max:1120px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      background: radial-gradient(1200px 700px at 12% 15%, rgba(8,144,136,.10), transparent 55%),
+                  radial-gradient(900px 600px at 90% 70%, rgba(8,144,136,.08), transparent 60%),
+                  var(--bg);
+    }
+    a{ color:inherit; text-decoration:none; }
+    img{ max-width:100%; display:block; }
+    .wrap{ max-width:var(--max); margin:0 auto; padding:0 20px; }
+
+    /* Header */
+    header{
+      position:sticky; top:0; z-index:50;
+      background: rgba(246,248,251,.75);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0;
+      gap:14px;
+    }
+    .brand{ display:flex; align-items:center; gap:10px; }
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(8,144,136,1), rgba(8,144,136,.65));
+      box-shadow: 0 10px 24px rgba(8,144,136,.18);
+    }
+    .brand strong{ letter-spacing:.2px; }
+    .menu{ display:flex; gap:18px; color:var(--muted); font-size:14px; }
+    .menu a{ padding:8px 10px; border-radius:12px; }
+    .menu a:hover{ background: rgba(8,144,136,.08); color:var(--ink); }
+
+    .actions{ display:flex; gap:10px; align-items:center; }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-weight:600;
+      font-size:14px;
+      cursor:pointer;
+      transition: transform .08s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+      background: var(--card);
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+    .btn.primary{
+      background: linear-gradient(135deg, var(--teal), rgba(8,144,136,.78));
+      border-color: rgba(8,144,136,.0);
+      color:#fff;
+      box-shadow: 0 16px 40px rgba(8,144,136,.22);
+    }
+    .btn.primary:hover{ box-shadow: 0 18px 48px rgba(8,144,136,.28); }
+    .btn.ghost{
+      background: transparent;
+    }
+
+    /* Hero */
+    .hero{ padding:52px 0 28px; }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:22px;
+      align-items:start;
+    }
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:8px 12px;
+      border-radius:999px;
+      background: rgba(8,144,136,.10);
+      border:1px solid rgba(8,144,136,.20);
+      color: var(--teal-700);
+      font-size:13px;
+      font-weight:600;
+    }
+    h1{
+      margin:14px 0 10px;
+      font-size:44px;
+      line-height:1.05;
+      letter-spacing:-.6px;
+    }
+    .sub{
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.6;
+      margin:0 0 16px;
+    }
+    .hero-ctas{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .mini{
+      display:flex; gap:14px; flex-wrap:wrap;
+      margin-top:18px;
+      color:var(--muted2);
+      font-size:13px;
+    }
+    .mini span{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius:14px;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;
+      background: var(--teal);
+      box-shadow: 0 0 0 4px rgba(8,144,136,.14);
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+    .card.pad{ padding:18px; }
+
+    /* Preview / tabs */
+    .tabs{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin:6px 0 12px;
+    }
+    .tab{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.6);
+      color:var(--muted);
+      font-weight:700;
+      font-size:13px;
+      cursor:pointer;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .tab.active{
+      background: rgba(8,144,136,.12);
+      border-color: rgba(8,144,136,.25);
+      color: var(--teal-700);
+    }
+    .shot{
+      border-top: 1px solid var(--line);
+      padding:14px;
+    }
+    .shot-frame{
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid rgba(15,23,42,.08);
+      background:#fff;
+      box-shadow: 0 14px 35px rgba(15,23,42,.10);
+    }
+    .shot-note{
+      margin:10px 2px 0;
+      color:var(--muted2);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    /* Sections */
+    .sec{ padding:44px 0; }
+    .sec h2{
+      margin:0 0 10px;
+      font-size:30px;
+      letter-spacing:-.3px;
+    }
+    .sec p{ margin:0; color:var(--muted); line-height:1.7; }
+
+    .grid3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+    .feat{
+      padding:18px;
+      border-radius: var(--radius);
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.75);
+      box-shadow: var(--shadow-soft);
+    }
+    .feat h3{ margin:8px 0 6px; font-size:16px; }
+    .feat p{ font-size:14px; color:var(--muted2); margin:0; }
+
+    .icon{
+      width:40px;height:40px;border-radius:14px;
+      background: rgba(8,144,136,.12);
+      border:1px solid rgba(8,144,136,.18);
+      display:flex; align-items:center; justify-content:center;
+      color: var(--teal-700);
+      font-weight:900;
+    }
+
+    /* Pricing */
+    .pricing{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+    .plan{ padding:18px; }
+    .plan .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(8,144,136,.10);
+      border:1px solid rgba(8,144,136,.18);
+      color: var(--teal-700);
+      font-weight:800;
+      font-size:12px;
+    }
+    .price{ font-size:38px; margin:10px 0 6px; letter-spacing:-.6px; }
+    .per{ color:var(--muted2); font-size:13px; }
+    .ul{ margin:14px 0 0; padding-left:18px; color:var(--muted); line-height:1.8; }
+    .best{
+      border-color: rgba(8,144,136,.28);
+      box-shadow: 0 22px 55px rgba(8,144,136,.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .best:before{
+      content:"";
+      position:absolute; inset:-60px -80px auto auto;
+      width:200px;height:200px;border-radius:999px;
+      background: rgba(8,144,136,.12);
+      filter: blur(0);
+    }
+
+    /* FAQ */
+    details{
+      background: rgba(255,255,255,.75);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      padding:14px 16px;
+      box-shadow: var(--shadow-soft);
+    }
+    details + details{ margin-top:10px; }
+    summary{
+      cursor:pointer;
+      font-weight:800;
+      color: var(--ink);
+      list-style:none;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    details p{ margin:10px 0 0; color:var(--muted); }
+
+    /* Footer */
+    footer{
+      border-top:1px solid var(--line);
+      padding:26px 0;
+      color:var(--muted2);
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero-grid{ grid-template-columns: 1fr; }
+      .grid3, .pricing{ grid-template-columns: 1fr; }
+      h1{ font-size:38px; }
+      .menu{ display:none; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="nav">
+      <a class="brand" href="#inicio">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <strong>Kairo</strong><br>
+          <span style="font-size:12px;color:var(--muted2);font-weight:600;">Simple Business Control</span>
+        </div>
+      </a>
+
+      <nav class="menu" aria-label="Navegación">
+        <a href="#funcionalidades">Funcionalidades</a>
+        <a href="#modulos">Módulos</a>
+        <a href="#precios">Planes</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="actions">
+        <!-- Reemplaza el WhatsApp -->
+        <a class="btn ghost" href="https://wa.me/XXXXXXXXXXX" target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
+        <!-- Reemplaza URL demo/registro -->
+        <a class="btn primary" href="#cta">Agendar demo</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="inicio">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill">✅ Control simple para crecer sin caos</span>
+        <h1>Todo tu negocio en un solo sistema: inventario, compras, ventas y reportes</h1>
+        <p class="sub">
+          Kairo centraliza la operación de tu empresa con multi-sucursal, multi-moneda, control por permisos y exportación a Excel.
+          Trabaja con datos en tiempo real sin depender de hojas de cálculo.
+        </p>
+
+        <div class="hero-ctas">
+          <a class="btn primary" href="#cta">Quiero una demo</a>
+          <a class="btn" href="#precios">Ver planes</a>
+        </div>
+
+        <div class="mini">
+          <span><span class="dot"></span> Multi-sucursal real</span>
+          <span><span class="dot"></span> Inventario en tiempo real</span>
+          <span><span class="dot"></span> CxC / CxP</span>
+          <span><span class="dot"></span> Exportación Excel</span>
+        </div>
+      </div>
+
+      <!-- Preview con tabs usando tus screenshots -->
+      <div class="card">
+        <div class="card pad">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div>
+              <strong style="font-size:14px;">Vista del sistema</strong><br>
+              <span style="font-size:12px;color:var(--muted2);font-weight:600;">Look & feel real de Kairo</span>
+            </div>
+            <span class="pill" style="padding:6px 10px;">Kairo Lite v1.0.0</span>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Pantallas de Kairo">
+            <button class="tab active" data-shot="welcome" role="tab" aria-selected="true">Bienvenida</button>
+            <button class="tab" data-shot="products" role="tab" aria-selected="false">Productos</button>
+            <button class="tab" data-shot="sales" role="tab" aria-selected="false">Ventas</button>
+          </div>
+        </div>
+
+        <div class="shot">
+          <div class="shot-frame">
+            <!-- Reemplaza por tus rutas reales -->
+            <img id="shotImg" src="assets/kairo-welcome.png" alt="Pantalla de bienvenida de Kairo" />
+          </div>
+          <div class="shot-note" id="shotNote">
+            Pantalla de bienvenida: navegación clara, UI limpia y moderna.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="sec" id="funcionalidades">
+    <div class="wrap">
+      <h2>Lo esencial para operar, vender y crecer</h2>
+      <p>Diseñado para negocios que necesitan control real sin complejidad innecesaria.</p>
+
+      <div class="grid3">
+        <div class="feat">
+          <div class="icon">✓</div>
+          <h3>Inventario en tiempo real</h3>
+          <p>Stock por sucursal, movimientos y trazabilidad con cada compra, venta o transferencia.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">$</div>
+          <h3>Ventas + Cuentas por cobrar</h3>
+          <p>Órdenes, estados de pago (completo/pendiente) y control de saldos por cliente.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">↔</div>
+          <h3>Multi-sucursal</h3>
+          <p>Operación por sedes, consolidación de reportes y transferencias entre sucursales.</p>
+        </div>
+
+        <div class="feat">
+          <div class="icon">₿</div>
+          <h3>Multi-moneda</h3>
+          <p>Operaciones en distintas monedas con reportes consolidados según configuración.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">🔒</div>
+          <h3>Permisos granulares</h3>
+          <p>Controla quién puede ver/crear/editar/eliminar por módulo y operación.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">⬇</div>
+          <h3>Exportación a Excel</h3>
+          <p>Exporta catálogo, ventas, compras y reportes sin fricción.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULES -->
+  <section class="sec" id="modulos">
+    <div class="wrap">
+      <h2>Módulos que se integran entre sí</h2>
+      <p>Un flujo operativo completo: catálogo → compras → inventario → ventas → reportes.</p>
+
+      <div class="grid3">
+        <div class="feat"><h3>Productos</h3><p>Catálogo, categorías, impuestos, stock por sucursal y carga masiva.</p></div>
+        <div class="feat"><h3>Compras</h3><p>Contado/crédito, actualización automática de inventario y control financiero.</p></div>
+        <div class="feat"><h3>Ventas</h3><p>Órdenes, pagos, saldos pendientes y reportes comerciales.</p></div>
+        <div class="feat"><h3>Transferencias</h3><p>Movimientos entre sucursales con estados y trazabilidad.</p></div>
+        <div class="feat"><h3>Usuarios y permisos</h3><p>Roles y accesos por módulo, acciones y sucursales.</p></div>
+        <div class="feat"><h3>Reportes</h3><p>Ventas, inventario, cartera, compras y exportación.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="sec" id="precios">
+    <div class="wrap">
+      <h2>Planes y precios</h2>
+      <p>Escoge el plan según el tamaño de tu operación. Puedes crecer de forma progresiva.</p>
+
+      <div class="pricing">
+        <div class="card plan">
+          <span class="tag">Starter</span>
+          <div class="price">$19</div>
+          <div class="per">por mes · 1 sucursal</div>
+          <ul class="ul">
+            <li>Productos + Categorías + Impuestos</li>
+            <li>Ventas básicas</li>
+            <li>Exportación Excel</li>
+            <li>Soporte estándar</li>
+          </ul>
+          <div style="margin-top:16px;">
+            <a class="btn primary" href="#cta" style="width:100%;">Empezar</a>
+          </div>
+        </div>
+
+        <div class="card plan best">
+          <span class="tag">Smart (Recomendado)</span>
+          <div class="price">$29</div>
+          <div class="per">por mes · multi-sucursal</div>
+          <ul class="ul">
+            <li>Compras (contado/crédito)</li>
+            <li>Ventas + Cuentas por cobrar</li>
+            <li>Transferencias y movimientos</li>
+            <li>Reportes clave</li>
+          </ul>
+          <div style="margin-top:16px;">
+            <a class="btn primary" href="#cta" style="width:100%;">Elegir Smart</a>
+          </div>
+        </div>
+
+        <div class="card plan">
+          <span class="tag">Business</span>
+          <div class="price">$40</div>
+          <div class="per">por mes · operación completa</div>
+          <ul class="ul">
+            <li>Permisos avanzados</li>
+            <li>Reportes pro + exportaciones</li>
+            <li>Soporte prioritario</li>
+            <li>Onboarding asistido</li>
+          </ul>
+          <div style="margin-top:16px;">
+            <a class="btn primary" href="https://wa.me/XXXXXXXXXXX" target="_blank" rel="noreferrer" style="width:100%;">Hablar con ventas</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="sec" id="faq">
+    <div class="wrap">
+      <h2>Preguntas frecuentes</h2>
+      <p>Resolvemos lo típico antes de iniciar.</p>
+
+      <div style="margin-top:18px;">
+        <details>
+          <summary>¿Kairo es en la nube o se instala?</summary>
+          <p>Kairo puede operar en la nube. Si necesitas un despliegue dedicado (empresa), se puede evaluar según el plan.</p>
+        </details>
+
+        <details>
+          <summary>¿Puedo manejar varias sucursales?</summary>
+          <p>Sí. Kairo soporta operación multi-sucursal y reportes consolidados según configuración.</p>
+        </details>
+
+        <details>
+          <summary>¿Maneja pagos parciales y saldos pendientes?</summary>
+          <p>Sí. En ventas puedes registrar pagos completos o parciales y controlar el saldo pendiente por cliente.</p>
+        </details>
+
+        <details>
+          <summary>¿Puedo exportar reportes a Excel?</summary>
+          <p>Sí. Módulos como productos, compras y ventas permiten exportación para análisis o respaldo.</p>
+        </details>
+
+        <details>
+          <summary>¿Cómo funcionan usuarios y permisos?</summary>
+          <p>El sistema permite permisos por módulo y acción (ver/crear/editar/eliminar) para controlar el acceso de cada usuario.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="sec" id="cta">
+    <div class="wrap">
+      <div class="card pad" style="display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:center;">
+        <div>
+          <h2 style="margin:0 0 8px;">Empieza hoy con Kairo</h2>
+          <p style="margin:0;color:var(--muted);">
+            Agenda una demo y te ayudamos con la configuración inicial: sucursales, catálogo, usuarios y permisos.
+          </p>
+          <div class="hero-ctas" style="margin-top:14px;">
+            <a class="btn primary" href="https://TU_URL_DEMO_O_REGISTRO" target="_blank" rel="noreferrer">Agendar demo</a>
+            <a class="btn" href="https://wa.me/XXXXXXXXXXX" target="_blank" rel="noreferrer">WhatsApp</a>
+          </div>
+        </div>
+        <div class="feat" style="margin:0;">
+          <h3 style="margin:0 0 6px;">Incluye</h3>
+          <p style="margin:0;color:var(--muted2);line-height:1.8;">
+            • Onboarding<br>
+            • Soporte<br>
+            • Plantillas de carga masiva<br>
+            • Recomendaciones de operación
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+    <span>© <span id="y"></span> Kairo. Todos los derechos reservados.</span>
+    <span>Privacidad · Términos · Soporte</span>
+  </div>
+</footer>
+
+<script>
+  // Año
+  document.getElementById('y').textContent = new Date().getFullYear();
+
+  // Tabs de screenshots
+  const map = {
+    welcome: {
+      src: "assets/kairo-welcome.png",
+      alt: "Pantalla de bienvenida de Kairo",
+      note: "Pantalla de bienvenida: navegación clara, UI limpia y moderna."
+    },
+    products: {
+      src: "assets/kairo-products.png",
+      alt: "Módulo de productos de Kairo",
+      note: "Productos: KPIs + filtros + tabla, exportación Excel y carga masiva."
+    },
+    sales: {
+      src: "assets/kairo-sales.png",
+      alt: "Módulo de ventas de Kairo",
+      note: "Ventas: indicadores, estados de pago y saldo pendiente por cliente."
+    }
+  };
+
+  const tabs = document.querySelectorAll('.tab');
+  const img = document.getElementById('shotImg');
+  const note = document.getElementById('shotNote');
+
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      tabs.forEach(x => { x.classList.remove('active'); x.setAttribute('aria-selected','false'); });
+      t.classList.add('active');
+      t.setAttribute('aria-selected','true');
+
+      const key = t.getAttribute('data-shot');
+      img.src = map[key].src;
+      img.alt = map[key].alt;
+      note.textContent = map[key].note;
+    });
+  });
+</script>
+</body>
+</html>
