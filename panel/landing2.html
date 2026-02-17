@@ -222,6 +222,25 @@
       font-weight:900;
     }
 
+    .install-fee{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(8,144,136,.22);
+      background: rgba(8,144,136,.08);
+      color: var(--teal-700);
+      font-weight:700;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .install-fee small{
+      display:block;
+      font-weight:600;
+      color: var(--muted2);
+      margin-top:2px;
+    }
+
     /* Pricing */
     .pricing{
       display:grid;
@@ -441,11 +460,17 @@
     <div class="wrap">
       <h2>Planes y precios</h2>
       <p>Escoge el plan según el tamaño de tu operación. Puedes crecer de forma progresiva.</p>
-
+        <div class="install-fee">
+        <span class="dot" style="margin-top:6px;"></span>
+        <div>
+          Instalación y configuración inicial: <strong>$250</strong> (pago único).
+          <small>Incluye onboarding, carga inicial asistida (catálogo/sucursales/usuarios) y recomendaciones de operación.</small>
+        </div>
+      </div>
       <div class="pricing">
         <div class="card plan">
           <span class="tag">Starter</span>
-          <div class="price">Pago unico de 250$ + $19</div>
+          <div class="price">$19</div>
           <div class="per">por mes · 1 sucursal</div>
           <ul class="ul">
             <li>Productos + Categorías + Impuestos</li>
@@ -536,7 +561,7 @@
             Agenda una demo y te ayudamos con la configuración inicial: sucursales, catálogo, usuarios y permisos.
           </p>
           <div class="hero-ctas" style="margin-top:14px;">
-            <a class="btn primary" href="https://main.d1c20ct90iemdd.amplifyapp.com/home/select-empresa" target="_blank" rel="noreferrer">Agendar demo</a>
+            <a class="btn primary" href="https://main.d1c20ct90iemdd.amplifyapp.com/login" target="_blank" rel="noreferrer">Agendar demo</a>
             <a class="btn" href="https://wa.me/XXXXXXXXXXX" target="_blank" rel="noreferrer">WhatsApp</a>
           </div>
         </div>
