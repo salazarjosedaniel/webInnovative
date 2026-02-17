@@ -1,1305 +1,1205 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor Inteligente de Precios - Infografía</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Clash+Display:wght@500;600;700&family=General+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #0A0E27;
-            --secondary: #1A1F3A;
-            --accent-cyan: #00F5FF;
-            --accent-blue: #0066FF;
-            --accent-orange: #FF6B35;
-            --accent-purple: #8B5CF6;
-            --accent-green: #10B981;
-            --text-primary: #FFFFFF;
-            --text-secondary: #94A3B8;
-            --text-muted: #64748B;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --shadow-glow: 0 0 40px rgba(0, 245, 255, 0.15);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'General Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--primary);
-            color: var(--text-primary);
-            padding: 120px 30px 60px; /* top padding for sticky nav */
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(0, 102, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(0, 245, 255, 0.05) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .noise {
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-            opacity: 0.4;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* Sticky Nav */
-        .sticky-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(10, 14, 39, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            z-index: 999;
-        }
-
-        .sticky-inner {
-            max-width: 1400px;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 30px;
-        }
-
-        .nav-logo {
-            font-weight: 800;
-            color: var(--accent-cyan);
-            letter-spacing: 1px;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .nav-links a {
-            margin-left: 22px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-        }
-
-        .nav-links a:hover { color: var(--accent-cyan); }
-
-        .nav-cta {
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            padding: 8px 18px;
-            border-radius: 20px;
-            color: #000 !important;
-            font-weight: 800 !important;
-        }
-
-        /* Header Section */
-        .header {
-            text-align: center;
-            margin-bottom: 80px;
-            position: relative;
-            animation: fadeInDown 1s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .header-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 20px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--accent-cyan);
-            margin-bottom: 24px;
-            backdrop-filter: blur(10px);
-        }
-
-        .header-badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--accent-cyan);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .header h1 {
-            font-family: 'Clash Display', sans-serif;
-            font-size: clamp(2.5rem, 6vw, 5rem);
-            font-weight: 700;
-            margin-bottom: 20px;
-            letter-spacing: -2px;
-            line-height: 1.1;
-            background: linear-gradient(135deg, #FFFFFF 0%, var(--accent-cyan) 50%, var(--accent-purple) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: shimmer 3s ease-in-out infinite;
-            background-size: 200% auto;
-        }
-
-        .header .subtitle {
-            font-size: clamp(1rem, 2vw, 1.25rem);
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-bottom: 18px;
-            letter-spacing: 0.3px;
-        }
-
-        .header .company {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-top: 18px;
-        }
-
-        .hero-cta { margin-top: 22px; }
-
-        .btn-primary, .btn-secondary {
-            display: inline-block;
-            padding: 14px 28px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-weight: 800;
-            margin: 8px;
-            transition: 0.3s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            color: #000;
-            width: 200px;
-        }
-        .btn-primary:hover { transform: translateY(-3px);  width: 200px;}
-
-        .btn-secondary {
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-            background: rgba(255,255,255,0.02);
-        }
-        .btn-secondary:hover { border-color: var(--accent-cyan); transform: translateY(-3px); }
-
-        /* Main Grid */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 24px;
-            margin-bottom: 40px;
-        }
-
-        /* Card Base Styles */
-        .card {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 40px;
-            border: 1px solid var(--glass-border);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 245, 255, 0.08) 0%, transparent 40%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-        .card:hover::before { opacity: 1; }
-
-        .card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(0, 245, 255, 0.2);
-            box-shadow: var(--shadow-glow);
-        }
-
-        /* Section Title */
-        .section-title {
-            font-family: 'Clash Display', sans-serif;
-            font-size: clamp(1.5rem, 3vw, 2.2rem);
-            font-weight: 700;
-            margin-bottom: 32px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            letter-spacing: -0.5px;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 32px;
-            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
-            border-radius: 2px;
-        }
-
-        .section-subtitle {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: -20px;
-            margin-bottom: 28px;
-            font-weight: 600;
-        }
-
-        /* Hero Flow Diagram */
-        .hero-section {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, var(--glass) 0%, rgba(0, 102, 255, 0.05) 100%);
-            border: 1px solid rgba(0, 102, 255, 0.2);
-            animation-delay: 0.1s;
-            padding: 50px 40px;
-        }
-
-        .flow-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-            margin-top: 40px;
-        }
-
-        .flow-step {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-        }
-
-        .flow-number {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: var(--accent-cyan);
-            margin-bottom: 16px;
-            letter-spacing: 1px;
-        }
-
-        .flow-icon {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, rgba(0, 245, 255, 0.1), rgba(139, 92, 246, 0.1));
-            border: 2px solid var(--glass-border);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .flow-icon::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            border-radius: 20px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: -1;
-        }
-
-        .flow-step:hover .flow-icon {
-            transform: translateY(-5px) scale(1.05);
-            border-color: var(--accent-cyan);
-        }
-
-        .flow-step:hover .flow-icon::before { opacity: 0.3; }
-
-        .flow-arrow {
-            position: absolute;
-            right: -30px;
-            top: 70px;
-            font-size: 1.5rem;
-            color: var(--accent-cyan);
-            opacity: 0.3;
-            animation: slideRight 1.5s ease-in-out infinite;
-        }
-
-        .flow-step:last-child .flow-arrow { display: none; }
-
-        .flow-label {
-            font-weight: 800;
-            font-size: 1rem;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-            letter-spacing: 0.5px;
-        }
-
-        .flow-desc {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        /* Architecture Section */
-        .arch-section { grid-column: 1 / 7; animation-delay: 0.2s; }
-
-        .arch-visual {
-            background: rgba(0, 102, 255, 0.05);
-            border-radius: 16px;
-            padding: 30px;
-            margin-top: 20px;
-            border: 1px solid rgba(0, 102, 255, 0.2);
-        }
-
-        .arch-layer {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 20px;
-            background: var(--glass);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s ease;
-        }
-
-        .arch-layer:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--accent-cyan);
-            transform: translateX(5px);
-        }
-
-        .arch-layer-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-
-        .arch-layer-content h4 {
-            font-weight: 800;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .arch-layer-content p {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            font-weight: 600;
-        }
-
-        /* Specs Grid */
-        .specs-section { grid-column: 7 / -1; animation-delay: 0.3s; }
-
-        .specs-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-top: 20px;
-        }
-
-        .spec-card {
-            background: rgba(139, 92, 246, 0.05);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s ease;
-        }
-
-        .spec-card:hover {
-            background: rgba(139, 92, 246, 0.1);
-            transform: scale(1.03);
-            border-color: var(--accent-purple);
-        }
-
-        .spec-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
-
-        .spec-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .spec-value {
-            font-weight: 800;
-            font-size: 1.05rem;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-        }
-
-        .spec-desc {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
-            font-weight: 600;
-        }
-
-        /* Security Section */
-        .security-section {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(139, 92, 246, 0.05));
-            border: 1px solid rgba(255, 107, 53, 0.2);
-            animation-delay: 0.4s;
-        }
-
-        .security-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 24px;
-        }
-
-        .security-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 24px;
-            background: var(--glass);
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s ease;
-        }
-
-        .security-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--accent-orange);
-            transform: translateY(-3px);
-        }
-
-        .security-icon {
-            width: 52px;
-            height: 52px;
-            background: linear-gradient(135deg, var(--accent-orange), var(--accent-purple));
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            flex-shrink: 0;
-        }
-
-        .security-content h4 {
-            font-weight: 800;
-            font-size: 1rem;
-            color: var(--accent-orange);
-            margin-bottom: 6px;
-        }
-
-        .security-content p {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            font-weight: 600;
-        }
-
-        /* Benefits Section */
-        .benefits-section { grid-column: 1 / -1; animation-delay: 0.5s; }
-
-        .benefits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            margin-top: 24px;
-        }
-
-        .benefit-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 36px;
-            text-align: center;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .benefit-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 0%, rgba(0, 245, 255, 0.1), transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .benefit-card:hover::before { opacity: 1; }
-
-        .benefit-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--accent-cyan);
-            box-shadow: 0 20px 60px rgba(0, 245, 255, 0.2);
-        }
-
-        .benefit-icon {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
-            filter: drop-shadow(0 4px 8px rgba(0, 245, 255, 0.3));
-        }
-
-        .benefit-title {
-            font-family: 'Clash Display', sans-serif;
-            font-weight: 800;
-            font-size: 1.3rem;
-            margin-bottom: 12px;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-
-        .benefit-desc {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            font-weight: 600;
-        }
-
-        /* Stats Section */
-        .stats-section {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, rgba(0, 102, 255, 0.08), rgba(139, 92, 246, 0.08));
-            border: 1px solid rgba(0, 102, 255, 0.3);
-            animation-delay: 0.6s;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 32px;
-            margin-top: 24px;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 28px;
-            background: var(--glass);
-            border-radius: 16px;
-            border: 1px solid var(--glass-border);
-            transition: all 0.3s ease;
-        }
-
-        .stat-item:hover { transform: scale(1.05); border-color: var(--accent-cyan); }
-
-        .stat-number {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: clamp(2.2rem, 4vw, 3.2rem);
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 12px;
-            line-height: 1;
-            letter-spacing: -1px;
-        }
-
-        .stat-label {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        /* Business Model */
-        .business-section {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, rgba(255, 107, 53, 0.08), rgba(139, 92, 246, 0.08));
-            border: 1px solid rgba(255, 107, 53, 0.3);
-            animation-delay: 0.7s;
-            padding: 50px 40px;
-        }
-
-        .business-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px;
-            margin-top: 32px;
-        }
-
-        .business-column {
-            background: var(--glass);
-            border-radius: 20px;
-            padding: 32px;
-            border: 1px solid var(--glass-border);
-        }
-
-        .business-column h4 {
-            font-family: 'Clash Display', sans-serif;
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--text-primary);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            letter-spacing: -0.5px;
-        }
-
-        .business-column ul { list-style: none; padding: 0; }
-
-        .business-column li {
-            padding: 14px 0 14px 36px;
-            position: relative;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            font-weight: 600;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .business-column li:last-child { border-bottom: none; }
-
-        .business-column li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: var(--accent-green);
-            font-weight: 800;
-            font-size: 1.3rem;
-        }
-
-        .revenue-highlight {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 40px;
-            background: linear-gradient(135deg, rgba(0, 245, 255, 0.1), rgba(139, 92, 246, 0.1));
-            border-radius: 20px;
-            margin-top: 32px;
-            border: 2px solid var(--accent-cyan);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .revenue-highlight::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            animation: shimmerSlide 3s infinite;
-        }
-
-        .revenue-highlight .big-number {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: clamp(3rem, 8vw, 6rem);
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1;
-            margin-bottom: 16px;
-            letter-spacing: -2px;
-        }
-
-        .revenue-highlight .label {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        /* Implementation / Trust / Contact */
-        .implementation-section { grid-column: 1 / -1; animation-delay: 0.55s; }
-        .trust-section { grid-column: 1 / -1; animation-delay: 0.6s; }
-
-        .contact-section {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, rgba(0, 245, 255, 0.06), rgba(139, 92, 246, 0.06));
-            border: 1px solid rgba(0, 245, 255, 0.18);
-            animation-delay: 0.75s;
-        }
-
-        .contact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-top: 24px;
-        }
-
-        .contact-grid input, .contact-grid select {
-            padding: 14px;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03);
-            color: white;
-            outline: none;
-            font-weight: 600;
-        }
-
-        .contact-grid input::placeholder { color: rgba(148, 163, 184, 0.8); font-weight: 600; }
-        .contact-grid select option { color: #0A0E27; }
-
-        .contact-grid button {
-            grid-column: 1 / -1;
-            border: none;
-            cursor: pointer;
-        }
-
-        .contact-note {
-            margin-top: 14px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            margin-top: 80px;
-            padding-top: 50px;
-            border-top: 1px solid var(--glass-border);
-            animation: fadeIn 1s ease-out 0.8s backwards;
-        }
-
-        .footer-logo {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 1.8rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 16px;
-            letter-spacing: 1px;
-        }
-
-        .footer-tags {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .footer-tag {
-            padding: 6px 16px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .footer-text { color: var(--text-muted); font-size: 0.9rem; margin-top: 16px; font-weight: 600; }
-
-        /* Animations */
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-40px);} to { opacity: 1; transform: translateY(0);} }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px);} to { opacity: 1; transform: translateY(0);} }
-        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9);} to { opacity: 1; transform: scale(1);} }
-        @keyframes float { 0%, 100% { transform: translateY(0);} 50% { transform: translateY(-12px);} }
-        @keyframes fadeIn { from { opacity: 0;} to { opacity: 1;} }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1);} 50% { opacity: 0.5; transform: scale(1.2);} }
-        @keyframes shimmer { 0% { background-position: -200% center;} 100% { background-position: 200% center;} }
-        @keyframes shimmerSlide { 0% { left: -100%;} 100% { left: 100%;} }
-        @keyframes slideRight { 0%, 100% { transform: translateX(0); opacity: 0.3;} 50% { transform: translateX(8px); opacity: 0.6;} }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .flow-container { grid-template-columns: repeat(2, 1fr); }
-            .flow-arrow { display: none; }
-            .arch-section, .specs-section { grid-column: 1 / -1; }
-            .business-grid { grid-template-columns: 1fr; }
-            .nav-links a { margin-left: 14px; }
-        }
-
-        @media (max-width: 768px) {
-            body { padding: 110px 20px 40px; }
-            .card { padding: 30px 24px; }
-            .flow-container { grid-template-columns: 1fr; }
-            .specs-grid { grid-template-columns: 1fr; }
-            .section-title { font-size: 1.8rem; }
-            .sticky-inner { padding: 12px 18px; }
-            .nav-links { display: none; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visor Inteligente de Precios | Plataforma SaaS Retail</title>
+  <meta name="description" content="Pantalla inteligente para consulta de precios en tiendas. Escanea el código y muestra el precio actualizado en tiempo real. Plataforma SaaS con monitoreo, OTA y control de flota." />
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Clash+Display:wght@500;600;700&family=General+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0A0E27;
+      --panel:#0f1638;
+      --glass: rgba(255,255,255,0.035);
+      --glass2: rgba(255,255,255,0.055);
+      --border: rgba(255,255,255,0.10);
+
+      --txt:#FFFFFF;
+      --muted:#94A3B8;
+      --muted2:#64748B;
+
+      --cyan:#00F5FF;
+      --blue:#0066FF;
+      --purple:#8B5CF6;
+      --orange:#FF6B35;
+      --green:#10B981;
+
+      --shadow: 0 20px 60px rgba(0,245,255,0.18);
+      --shadowSoft: 0 18px 50px rgba(0,0,0,0.35);
+
+      --radius: 24px;
+      --radius2: 18px;
+      --max: 1200px;
+
+      --focus: 0 0 0 4px rgba(0,245,255,0.16);
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html,body{ height:100%; }
+    body{
+      font-family:'General Sans',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      overflow-x:hidden;
+    }
+
+    /* Background */
+    .bgGlow{
+      position:fixed; inset:0; pointer-events:none; z-index:-2;
+      background:
+        radial-gradient(900px 600px at 20% 15%, rgba(0,102,255,0.12), transparent 55%),
+        radial-gradient(900px 600px at 80% 85%, rgba(139,92,246,0.12), transparent 55%),
+        radial-gradient(1100px 800px at 50% 55%, rgba(0,245,255,0.07), transparent 60%);
+    }
+    .noise{
+      position:fixed; inset:-50%;
+      width:200%; height:200%;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity:.45; pointer-events:none; z-index:-1;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    .container{ width:min(var(--max), calc(100% - 48px)); margin:0 auto; }
+
+    /* Nav */
+    .nav{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(180deg, rgba(10,14,39,0.75), rgba(10,14,39,0.25));
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .navInner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0;
+    }
+    .brand{ flex-wrap:wrap; max-width: 60vw; 
+      display:flex; align-items:center; gap:12px;
+      font-family:'IBM Plex Mono',monospace;
+      letter-spacing:1px;
+      font-weight:700;
+    }
+    .brandDot{
+      width:10px; height:10px; border-radius:50%;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      box-shadow: 0 0 24px rgba(0,245,255,0.35);
+    }
+    .navLinks{
+      display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+      color: var(--muted);
+      font-weight:600;
+      font-size:0.95rem;
+    }
+    .navLinks a{ opacity:.9; }
+    .navLinks a:hover{ color: #fff; opacity:1; }
+
+    .navCtas{ display:flex; gap:10px; align-items:center; }
+    .btn{
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+      color:#fff;
+      padding:10px 14px;
+      border-radius: 999px;
+      font-weight:700;
+      transition:.22s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(0,245,255,0.25); box-shadow: 0 10px 30px rgba(0,245,255,0.10); }
+    .btn:focus{ outline:none; box-shadow: var(--focus); }
+    .btnPrimary{
+      background: linear-gradient(135deg, rgba(0,245,255,0.18), rgba(139,92,246,0.18));
+      border-color: rgba(0,245,255,0.30);
+    }
+    .btnPrimary:hover{ box-shadow: var(--shadow); }
+    .btnGhost{ background: transparent; border-color: rgba(255,255,255,0.12); color: var(--muted); }
+    .btnGhost:hover{ color:#fff; border-color: rgba(255,255,255,0.22); box-shadow: var(--shadowSoft); }
+
+    /* Hero */
+    .hero{ padding: 70px 0 30px; }
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:8px 16px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      border-radius: 999px;
+      color: var(--cyan);
+      font-weight:800;
+      letter-spacing:1.2px;
+      text-transform: uppercase;
+      font-size:0.75rem;
+      backdrop-filter: blur(12px);
+    }
+    .badge i{
+      width:7px; height:7px; border-radius:50%;
+      background: var(--cyan);
+      display:inline-block;
+      box-shadow: 0 0 18px rgba(0,245,255,0.55);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .heroGrid{
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 26px;
+      align-items: stretch;
+      margin-top: 18px;
+    }
+    .heroTitle{
+      font-family:'Clash Display',sans-serif;
+      font-weight:800;
+      letter-spacing:-1.8px;
+      line-height:1.05;
+      font-size: clamp(2.3rem, 5vw, 4.3rem);
+      margin-top:18px;
+      background: linear-gradient(135deg, #FFFFFF 0%, var(--cyan) 45%, var(--purple) 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-size: 220% auto;
+      animation: shimmer 3.2s ease-in-out infinite;
+    }
+    .heroSub{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 1.8vw, 1.2rem);
+      line-height:1.6;
+      font-weight:600;
+    }
+    .heroBullets{
+      display:flex; flex-wrap:wrap;
+      gap:10px;
+      margin-top: 18px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      border-radius: 999px;
+      color: var(--muted);
+      font-weight:700;
+      font-size:0.9rem;
+    }
+    .pill span{
+      width:8px; height:8px; border-radius:50%;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      display:inline-block;
+      opacity:.9;
+    }
+
+    .heroCard{
+      border-radius: var(--radius);
+      border:1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,102,255,0.06));
+      padding: 22px;
+      box-shadow: var(--shadowSoft);
+      position: relative;
+      overflow:hidden;
+    }
+    .heroCard::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(circle at 20% 20%, rgba(0,245,255,0.14), transparent 45%),
+                  radial-gradient(circle at 80% 80%, rgba(139,92,246,0.14), transparent 45%);
+      opacity: .75;
+      z-index:0;
+    }
+    .heroCardInner{ position:relative; z-index:1; }
+    .kpiGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top: 10px;
+    }
+    .kpi{
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      padding: 14px 14px;
+    }
+    .kpi .n{
+      font-family:'IBM Plex Mono',monospace;
+      font-size: 1.5rem;
+      font-weight:900;
+      letter-spacing:-1px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      -webkit-background-clip:text;
+      background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .kpi .l{
+      margin-top:6px;
+      color: var(--muted);
+      font-weight:700;
+      font-size:0.92rem;
+      line-height:1.3;
+    }
+
+    .heroCtas{
+      margin-top: 20px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .note{
+      margin-top: 14px;
+      color: var(--muted2);
+      font-weight:600;
+      font-size:0.92rem;
+      line-height:1.4;
+    }
+    .note b{ color:#fff; }
+
+    /* Sections */
+    section{ padding: 40px 0; }
+    .sectionHead{
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:20px;
+      margin-bottom: 18px;
+    }
+    .h2{
+      font-family:'Clash Display',sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      letter-spacing:-0.8px;
+      font-weight:800;
+    }
+    .desc{
+      color: var(--muted);
+      font-weight:600;
+      line-height:1.6;
+      max-width: 62ch;
+      font-size: 1.02rem;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+    .card{
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.035);
+      border-radius: var(--radius);
+      padding: 22px;
+      position: relative;
+      overflow:hidden;
+      transition: .25s ease;
+    }
+    .card:hover{
+      transform: translateY(-4px);
+      border-color: rgba(0,245,255,0.18);
+      box-shadow: var(--shadow);
+    }
+    .cardTitle{
+      font-weight:900;
+      font-size:1.05rem;
+      letter-spacing:-0.2px;
+      margin-bottom: 8px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .iconBox{
+      width:38px; height:38px;
+      border-radius: 12px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(135deg, rgba(0,245,255,0.10), rgba(139,92,246,0.10));
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      flex: 0 0 auto;
+    }
+    .card p{
+      color: var(--muted);
+      font-weight:600;
+      line-height:1.6;
+      font-size:0.98rem;
+    }
+    .list{
+      margin-top: 12px;
+      display:grid;
+      gap:10px;
+    }
+    .li{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color: var(--muted);
+      font-weight:650;
+      line-height:1.5;
+    }
+    .li i{
+      color: var(--green);
+      font-weight:900;
+      margin-top:2px;
+      font-style:normal;
+    }
+
+    /* How it works */
+    .steps{
+      grid-column: 1 / -1;
+      padding: 26px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,102,255,0.05));
+    }
+    .stepsGrid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .step{
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      border-radius: 18px;
+      padding: 16px;
+      position: relative;
+      overflow:hidden;
+    }
+    .step .num{
+      font-family:'IBM Plex Mono',monospace;
+      color: var(--cyan);
+      font-weight:900;
+      font-size:0.75rem;
+      letter-spacing:1px;
+    }
+    .step .t{
+      margin-top: 10px;
+      font-weight:900;
+      letter-spacing:-0.2px;
+    }
+    .step .d{
+      margin-top: 8px;
+      color: var(--muted);
+      font-weight:650;
+      line-height:1.5;
+      font-size:0.92rem;
+    }
+
+    /* Use cases */
+    .uc1{ grid-column: 1 / 7; }
+    .uc2{ grid-column: 7 / -1; }
+    .tagRow{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px; }
+    .tag{
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight:800;
+      font-size:0.88rem;
+    }
+
+    /* Platform */
+    .platA{ grid-column: 1 / 8; }
+    .platB{ grid-column: 8 / -1; }
+
+    .miniTable{
+      margin-top: 14px;
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius: 18px;
+      overflow:hidden;
+    }
+    .row{
+      display:flex; gap:12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      align-items:flex-start;
+    }
+    .row:last-child{ border-bottom:none; }
+    .row b{ min-width: 240px; color:#fff; letter-spacing:-0.2px; }
+    .row span{ color: var(--muted); font-weight:650; line-height:1.5; }
+
+    /* Plans */
+    .plan{ grid-column: span 4; }
+    .price{
+      font-family:'IBM Plex Mono',monospace;
+      font-weight:900;
+      font-size: 2rem;
+      letter-spacing:-1px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip:text;
+      background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-top: 6px;
+    }
+    .small{
+      margin-top: 6px;
+      color: var(--muted2);
+      font-weight:650;
+      font-size:0.92rem;
+      line-height:1.5;
+    }
+    .chip{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-weight:900;
+      font-size:0.8rem;
+      letter-spacing:1px;
+      text-transform: uppercase;
+    }
+    .chip.hot{
+      color:#fff;
+      border-color: rgba(0,245,255,0.25);
+      background: linear-gradient(135deg, rgba(0,245,255,0.10), rgba(139,92,246,0.10));
+    }
+
+    /* Demo */
+    .demoWrap{
+      background: linear-gradient(135deg, rgba(0,245,255,0.08), rgba(139,92,246,0.08));
+      border:1px solid rgba(0,245,255,0.20);
+      border-radius: var(--radius);
+      padding: 26px;
+      position: relative;
+      overflow:hidden;
+    }
+    .demoGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .form{
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    label{
+      display:block;
+      font-weight:800;
+      color: var(--muted);
+      font-size:0.88rem;
+      margin-bottom:6px;
+    }
+    input, textarea, select{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(10,14,39,0.6);
+      color:#fff;
+      font-weight:650;
+      outline:none;
+      transition:.2s ease;
+    }
+    input:focus, textarea:focus, select:focus{ box-shadow: var(--focus); border-color: rgba(0,245,255,0.28); }
+    textarea{ min-height: 108px; resize: vertical; }
+    .formRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .formRow1{ grid-template-columns: 1fr; }
+    .formActions{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      margin-top: 10px;
+    }
+    .formNote{
+      margin-top: 10px;
+      color: var(--muted2);
+      font-weight:650;
+      line-height:1.5;
+      font-size:0.92rem;
+    }
+    .toast{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-weight:750;
+      display:none;
+    }
+    .toast.ok{
+      display:block;
+      border-color: rgba(16,185,129,0.35);
+      color:#eafff6;
+      background: rgba(16,185,129,0.08);
+    }
+    .toast.err{
+      display:block;
+      border-color: rgba(255,107,53,0.35);
+      color:#fff3ef;
+      background: rgba(255,107,53,0.08);
+    }
+
+    /* Footer */
+    footer{
+      padding: 46px 0 70px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 30px;
+      color: var(--muted);
+    }
+    .footRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 18px;
+      flex-wrap:wrap;
+    }
+    .footBrand{
+      font-family:'IBM Plex Mono',monospace;
+      font-weight:900;
+      letter-spacing:1px;
+      color:#fff;
+    }
+    .footTags{ display:flex; gap:10px; flex-wrap:wrap; }
+    .footTag{
+      padding: 7px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      font-weight:800;
+      font-size:0.78rem;
+      text-transform: uppercase;
+      letter-spacing:1px;
+      color: var(--muted2);
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .heroGrid{ grid-template-columns: 1fr; }
+      .stepsGrid{ grid-template-columns: repeat(2, 1fr); }
+      .uc1,.uc2,.platA,.platB{ grid-column: 1 / -1; }
+      .plan{ grid-column: 1 / -1; }
+      .demoGrid{ grid-template-columns: 1fr; }
+      .navLinks{ display:none; }
+    }
+    @media (max-width: 520px){
+      .container{ width: calc(100% - 28px); }
+      .stepsGrid{ grid-template-columns: 1fr; }
+      .formRow{ grid-template-columns: 1fr; }
+    }
+
+    /* Animations */
+    @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.15); opacity:0.55; } }
+    @keyframes shimmer{ 0%{ background-position:-200% center; } 100%{ background-position:200% center; } }
+  
+    /* --- Responsive fixes (no text cut) --- */
+    body, .container, .card, .row, .step, .kpi, .pill, .tag, .footTag,
+    h1, h2, h3, p, a, label, input, textarea, select, button {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* Ensure long monospace tokens don't overflow */
+    .price, .kpi .n, .badge, .brand, .chip {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* Prevent horizontal overflow on small screens */
+    .heroCard, .card, .demoWrap, .form, .miniTable {
+      max-width: 100%;
+    }
+
+    /* Make "miniTable" rows responsive */
+    .row b { min-width: 220px; }
+
+    @media (max-width: 640px){
+      .row{
+        flex-direction: column;
+        gap: 6px;
+      }
+      .row b{
+        min-width: auto;
+        width: 100%;
+      }
+      .row span{
+        width: 100%;
+      }
+
+      /* tighten paddings */
+      .hero{ padding: 56px 0 22px; }
+      section{ padding: 30px 0; }
+      .card{ padding: 18px; border-radius: 20px; }
+      .demoWrap{ padding: 18px; }
+      .form{ padding: 16px; }
+
+      /* better heading line-break on mobile */
+      .heroTitle{
+        letter-spacing: -1.2px;
+        line-height: 1.07;
+      }
+
+      /* pills and tags */
+      .pill, .tag, .footTag{
+        font-size: 0.86rem;
+      }
+
+      /* KPIs */
+      .kpi .n{ font-size: 1.35rem; }
+      .kpi .l{ font-size: 0.88rem; }
+
+      /* Footer spacing */
+      footer{ padding: 36px 0 56px; }
+    }
+
+    @media (max-width: 420px){
+      /* extra small devices */
+      .heroTitle{ font-size: 2.05rem; }
+      .desc{ font-size: 0.98rem; }
+      .navCtas .btn{ padding: 9px 12px; }
+    }
+
+  
+    /* --- Fix: PROBLEMA cards stacking on mobile (override inline grid-column) --- */
+    @media (max-width: 900px){
+      #problema .grid{ grid-template-columns: 1fr; }
+      #problema .grid .card{ grid-column: 1 / -1 !important; }
+    }
+
+</style>
 </head>
+
 <body>
-    <div class="noise"></div>
+  <div class="bgGlow"></div>
+  <div class="noise"></div>
 
-    <!-- Sticky Navigation -->
-    <div class="sticky-nav">
-        <div class="sticky-inner">
-            <div class="nav-logo">VISOR SaaS</div>
-            <div class="nav-links">
-                <a href="#flujo">Flujo</a>
-                <a href="#arquitectura">Arquitectura</a>
-                <a href="#beneficios">Beneficios</a>
-                <a href="#integradores">Integradores</a>
-                <a href="#contacto" class="nav-cta">Solicitar Demo</a>
-            </div>
-        </div>
-    </div>
-
+  <!-- NAV -->
+  <div class="nav">
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-badge"><span>PLATAFORMA SaaS</span></div>
-            <h1>VISOR INTELIGENTE<br>DE PRECIOS</h1>
-            <p class="subtitle">Consulta precio por código en 1–2 segundos · Gestión centralizada · Instalación en 15 minutos</p>
-            <div class="hero-cta">
-                <a href="#contacto" class="btn-primary">Solicitar Demo</a>
-                <a href="#arquitectura" class="btn-secondary">Ver Arquitectura</a>
-            </div>
-            <p class="company">INNOVATIVE SOLUTIONS TECNOLÓGICA, C.A.</p>
+      <div class="navInner">
+        <a class="brand" href="#top" aria-label="Innovative Solutions">
+          <span class="brandDot"></span>
+          INNOVATIVE SOLUTIONS
+        </a>
+
+        <nav class="navLinks" aria-label="Secciones">
+          <a href="#problema">Problema</a>
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#plataforma">Plataforma</a>
+          <a href="#planes">Planes</a>
+          <a href="#demo">Solicitar demo</a>
+        </nav>
+
+        <div class="navCtas">
+          <a class="btn btnGhost" href="#plataforma">Ver plataforma</a>
+          <a class="btn btnPrimary" href="#demo">Solicitar demo</a>
         </div>
-
-        <div class="grid">
-            <!-- Hero Flow -->
-            <div class="card hero-section" id="flujo">
-                <h2 class="section-title">Flujo Operativo del Sistema</h2>
-                <p class="section-subtitle">Arquitectura cliente-servidor con comunicación cifrada en tiempo real</p>
-                <div class="flow-container">
-                    <div class="flow-step">
-                        <div class="flow-number">01</div>
-                        <div class="flow-icon">📷</div>
-                        <div class="flow-label">ESCANEO</div>
-                        <div class="flow-desc">Lector USB 2D (HID)</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">02</div>
-                        <div class="flow-icon">📡</div>
-                        <div class="flow-label">CONSULTA API</div>
-                        <div class="flow-desc">HTTPS (443)</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">03</div>
-                        <div class="flow-icon">☁️</div>
-                        <div class="flow-label">RESPUESTA CLOUD</div>
-                        <div class="flow-desc">JSON estandarizado</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">04</div>
-                        <div class="flow-icon">💻</div>
-                        <div class="flow-label">VISUALIZACIÓN</div>
-                        <div class="flow-desc">Pantalla LCD 7”</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">05</div>
-                        <div class="flow-icon">📊</div>
-                        <div class="flow-label">REGISTRO</div>
-                        <div class="flow-desc">Logs y monitoreo central</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Architecture -->
-            <div class="card arch-section" id="arquitectura">
-                <h2 class="section-title">Arquitectura del Sistema</h2>
-                <div class="arch-visual">
-                    <div class="arch-layer">
-                        <div class="arch-layer-icon">🎯</div>
-                        <div class="arch-layer-content">
-                            <h4>Capa de Presentación</h4>
-                            <p>LCD 7” Waveshare con interfaz optimizada para retail</p>
-                        </div>
-                    </div>
-                    <div class="arch-layer">
-                        <div class="arch-layer-icon">⚡</div>
-                        <div class="arch-layer-content">
-                            <h4>Capa de Procesamiento</h4>
-                            <p>ESP32-S3 dual-core con gestión de eventos en tiempo real</p>
-                        </div>
-                    </div>
-                    <div class="arch-layer">
-                        <div class="arch-layer-icon">🌐</div>
-                        <div class="arch-layer-content">
-                            <h4>Capa de Comunicación</h4>
-                            <p>WiFi 2.4GHz con protocolo HTTPS (TLS)</p>
-                        </div>
-                    </div>
-                    <div class="arch-layer">
-                        <div class="arch-layer-icon">☁️</div>
-                        <div class="arch-layer-content">
-                            <h4>Capa de Servicios</h4>
-                            <p>Backend SaaS con APIs REST y base de datos centralizada</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Specs -->
-            <div class="card specs-section">
-                <h2 class="section-title">Especificaciones</h2>
-                <div class="specs-grid">
-                    <div class="spec-card">
-                        <span class="spec-icon">🖥️</span>
-                        <div class="spec-label">Pantalla</div>
-                        <div class="spec-value">LCD 7”</div>
-                        <div class="spec-desc">Waveshare de alta definición</div>
-                    </div>
-                    <div class="spec-card">
-                        <span class="spec-icon">⚡</span>
-                        <div class="spec-label">Procesador</div>
-                        <div class="spec-value">ESP32-S3</div>
-                        <div class="spec-desc">Dual-core con WiFi integrado</div>
-                    </div>
-                    <div class="spec-card">
-                        <span class="spec-icon">🔌</span>
-                        <div class="spec-label">Consumo</div>
-                        <div class="spec-value">&lt; 15W</div>
-                        <div class="spec-desc">Operación continua eficiente</div>
-                    </div>
-                    <div class="spec-card">
-                        <span class="spec-icon">🔄</span>
-                        <div class="spec-label">Actualizaciones</div>
-                        <div class="spec-value">OTA</div>
-                        <div class="spec-desc">Over-The-Air remoto</div>
-                    </div>
-                    <div class="spec-card">
-                        <span class="spec-icon">📷</span>
-                        <div class="spec-label">Escáner</div>
-                        <div class="spec-value">USB 2D</div>
-                        <div class="spec-desc">Lectura bidimensional (HID)</div>
-                    </div>
-                    <div class="spec-card">
-                        <span class="spec-icon">🔋</span>
-                        <div class="spec-label">Alimentación</div>
-                        <div class="spec-value">110V</div>
-                        <div class="spec-desc">Fuente interna + salida USB Tipo‑C</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Security -->
-            <div class="card security-section">
-                <h2 class="section-title">Seguridad Multicapa</h2>
-                <p class="section-subtitle">Protección integral de datos y comunicaciones con estándares enterprise</p>
-                <div class="security-grid">
-                    <div class="security-item">
-                        <div class="security-icon">🔒</div>
-                        <div class="security-content">
-                            <h4>HTTPS/TLS</h4>
-                            <p>Comunicación cifrada punto a punto en cada consulta (puerto 443).</p>
-                        </div>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-icon">🛡️</div>
-                        <div class="security-content">
-                            <h4>Sin Puertos Entrantes</h4>
-                            <p>Arquitectura outbound-only: el dispositivo solo “sale” a internet.</p>
-                        </div>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-icon">✓</div>
-                        <div class="security-content">
-                            <h4>Validación de Servicio</h4>
-                            <p>Verificación remota del estado de suscripción por deviceId.</p>
-                        </div>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-icon">🔧</div>
-                        <div class="security-content">
-                            <h4>Watchdog & Auto‑Recovery</h4>
-                            <p>Recuperación automática ante fallos de conectividad o bloqueo.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Benefits -->
-            <div class="card benefits-section" id="beneficios">
-                <h2 class="section-title">Ventajas Competitivas</h2>
-                <p class="section-subtitle">Solución integral que maximiza eficiencia operativa y retorno de inversión</p>
-                <div class="benefits-grid">
-                    <div class="benefit-card">
-                        <div class="benefit-icon">⚡</div>
-                        <h3 class="benefit-title">Despliegue Rápido</h3>
-                        <p class="benefit-desc">Puesta en marcha simple con portal WiFi integrado. Operativo en menos de 15 minutos.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">📈</div>
-                        <h3 class="benefit-title">Escalabilidad</h3>
-                        <p class="benefit-desc">Arquitectura cloud elástica. Gestiona desde 1 unidad hasta cientos/miles de dispositivos.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">💰</div>
-                        <h3 class="benefit-title">Costo Total Bajo</h3>
-                        <p class="benefit-desc">Consumo bajo &lt;15W. Mantenimiento remoto (OTA) reduce visitas técnicas y costos.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">📱</div>
-                        <h3 class="benefit-title">Gestión Centralizada</h3>
-                        <p class="benefit-desc">Monitoreo en tiempo real, logs y control de flota por sucursal y dispositivo.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="card stats-section">
-                <h2 class="section-title">KPIs de Rendimiento</h2>
-                <p class="section-subtitle">Métricas clave para operación continua y eficiente</p>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-number">&lt;15W</div>
-                        <div class="stat-label">Consumo Energético</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">15 MIN</div>
-                        <div class="stat-label">Puesta en Marcha</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">24/7</div>
-                        <div class="stat-label">Monitoreo</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">HTTPS</div>
-                        <div class="stat-label">Tráfico Cifrado (TLS)</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Implementation -->
-            <div class="card implementation-section">
-                <h2 class="section-title">Implementación en 5 Pasos</h2>
-                <p class="section-subtitle">Proceso estándar para instalación en sucursal y activación SaaS</p>
-                <div class="flow-container">
-                    <div class="flow-step">
-                        <div class="flow-number">01</div>
-                        <div class="flow-icon">🔌</div>
-                        <div class="flow-label">Instalación Física</div>
-                        <div class="flow-desc">Empotrado + energía</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">02</div>
-                        <div class="flow-icon">📶</div>
-                        <div class="flow-label">Configurar WiFi</div>
-                        <div class="flow-desc">Portal integrado</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">03</div>
-                        <div class="flow-icon">🔗</div>
-                        <div class="flow-label">Configurar URL API</div>
-                        <div class="flow-desc">Catálogo del cliente</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">04</div>
-                        <div class="flow-icon">📷</div>
-                        <div class="flow-label">Prueba de Escaneo</div>
-                        <div class="flow-desc">Validación inmediata</div>
-                        <div class="flow-arrow">→</div>
-                    </div>
-                    <div class="flow-step">
-                        <div class="flow-number">05</div>
-                        <div class="flow-icon">🚀</div>
-                        <div class="flow-label">Go‑Live</div>
-                        <div class="flow-desc">Operación en piso</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Trust & Support -->
-            <div class="card trust-section">
-                <h2 class="section-title">Confianza & Soporte</h2>
-                <p class="section-subtitle">Diseñado para operación real en retail (soporte y estabilidad)</p>
-                <div class="security-grid">
-                    <div class="security-item">
-                        <div class="security-icon">🛠️</div>
-                        <div class="security-content">
-                            <h4>Soporte Remoto N2–N3</h4>
-                            <p>Diagnóstico remoto, ajustes de plataforma y acompañamiento a integradores.</p>
-                        </div>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-icon">🔄</div>
-                        <div class="security-content">
-                            <h4>Actualización OTA</h4>
-                            <p>Mejoras y correcciones sin visitas presenciales ni interrupciones prolongadas.</p>
-                        </div>
-                    </div>
-                    <div class="security-item">
-                        <div class="security-icon">📊</div>
-                        <div class="security-content">
-                            <h4>Monitoreo Central</h4>
-                            <p>Estado por deviceId, logs y trazabilidad de eventos para soporte y auditoría.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Business Model -->
-            <div class="card business-section" id="integradores">
-                <h2 class="section-title">Modelo de Colaboración Estratégica</h2>
-                <p class="section-subtitle">Partnership estructurado con responsabilidades claras y beneficio recurrente</p>
-                <div class="business-grid">
-                    <div class="business-column">
-                        <h4>🏢 Innovative Solutions</h4>
-                        <ul>
-                            <li>Infraestructura SaaS y arquitectura cloud completa</li>
-                            <li>Soporte técnico remoto nivel 2 y 3</li>
-                            <li>I+D continuo y actualizaciones de plataforma</li>
-                            <li>Backend, APIs y gestión de base de datos</li>
-                            <li>Monitoreo centralizado y analytics</li>
-                        </ul>
-                    </div>
-                    <div class="business-column">
-                        <h4>🤝 Integrador Autorizado</h4>
-                        <ul>
-                            <li>Instalación física y configuración in‑situ</li>
-                            <li>Comercialización y adquisición de clientes</li>
-                            <li>Soporte técnico presencial nivel 1</li>
-                            <li>Gestión de cuenta y relación comercial</li>
-                            <li>Capacitación a usuarios finales</li>
-                        </ul>
-                    </div>
-                    <div class="revenue-highlight">
-                        <div class="big-number">30%</div>
-                        <div class="label">Participación Mensual Recurrente por Dispositivo Activo</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact -->
-            <div class="card contact-section" id="contacto">
-                <h2 class="section-title">Solicitar Demo</h2>
-                <p class="section-subtitle">Déjanos tus datos y coordinamos una demo (integradores / retail)</p>
-
-                <form class="contact-grid" onsubmit="return handleDemoRequest(event)">
-                    <input name="nombre" type="text" placeholder="Nombre" required>
-                    <input name="empresa" type="text" placeholder="Empresa" required>
-                    <input name="email" type="email" placeholder="Correo electrónico" required>
-                    <input name="ciudad" type="text" placeholder="Ciudad" required>
-                    <select name="tipo" required>
-                        <option value="" disabled selected>Selecciona tu perfil</option>
-                        <option value="integrador">Soy Integrador</option>
-                        <option value="retail">Soy Retail</option>
-                    </select>
-                    <button class="btn-primary" type="submit">Enviar Solicitud</button>
-                </form>
-
-                <div class="contact-note" id="contactNote">
-                    
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-logo">INNOVATIVE SOLUTIONS TECNOLÓGICA</div>
-            <div class="footer-tags">
-                <span class="footer-tag">IoT Platform</span>
-                <span class="footer-tag">SaaS Architecture</span>
-                <span class="footer-tag">Cloud Infrastructure</span>
-                <span class="footer-tag">ESP32-S3</span>
-                <span class="footer-tag">HTTPS/TLS</span>
-            </div>
-            <p class="footer-text">Infografía Técnico‑Comercial · Febrero 2026</p>
-            <p class="footer-text" style="opacity: 0.55; margin-top: 8px;">Sistema de Gestión Inteligente de Precios para Retail</p>
-        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // Smooth anchor scroll with header offset
-        document.querySelectorAll('a[href^="#"]').forEach(a => {
-            a.addEventListener('click', (e) => {
-                const id = a.getAttribute('href').slice(1);
-                const el = document.getElementById(id);
-                if (!el) return;
-                e.preventDefault();
-                const y = el.getBoundingClientRect().top + window.scrollY - 100;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-            });
+  <!-- HERO -->
+  <main id="top" class="hero">
+    <div class="container">
+      <div class="badge"><i></i> Plataforma SaaS Retail</div>
+
+      <div class="heroGrid">
+        <div>
+          <h1 class="heroTitle">
+            Consulta precios en segundos.<br/>
+            Sin filas. Sin errores.
+          </h1>
+
+          <p class="heroSub">
+            Pantalla inteligente para <b>farmacias</b>, <b>supermercados</b> y comercios.
+            El cliente escanea el código de barras y ve el precio actualizado en tiempo real.
+            Todo controlado desde la nube, con monitoreo, logs y actualizaciones remotas.
+          </p>
+
+          <div class="heroBullets" aria-label="Beneficios clave">
+            <div class="pill"><span></span> Instalación en ~15 min</div>
+            <div class="pill"><span></span> Operación 24/7</div>
+            <div class="pill"><span></span> Gestión centralizada</div>
+            <div class="pill"><span></span> Actualización OTA</div>
+            <div class="pill"><span></span> Tráfico cifrado HTTPS</div>
+          </div>
+
+          <div class="heroCtas">
+            <a class="btn btnPrimary" href="#demo">Solicitar demo</a>
+            <a class="btn btnGhost" href="#como-funciona">Ver cómo funciona</a>
+          </div>
+
+          <p class="note">
+            Diseñado para integrarse a tu API / ERP / POS.
+            <b>Sin instalaciones complicadas</b> y sin depender del personal para consultas repetitivas.
+          </p>
+        </div>
+
+        <aside class="heroCard" aria-label="KPIs">
+          <div class="heroCardInner">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px;">
+              <div>
+                <div style="font-weight:900; letter-spacing:-0.5px; font-size:1.15rem;">Resultados esperados</div>
+                <div style="color:var(--muted); font-weight:650; margin-top:6px; line-height:1.5;">
+                  Métricas típicas para puntos de venta con alta rotación y cambios frecuentes de precio.
+                </div>
+              </div>
+              <div class="chip hot">Ready-to-scale</div>
+            </div>
+
+            <div class="kpiGrid">
+              <div class="kpi">
+                <div class="n">-40%</div>
+                <div class="l">Consultas al personal (aprox.)</div>
+              </div>
+              <div class="kpi">
+                <div class="n">&lt;15W</div>
+                <div class="l">Consumo continuo</div>
+              </div>
+              <div class="kpi">
+                <div class="n">24/7</div>
+                <div class="l">Uptime monitoreado</div>
+              </div>
+              <div class="kpi">
+                <div class="n">15min</div>
+                <div class="l">Puesta en marcha</div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px; color:var(--muted2); font-weight:650; font-size:0.92rem; line-height:1.5;">
+              * Depende del flujo de clientes y operación. En demo te damos un estimado por tipo de tienda.
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- PROBLEMA -->
+  <section id="problema">
+    <div class="container">
+      <div class="sectionHead">
+        <div>
+          <div class="h2">El problema del retail hoy</div>
+          <div class="desc">Cuando los precios cambian, los clientes preguntan y el equipo se detiene. Ese tiempo se vuelve costo y mala experiencia.</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card" style="grid-column: 1 / 5;">
+          <div class="cardTitle">
+            <span class="iconBox">⏱️</span>
+            Tiempo perdido
+          </div>
+          <p>El personal interrumpe tareas para responder precios una y otra vez, especialmente en hora pico.</p>
+          <div class="list">
+            <div class="li"><i>✓</i> Menos atención en caja</div>
+            <div class="li"><i>✓</i> Menos reposición en anaqueles</div>
+            <div class="li"><i>✓</i> Menos control operativo</div>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: 5 / 9;">
+          <div class="cardTitle">
+            <span class="iconBox">⚠️</span>
+            Errores y reclamos
+          </div>
+          <p>Si el precio del sistema y el anaquel no coinciden, aparecen reclamos y pérdida de confianza.</p>
+          <div class="list">
+            <div class="li"><i>✓</i> Evita “precio distinto”</div>
+            <div class="li"><i>✓</i> Reduce fricción con el cliente</div>
+            <div class="li"><i>✓</i> Consulta consistente</div>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: 9 / -1;">
+          <div class="cardTitle">
+            <span class="iconBox">📉</span>
+            Experiencia deficiente
+          </div>
+          <p>Cuando no hay claridad del precio, el cliente pierde tiempo y puede abandonar la compra.</p>
+          <div class="list">
+            <div class="li"><i>✓</i> Autoservicio real</div>
+            <div class="li"><i>✓</i> Compra más rápida</div>
+            <div class="li"><i>✓</i> Mejor percepción de marca</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO FUNCIONA -->
+  <section id="como-funciona">
+    <div class="container">
+      <div class="sectionHead">
+        <div>
+          <div class="h2">Cómo funciona</div>
+          <div class="desc">Flujo simple para el cliente y control total para el administrador. Sin puertas abiertas hacia la tienda: solo conexión segura hacia la nube.</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card steps">
+          <div class="cardTitle">
+            <span class="iconBox">🔁</span>
+            Flujo operativo en 5 pasos
+          </div>
+
+          <div class="stepsGrid">
+            <div class="step">
+              <div class="num">01</div>
+              <div class="t">Escaneo</div>
+              <div class="d">Lector USB 2D (HID). El cliente escanea el código del producto.</div>
+            </div>
+            <div class="step">
+              <div class="num">02</div>
+              <div class="t">Consulta API</div>
+              <div class="d">El visor consulta tu API/ERP/POS vía HTTPS (puerto 443).</div>
+            </div>
+            <div class="step">
+              <div class="num">03</div>
+              <div class="t">Respuesta cloud</div>
+              <div class="d">Respuesta JSON optimizada con precio, descripción, promos y stock (si aplica).</div>
+            </div>
+            <div class="step">
+              <div class="num">04</div>
+              <div class="t">Visualización</div>
+              <div class="d">Pantalla LCD 7" con UI rápida (producto / precio / promo / aviso).</div>
+            </div>
+            <div class="step">
+              <div class="num">05</div>
+              <div class="t">Registro y control</div>
+              <div class="d">Logs centralizados, estado del dispositivo, suscripción activa y métricas.</div>
+            </div>
+          </div>
+
+          <div class="list" style="margin-top:16px;">
+            <div class="li"><i>✓</i> Seguridad: HTTPS + validación de dispositivo antes de operar</div>
+            <div class="li"><i>✓</i> Resiliencia: watchdog + auto-reconexión + recuperación ante fallas</div>
+            <div class="li"><i>✓</i> Operación: actualizaciones OTA y monitoreo remoto de flota</div>
+          </div>
+        </div>
+
+        <div class="card uc1">
+          <div class="cardTitle"><span class="iconBox">🛒</span>Casos de uso ideales</div>
+          <p>Donde hay rotación, promociones o alto volumen de clientes, el visor se vuelve autoservicio y reduce carga al equipo.</p>
+          <div class="tagRow">
+            <div class="tag">Farmacias</div>
+            <div class="tag">Abarrotes</div>
+            <div class="tag">Tiendas de conveniencia</div>
+            <div class="tag">Ferreterías</div>
+            <div class="tag">Electrónica</div>
+            <div class="tag">Repuestos</div>
+          </div>
+          <div class="list">
+            <div class="li"><i>✓</i> Mostrar precios por unidad / presentación</div>
+            <div class="li"><i>✓</i> Promociones y avisos legales</div>
+            <div class="li"><i>✓</i> Opcional: stock / ubicación de pasillo</div>
+          </div>
+        </div>
+
+        <div class="card uc2">
+          <div class="cardTitle"><span class="iconBox">🔧</span>Instalación y operación</div>
+          <p>Implementación rápida pensada para integradores: conectar, configurar WiFi y URL de API.</p>
+          <div class="miniTable" role="table" aria-label="Instalación">
+            <div class="row" role="row"><b>Hardware</b><span>LCD 7" + controlador + lector USB (montaje en panel).</span></div>
+            <div class="row" role="row"><b>Conectividad</b><span>WiFi 2.4GHz (portal de configuración incluido).</span></div>
+            <div class="row" role="row"><b>Integración</b><span>URL de API configurable por tienda / integrador.</span></div>
+            <div class="row" role="row"><b>Soporte</b><span>Logs + diagnóstico remoto + actualizaciones OTA.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATAFORMA -->
+  <section id="plataforma">
+    <div class="container">
+      <div class="sectionHead">
+        <div>
+          <div class="h2">No es solo una pantalla: es plataforma</div>
+          <div class="desc">Administra una o miles de unidades desde un panel web. Controla suscripción, firmware, estatus y métricas sin visitas técnicas.</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card platA">
+          <div class="cardTitle"><span class="iconBox">📊</span>Panel SaaS centralizado</div>
+          <p>Control de flota y operación en un solo lugar. Ideal para integradores y cadenas con múltiples sucursales.</p>
+
+          <div class="miniTable" role="table" aria-label="Funciones SaaS">
+            <div class="row" role="row"><b>Gestión de dispositivos</b><span>Alta automática por DeviceId + IP + firmware, con “lastSeen”.</span></div>
+            <div class="row" role="row"><b>Suscripción y bloqueo</b><span>Validación de pago antes de operar, sin intervención manual en tienda.</span></div>
+            <div class="row" role="row"><b>Logs y auditoría</b><span>Registro de eventos para troubleshooting, calidad y soporte.</span></div>
+            <div class="row" role="row"><b>OTA / firmware remoto</b><span>Actualiza versiones, fuerza update y gestiona URLs de binarios.</span></div>
+            <div class="row" role="row"><b>Analytics</b><span>Consultas por dispositivo, horarios pico y productos consultados (opcional).</span></div>
+          </div>
+        </div>
+
+        <div class="card platB">
+          <div class="cardTitle"><span class="iconBox">🔒</span>Seguridad y continuidad</div>
+          <p>Arquitectura “outbound-only”: sin abrir puertos hacia la tienda. Cifrado, validación y recuperación automática.</p>
+          <div class="list">
+            <div class="li"><i>✓</i> HTTPS + TLS</div>
+            <div class="li"><i>✓</i> Zero-trust (dispositivo autenticado)</div>
+            <div class="li"><i>✓</i> Watchdog y auto-reconexión</div>
+            <div class="li"><i>✓</i> Sin acceso remoto directo a la red local</div>
+          </div>
+
+          <div style="margin-top:14px; padding:14px; border-radius:18px; border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.02);">
+            <div style="font-weight:900;">Integración flexible</div>
+            <div style="margin-top:8px; color:var(--muted); font-weight:650; line-height:1.55;">
+              Puedes integrar a tu API existente o usar un endpoint estándar. El visor solo necesita
+              una URL y el formato de respuesta acordado.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLANES -->
+  <section id="planes">
+    <div class="container">
+      <div class="sectionHead">
+        <div>
+          <div class="h2">Planes para retail e integradores</div>
+          <div class="desc">Modelo SaaS mensual con hardware. Puedes vender como integrador o implementarlo directo en tu comercio.</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card plan">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div>
+              <div class="chip">Retail</div>
+              <div style="margin-top:10px; font-weight:900; font-size:1.2rem;">Starter</div>
+              <div class="price">SaaS</div>
+              <div class="small">Para 1–3 dispositivos en tienda.</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="li"><i>✓</i> Gestión de dispositivos</div>
+            <div class="li"><i>✓</i> Logs + monitoreo básico</div>
+            <div class="li"><i>✓</i> OTA habilitado</div>
+            <div class="li"><i>✓</i> Integración por URL de API</div>
+          </div>
+        </div>
+
+        <div class="card plan" style="border-color: rgba(0,245,255,0.22); background: linear-gradient(135deg, rgba(0,245,255,0.06), rgba(139,92,246,0.06));">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div>
+              <div class="chip hot">Más popular</div>
+              <div style="margin-top:10px; font-weight:900; font-size:1.2rem;">Business</div>
+              <div class="price">SaaS+</div>
+              <div class="small">Para cadenas y multi-sucursal.</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="li"><i>✓</i> Todo Starter</div>
+            <div class="li"><i>✓</i> Métricas y reportes</div>
+            <div class="li"><i>✓</i> Configuración avanzada (por tienda)</div>
+            <div class="li"><i>✓</i> SLA de soporte remoto</div>
+            <div class="li"><i>✓</i> OTA / firmware remoto</div>
+          </div>
+        </div>
+
+        <div class="card plan">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div>
+              <div class="chip">Integradores</div>
+              <div style="margin-top:10px; font-weight:900; font-size:1.2rem;">Partner</div>
+              <div class="price">MRR</div>
+              <div class="small">Modelo de colaboración para vender e instalar.</div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="li"><i>✓</i> Panel para administrar clientes</div>
+            <div class="li"><i>✓</i> Comisión / participación mensual</div>
+            <div class="li"><i>✓</i> Soporte L2/L3 desde Innovative</div>
+            <div class="li"><i>✓</i> Kit de instalación + manual</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03); border-radius: var(--radius); padding: 18px;">
+        <div style="font-weight:900;">Instalación</div>
+        <div style="margin-top:8px; color:var(--muted); font-weight:650; line-height:1.6;">
+          La instalación puede ser realizada por integrador autorizado o por tu equipo. Si ofreces instalación como servicio,
+          puedes incluir tu tarifa de instalación en tu propuesta comercial.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section id="demo">
+    <div class="container">
+      <div class="sectionHead">
+        <div>
+          <div class="h2">Solicitar demo</div>
+          <div class="desc">Déjanos tus datos y te contactamos. Se registra en la base (Redis) vía API en Vercel.</div>
+        </div>
+      </div>
+
+      <div class="demoWrap">
+        <div class="demoGrid">
+          <div>
+            <div class="cardTitle"><span class="iconBox">✅</span>Qué obtienes en la demo</div>
+            <div class="list" style="margin-top:12px;">
+              <div class="li"><i>✓</i> Demo funcional de consulta por código</div>
+              <div class="li"><i>✓</i> Guía de integración (formato JSON)</div>
+              <div class="li"><i>✓</i> Alcance de instalación y despliegue</div>
+              <div class="li"><i>✓</i> Estimación de ROI por tipo de tienda</div>
+            </div>
+
+            <div style="margin-top:16px; padding:14px; border-radius:18px; border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.02);">
+              <div style="font-weight:900;">Innovative Solutions Tecnológica, C.A.</div>
+              <div style="margin-top:8px; color:var(--muted); font-weight:650; line-height:1.55;">
+                Plataforma SaaS para retail e integradores. Escalamiento por flota, soporte remoto y actualizaciones OTA.
+              </div>
+            </div>
+          </div>
+
+          <form class="form" id="demoForm" autocomplete="on">
+            <input type="text" name="website" autocomplete="off" tabindex="-1"
+                   style="position:absolute; left:-9999px; opacity:0;" />
+
+            <div class="formRow">
+              <div>
+                <label for="nombre">Nombre*</label>
+                <input id="nombre" name="nombre" required placeholder="Nombre y apellido" />
+              </div>
+              <div>
+                <label for="empresa">Empresa*</label>
+                <input id="empresa" name="empresa" required placeholder="Nombre del comercio / integrador" />
+              </div>
+            </div>
+
+            <div class="formRow">
+              <div>
+                <label for="telefono">Teléfono*</label>
+                <input id="telefono" name="telefono" required placeholder="+52 ..." />
+              </div>
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="correo@dominio.com" />
+              </div>
+            </div>
+
+            <div class="formRow">
+              <div>
+                <label for="ciudad">Ciudad</label>
+                <input id="ciudad" name="ciudad" placeholder="Monterrey, Apodaca..." />
+              </div>
+              <div>
+                <label for="giro">Giro</label>
+                <select id="giro" name="giro">
+                  <option value="">Selecciona</option>
+                  <option value="farmacia">Farmacia</option>
+                  <option value="abarrotes">Abarrotes</option>
+                  <option value="ferreteria">Ferretería</option>
+                  <option value="conveniencia">Conveniencia</option>
+                  <option value="electronica">Electrónica</option>
+                  <option value="otros">Otros</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="formRow formRow1">
+              <div>
+                <label for="mensaje">Mensaje</label>
+                <textarea id="mensaje" name="mensaje" placeholder="Cuéntanos cuántas sucursales/dispositivos estimas y tu sistema actual (POS/ERP)."></textarea>
+              </div>
+            </div>
+
+            <input type="hidden" name="source" value="landing" />
+
+            <div class="formActions">
+              <button class="btn btnPrimary" type="submit">Enviar solicitud</button>
+              <a class="btn btnGhost" href="#como-funciona">Ver cómo funciona</a>
+            </div>
+
+            <div class="formNote">
+              Al enviar, aceptas ser contactado para una demo. Tu solicitud se guarda para seguimiento comercial.
+            </div>
+
+            <div id="demoToast" class="toast" aria-live="polite"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footRow">
+        <div>
+          <div class="footBrand">INNOVATIVE SOLUTIONS TECNOLÓGICA, C.A.</div>
+          <div style="margin-top:10px; color:var(--muted2); font-weight:650; line-height:1.6; max-width:70ch;">
+            Sistema de gestión inteligente de precios para retail. Arquitectura SaaS, operación 24/7, monitoreo y OTA.
+          </div>
+          <div style="margin-top:10px; color:var(--muted2); font-weight:700;">Infografía técnico‑comercial · Febrero 2026</div>
+        </div>
+        <div class="footTags" aria-label="Tecnologías">
+          <span class="footTag">IoT</span>
+          <span class="footTag">SaaS</span>
+          <span class="footTag">ESP32‑S3</span>
+          <span class="footTag">LCD 7&quot;</span>
+          <span class="footTag">HTTPS</span>
+          <span class="footTag">OTA</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth anchor scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const href = a.getAttribute('href');
+        if (!href || href === '#') return;
+        const el = document.querySelector(href);
+        if (!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.replaceState(null, '', href);
+      });
+    });
+
+    // Demo form -> Vercel API (Redis)
+    const demoForm = document.getElementById('demoForm');
+    const toast = document.getElementById('demoToast');
+
+    function showToast(type, msg){
+      toast.className = 'toast ' + (type === 'ok' ? 'ok' : 'err');
+      toast.textContent = msg;
+    }
+
+    demoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = demoForm.querySelector('button[type="submit"]');
+      if (btn) { btn.disabled = true; btn.style.opacity = 0.8; btn.textContent = 'Enviando...'; }
+
+      const data = Object.fromEntries(new FormData(demoForm).entries());
+
+      try{
+        // Endpoint recomendado: /pages/api/demo/request.js  -> /api/demo/request
+        const r = await fetch('/api/demo/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         });
 
-        // Mouse glow tracking for cards
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                card.style.setProperty('--mouse-x', x + '%');
-                card.style.setProperty('--mouse-y', y + '%');
-            });
-        });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || 'Error');
 
-        // Demo form placeholder handler
-                    async function handleDemoRequest(event) {
-            event.preventDefault();
-
-            const form = event.target;
-            const data = Object.fromEntries(new FormData(form).entries());
-            const note = document.getElementById('contactNote');
-
-            try {
-                const response = await fetch('/api/request', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.ok) {
-                note.textContent = "✅ Demo solicitada correctamente. Te contactaremos pronto.";
-                form.reset();
-                } else {
-                note.textContent = "❌ Error: " + result.error;
-                }
-
-            } catch (err) {
-                note.textContent = "❌ Error de conexión con el servidor.";
-            }
-
-            return false;
-            }
-    </script>
+        showToast('ok', '✅ Solicitud enviada. Te contactaremos pronto.');
+        demoForm.reset();
+      }catch(err){
+        console.error(err);
+        showToast('err', '❌ No se pudo enviar. Revisa tu conexión e intenta de nuevo.');
+      }finally{
+        if (btn) { btn.disabled = false; btn.style.opacity = 1; btn.textContent = 'Enviar solicitud'; }
+      }
+    });
+  </script>
 </body>
 </html>
