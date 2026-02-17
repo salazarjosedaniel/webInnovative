@@ -120,6 +120,66 @@
     .btnGhost{ background: transparent; border-color: rgba(255,255,255,0.12); color: var(--muted); }
     .btnGhost:hover{ color:#fff; border-color: rgba(255,255,255,0.22); box-shadow: var(--shadowSoft); }
 
+
+    .product-preview {
+  padding: 80px 20px;
+  background: linear-gradient(180deg, #0b1020 0%, #0f162d 100%);
+}
+
+    .product-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 60px;
+    }
+
+    .product-image {
+    text-align: center;
+    }
+
+    .product-image img {
+    max-width: 100%;
+    width: 420px;
+    border-radius: 18px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+    }
+
+    .product-content h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    }
+
+    .product-content p {
+    color: #aab3c5;
+    margin-bottom: 25px;
+    line-height: 1.6;
+    }
+
+    .product-features {
+    list-style: none;
+    padding: 0;
+    }
+
+    .product-features li {
+    margin-bottom: 10px;
+    font-weight: 500;
+    color: #e4e9f5;
+    }
+
+    /* RESPONSIVE FIX */
+    @media (max-width: 900px) {
+    .product-wrapper {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .product-image img {
+        width: 280px;
+    }
+    }
+
     /* Hero */
     .hero{ padding: 70px 0 30px; }
     .badge{
@@ -769,6 +829,30 @@
       </div>
     </div>
   </main>
+
+  <section class="product-preview">
+  <div class="product-wrapper">
+    <div class="product-image">
+      <img src="/public/img/visor-equipo.png" alt="Visor Inteligente de Precios LCD 7 pulgadas">
+    </div>
+
+    <div class="product-content">
+      <h2>Así se ve en tienda</h2>
+      <p>
+        Equipo compacto con pantalla LCD 7" de alta visibilidad.
+        Diseñado para mostrador, pasillo o punto estratégico.
+      </p>
+
+      <ul class="product-features">
+        <li>✔ Pantalla LCD 7"</li>
+        <li>✔ Escáner 2D USB incluido</li>
+        <li>✔ Conectividad WiFi segura</li>
+        <li>✔ Instalación en menos de 15 minutos</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 
   <!-- PROBLEMA -->
   <section id="problema">
