@@ -7,6 +7,7 @@
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^3.3.2",
     "redis": "^5.9.0",
-    "redis-cli": "^2.1.2"
+    "redis-cli": "^2.1.2",
+    "undici": "^7.22.0"
   }
 }
