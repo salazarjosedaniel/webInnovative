@@ -3,7 +3,7 @@ import { getRedisClient } from "../lib/redis";
 import { fetchAndParseBCV } from "../lib/bcv";
 
 const CACHE_KEY = "rates:bcv:latest";
-const TTL_FRESH = 600;      // 10 min fresh
+const TTL_FRESH = 60000;      // 60 min fresh
 const TTL_STALE = 86400;    // 24h stale aceptable
 
 async function getCached(redis) {
@@ -11,6 +11,7 @@ async function getCached(redis) {
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
+
 
 export default async function handler(req, res) {
   try {
