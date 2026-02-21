@@ -15,12 +15,7 @@ async function getCached(redis) {
 
 export default async function handler(req, res) {
   try {
-    // Opcional: exigir el header del device
-    const deviceId = req.headers["x-device-id"];
-    if (!deviceId) {
-      return res.status(400).json({ error: "Missing X-Device-ID" });
-    }
-
+  
     const redis = await getRedisClient();
 
     // 1) Si hay cache fresh, responde
