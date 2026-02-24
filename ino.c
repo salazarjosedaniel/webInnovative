@@ -725,7 +725,7 @@ bool ledOn = false;
 unsigned long wifiFallidaDesde = 0;
 const unsigned long TIEMPO_MAX_SIN_WIFI = 600000;  // 10 min
 const unsigned long INTERVALO_API = 6000;          // 6s
-const unsigned long FW_CHECK_INTERVAL = 6UL * 60UL * 60UL * 1000UL;
+const unsigned long FW_CHECK_INTERVAL = 5UL * 60UL * 1000UL;
 
 /************ NTP ************/
 const char* ntpServer = "pool.ntp.org";
@@ -734,7 +734,7 @@ const int daylightOffset_sec = 0;
 
 /************ Boot safety ************/
 unsigned long bootTime = 0;
-const unsigned long MAX_UPTIME = 6UL * 60UL * 60UL * 1000UL;  // 6 horas
+const unsigned long MAX_UPTIME = 2UL * 60UL * 60UL * 1000UL;  // 2 horas
 
 /************ OTA Local ************/
 WebServer otaServer(80);
@@ -758,6 +758,9 @@ static const char* KEY_API_LEGACY = "api_legacy";
 static const char* KEY_API_PRODUCT = "api_product";
 static const char* KEY_SCANNER_PREFIX = "scanner_prefix";
 static const char* KEY_SCANNER_MODE = "scanner_mode";
+static const char* KEY_OTA_PENDING = "ota_pending";  // bool
+static const char* KEY_OTA_URL = "ota_url";          // string
+static const char* KEY_OTA_VER = "ota_ver";          // string (opcional)
 bool pendingResetCfg = false;
 RTC_DATA_ATTR uint32_t g_forcePortal = 0x0;
 static const uint32_t FORCE_PORTAL_MAGIC = 0xC0FFEE11;
@@ -806,7 +809,7 @@ static lv_obj_t* ddScannerMode = nullptr;
 static lv_obj_t* btnCfg = nullptr;
 static lv_obj_t* msgboxSaved = nullptr;
 // --- Config Gate + Reset ---
-static const char* CFG_UI_PASSWORD = "1234";   // <-- CAMBIA TU CLAVE AQUI
+static const char* CFG_UI_PASSWORD = "1234";  // <-- CAMBIA TU CLAVE AQUI
 static lv_obj_t* screenCfgPass = nullptr;
 static lv_obj_t* taCfgPass = nullptr;
 static lv_obj_t* kbCfgPass = nullptr;
@@ -822,7 +825,7 @@ static bool kbVisible = false;
 
 /************ Datos actuales visor ************/
 static String curCode = "";
-static String curDesc = "Escanee un producto...";
+static String curDesc = "Escanee un producto....";
 static String curPrice = "--.--";
 
 /************ Cache prev para evitar flicker ************/
@@ -1344,7 +1347,114 @@ static bool isNewerVersion(const String& remote, const String& local) {
   return (remote > local);  // simple string compare (si usas semver, puedes mejorar)
 }
 
-static bool doHttpUpdate(const String& fwUrl) {
+static void debugHeadGet(const String& url) {
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(20000);
+
+  HTTPClient http;
+  http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);  // clave
+  http.setTimeout(20000);
+
+  Serial.println("[DBG] GET " + url);
+  if (!http.begin(client, url)) {
+    Serial.println("[DBG] http.begin failed");
+    return;
+  }
+
+  int code = http.GET();
+  Serial.printf("[DBG] code=%d size=%d\n", code, http.getSize());
+
+  // Importante: ver si hay Location (redirect)
+  String loc = http.getLocation();
+  if (loc.length()) Serial.println("[DBG] Location: " + loc);
+
+  http.end();
+}
+
+static void pauseTimersForOta(bool pause) {
+  if (!usarLVGL) return;
+  lvgl_port_lock(-1);
+
+  if (timer_api) lv_timer_pause(timer_api);
+  if (timer_wifi) lv_timer_pause(timer_wifi);
+  if (timer_ble_adv) lv_timer_pause(timer_ble_adv);
+  if (timer_ui) lv_timer_pause(timer_ui);
+
+  // si NO quieres pausar LED / watchdog visual, no pauses timer_led
+  // if (timer_led) lv_timer_pause(timer_led);
+
+  if (!pause) {
+    if (timer_api) lv_timer_resume(timer_api);
+    if (timer_wifi) lv_timer_resume(timer_wifi);
+    if (timer_ble_adv) lv_timer_resume(timer_ble_adv);
+    if (timer_ui) lv_timer_resume(timer_ui);
+    // if (timer_led) lv_timer_resume(timer_led);
+  }
+
+  lvgl_port_unlock();
+}
+
+
+static bool testHttpsRaw(const char* host, const char* path) {
+  Serial.printf("\n[TEST] host=%s path=%s\n", host, path);
+
+  // 1) DNS
+  IPAddress ip;
+  if (!WiFi.hostByName(host, ip)) {
+    Serial.println("[TEST] ❌ DNS hostByName failed");
+    return false;
+  }
+  Serial.print("[TEST] DNS OK -> ");
+  Serial.println(ip);
+
+  // 2) TCP + TLS
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(20000);
+
+  Serial.println("[TEST] Connecting 443...");
+  if (!client.connect(host, 443)) {
+    Serial.println("[TEST] ❌ connect(443) failed");
+
+    char errbuf[120];
+    client.lastError(errbuf, sizeof(errbuf));
+    Serial.print("[TEST] TLS lastError: ");
+    Serial.println(errbuf);
+
+    return false;
+  }
+  Serial.println("[TEST] ✅ connected");
+
+  // 3) GET manual
+  client.printf(
+    "GET %s HTTP/1.1\r\n"
+    "Host: %s\r\n"
+    "User-Agent: ESP32\r\n"
+    "Connection: close\r\n\r\n",
+    path, host);
+
+  // lee status line
+  String status = client.readStringUntil('\n');
+  Serial.print("[TEST] status line: ");
+  Serial.println(status);
+
+  return status.startsWith("HTTP/1.1 200");
+}
+
+static void scheduleOtaAndReboot(const String& fwUrl, const String& remoteVersion) {
+  prefs.begin(NVS_NS, false);
+  prefs.putBool(KEY_OTA_PENDING, true);
+  prefs.putString(KEY_OTA_URL, fwUrl);
+  prefs.putString(KEY_OTA_VER, remoteVersion);  // opcional
+  prefs.end();
+
+  Serial.println("[OTA] Scheduled. Rebooting into OTA mode...");
+  delay(200);
+  ESP.restart();
+}
+
+static bool doHttpUpdate2(const String& fwUrl) {
   WiFiClient client;
   HTTPUpdate httpUpdate;
   Serial.println("🔄 Iniciando OTA desde: " + fwUrl);
@@ -1352,17 +1462,160 @@ static bool doHttpUpdate(const String& fwUrl) {
 
   switch (ret) {
     case HTTP_UPDATE_FAILED:
+      esp_task_wdt_reset();
       Serial.printf("❌ OTA falló. Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
       sendLog(String("OTA_FAIL ") + httpUpdate.getLastErrorString().c_str());
       return false;
     case HTTP_UPDATE_NO_UPDATES:
+      esp_task_wdt_reset();
       Serial.println("ℹ️ No hay actualización disponible.");
       return false;
     case HTTP_UPDATE_OK:
+      esp_task_wdt_reset();
       Serial.println("✅ OTA OK, reiniciando...");
       return true;
   }
   return false;
+}
+
+static bool runOtaBootModeIfPending() {
+  // 1) Lee flags
+  Preferences prefs;
+  prefs.begin(NVS_NS, true);
+  const bool pending = prefs.getBool(KEY_OTA_PENDING, false);
+  String fwUrl = prefs.getString(KEY_OTA_URL, "");
+  prefs.end();
+
+  if (!pending || fwUrl.isEmpty()) return false;
+
+  Serial.println("[OTA-BOOT] Pending OTA detected");
+  Serial.println("[OTA-BOOT] URL: " + fwUrl);
+
+  // 2) WiFi mínimo
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(); // usa credenciales guardadas
+
+  const unsigned long t0 = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - t0 < 30000) {
+    delay(100);
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[OTA-BOOT] WiFi not connected. Keeping pending and rebooting...");
+    delay(1500);
+    ESP.restart();
+  }
+
+  // 3) Fuerza HTTPS (recomendado)
+  //    Si te llega http://, conviértelo a https:// para evitar 308
+  if (fwUrl.startsWith("http://")) {
+    fwUrl.replace("http://", "https://");
+    Serial.println("[OTA-BOOT] URL rewritten to HTTPS: " + fwUrl);
+  }
+
+  // 4) HTTP GET del BIN
+  HTTPClient http;
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+
+  const char* hdrKeys[] = {"Location", "Content-Length", "Content-Type"};
+  http.collectHeaders(hdrKeys, 3);
+
+  WiFiClientSecure client;
+  client.setInsecure();       // OK para Vercel (si quieres pinning luego lo hacemos)
+  client.setTimeout(20000);
+
+  if (!http.begin(client, fwUrl)) {
+    Serial.println("❌ [OTA-BOOT] http.begin() failed");
+    Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
+    delay(1500);
+    ESP.restart();
+    return true;
+  }
+
+  Serial.println("🔄 [OTA-BOOT] GET: " + fwUrl);
+  int code = http.GET();
+  Serial.printf("[OTA-BOOT] HTTP code=%d\n", code);
+
+  if (code != HTTP_CODE_OK) {
+    Serial.printf("[OTA-BOOT] Location=%s\n", http.header("Location").c_str());
+    http.end();
+    Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
+    delay(1500);
+    ESP.restart();
+    return true;
+  }
+
+  // 5) Validaciones fuertes
+  int totalLen = http.getSize();
+  Serial.printf("[OTA-BOOT] Content-Length=%d\n", totalLen);
+
+  if (totalLen <= 0) {
+    Serial.println("❌ [OTA-BOOT] Invalid Content-Length. Aborting OTA.");
+    http.end();
+    Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
+    delay(1500);
+    ESP.restart();
+    return true;
+  }
+
+  WiFiClient* stream = http.getStreamPtr();
+  if (!stream) {
+    Serial.println("❌ [OTA-BOOT] Stream null.");
+    http.end();
+    Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
+    delay(1500);
+    ESP.restart();
+    return true;
+  }
+
+  // 6) Escribe firmware
+  if (!Update.begin((size_t)totalLen)) {
+    Serial.println("❌ [OTA-BOOT] Update.begin failed");
+    Update.printError(Serial);
+    http.end();
+    Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
+    delay(1500);
+    ESP.restart();
+    return true;
+  }
+
+  size_t written = Update.writeStream(*stream);
+  Serial.printf("[OTA-BOOT] Written=%u\n", (unsigned)written);
+
+  if (written != (size_t)totalLen) {
+    Serial.println("❌ [OTA-BOOT] Incomplete write");
+    Update.abort();
+    http.end();
+    Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
+    delay(1500);
+    ESP.restart();
+    return true;
+  }
+
+  if (!Update.end(true)) {
+    Serial.println("❌ [OTA-BOOT] Update.end failed");
+    Update.printError(Serial);
+    http.end();
+    Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
+    delay(1500);
+    ESP.restart();
+    return true;
+  }
+
+  http.end();
+
+  // 7) Limpia flags y reinicia a firmware nuevo
+  Serial.println("✅ [OTA-BOOT] OTA OK. Clearing flags and restarting...");
+  prefs.begin(NVS_NS, false);
+  prefs.putBool(KEY_OTA_PENDING, false);
+  prefs.remove(KEY_OTA_URL);
+  prefs.remove(KEY_OTA_VER);
+  prefs.end();
+
+  delay(500);
+  ESP.restart();
+  return true;
+  
 }
 
 static void checkForFirmwareUpdate(bool manualTrigger) {
@@ -1394,7 +1647,15 @@ static void checkForFirmwareUpdate(bool manualTrigger) {
   if (isNewerVersion(remoteVersion, FW_VERSION)) shouldUpdate = true;
   else if (manualTrigger && force) shouldUpdate = true;
 
-  if (shouldUpdate) doHttpUpdate(fwUrl);
+  if (shouldUpdate) {
+    Serial.println("🛑 Pausando timers para OTA...");
+    pauseTimersForOta(true);
+    uiSetStatus("Actualizando firmware... NO APAGAR");
+
+    delay(200);  // pequeño margen visual
+
+    scheduleOtaAndReboot(fwUrl, remoteVersion);
+  }
 }
 
 /************ USD rate (API legacy) ************/
@@ -2322,35 +2583,35 @@ static void doFactoryResetNow() {
   ESP.restart();
 }
 
-static void reset_mbox_event_cb(lv_event_t * e)
-{
-    if(lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) return;
+static void reset_mbox_event_cb(lv_event_t* e) {
+  if (lv_event_get_code(e) != LV_EVENT_VALUE_CHANGED) return;
 
-    lv_obj_t * btnm = lv_event_get_target(e);              // btnmatrix
-    lv_obj_t * mbox = (lv_obj_t*) lv_event_get_user_data(e); // msgbox real
+  lv_obj_t* btnm = lv_event_get_target(e);                // btnmatrix
+  lv_obj_t* mbox = (lv_obj_t*)lv_event_get_user_data(e);  // msgbox real
 
-    uint16_t idx = lv_btnmatrix_get_selected_btn(btnm);
-    const char * txt = lv_btnmatrix_get_btn_text(btnm, idx);
+  uint16_t idx = lv_btnmatrix_get_selected_btn(btnm);
+  const char* txt = lv_btnmatrix_get_btn_text(btnm, idx);
 
-    // DEBUG rápido (quita luego)
-    Serial.printf("[MB] idx=%u txt=%s\n", idx, txt ? txt : "NULL");
+  // DEBUG rápido (quita luego)
+  Serial.printf("[MB] idx=%u txt=%s\n", idx, txt ? txt : "NULL");
 
-    if(txt && (strcmp(txt, "SI") == 0 || strcmp(txt, "Sí") == 0 || strcmp(txt, "YES") == 0)) {
-        pendingResetCfg = true;  // SOLO bandera
-    }
+  if (txt && (strcmp(txt, "SI") == 0 || strcmp(txt, "Sí") == 0 || strcmp(txt, "YES") == 0)) {
+    pendingResetCfg = true;  // SOLO bandera
+  } else {
+    closeConfigAndGoHome();
+  }
 
-    lv_obj_del_async(mbox); // siempre cerrar el diálogo
+  lv_obj_del_async(mbox);  // siempre cerrar el diálogo
 }
 
-static void showResetConfirmDialog()
-{
-    static const char * btns[] = {"NO", "SI", ""};
+static void showResetConfirmDialog() {
+  static const char* btns[] = { "NO", "SI", "" };
 
-    lv_obj_t * mbox = lv_msgbox_create(NULL, "Reset", "Borrar WiFi y reiniciar?", btns, true);
-    lv_obj_center(mbox);
+  lv_obj_t* mbox = lv_msgbox_create(NULL, "Reset", "Borrar WiFi y reiniciar?", btns, true);
+  lv_obj_center(mbox);
 
-    lv_obj_t * btnm = lv_msgbox_get_btns(mbox);
-    lv_obj_add_event_cb(btnm, reset_mbox_event_cb, LV_EVENT_VALUE_CHANGED, mbox);
+  lv_obj_t* btnm = lv_msgbox_get_btns(mbox);
+  lv_obj_add_event_cb(btnm, reset_mbox_event_cb, LV_EVENT_VALUE_CHANGED, mbox);
 }
 
 static void cfgPassKb_event_cb(lv_event_t* e) {
@@ -2455,9 +2716,11 @@ static void showScannerConfigScreen() {
   lv_obj_t* btnBack = lv_btn_create(screenConfig);
   lv_obj_set_size(btnBack, 160, 50);
   lv_obj_align(btnBack, LV_ALIGN_BOTTOM_LEFT, 40, -15);
-  lv_obj_add_event_cb(btnBack, [](lv_event_t*) {
-    lv_scr_load(homeScreen);
-  }, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(
+    btnBack, [](lv_event_t*) {
+      lv_scr_load(homeScreen);
+    },
+    LV_EVENT_CLICKED, NULL);
 
   lv_obj_t* lblBack = lv_label_create(btnBack);
   lv_label_set_text(lblBack, "Volver");
@@ -2467,9 +2730,11 @@ static void showScannerConfigScreen() {
   lv_obj_t* btnReset = lv_btn_create(screenConfig);
   lv_obj_set_size(btnReset, 220, 50);
   lv_obj_align(btnReset, LV_ALIGN_BOTTOM_RIGHT, -40, -15);
-  lv_obj_add_event_cb(btnReset, [](lv_event_t*) {
-    showResetConfirmDialog();
-  }, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(
+    btnReset, [](lv_event_t*) {
+      showResetConfirmDialog();
+    },
+    LV_EVENT_CLICKED, NULL);
 
   lv_obj_t* lblReset = lv_label_create(btnReset);
   lv_label_set_text(lblReset, "Reset Config");
@@ -2596,6 +2861,7 @@ static void showSavedPopup() {
 /************ SETUP ************/
 void setup() {
   Serial.begin(115200);
+  if (runOtaBootModeIfPending()) return;
   // --------------------
   // Anti-fragmentación (String): reservas para evitar reallocs en runtime
   // --------------------
@@ -2872,22 +3138,22 @@ void setup() {
 
   Serial.printf("[BOOT] WiFi.SSID()='%s'\n", WiFi.SSID().c_str());
   Serial.printf("[BOOT] forcePortal=%s\n",
-              (g_forcePortal == FORCE_PORTAL_MAGIC) ? "YES" : "NO");
+                (g_forcePortal == FORCE_PORTAL_MAGIC) ? "YES" : "NO");
 
-if (g_forcePortal == FORCE_PORTAL_MAGIC) {
-  g_forcePortal = 0; // limpiar flag
+  if (g_forcePortal == FORCE_PORTAL_MAGIC) {
+    g_forcePortal = 0;  // limpiar flag
 
-  Serial.println("[BOOT] Forcing config portal...");
-  WiFiManager wm_force;
+    Serial.println("[BOOT] Forcing config portal...");
+    WiFiManager wm_force;
 
-  // IMPORTANTÍSIMO: no intentes autoconectar aquí, solo portal
-  wm_force.setConfigPortalTimeout(180); // 3 min
-  wm_force.startConfigPortal("Visor-Precios");
+    // IMPORTANTÍSIMO: no intentes autoconectar aquí, solo portal
+    wm_force.setConfigPortalTimeout(180);  // 3 min
+    wm_force.startConfigPortal("Visor-Precios");
 
-  Serial.println("[BOOT] Portal done/timeout -> restart");
-  delay(500);
-  ESP.restart();
-}
+    Serial.println("[BOOT] Portal done/timeout -> restart");
+    delay(500);
+    ESP.restart();
+  }
 
   /************ WiFiManager ************/
   loadConfigFromNVS();
@@ -2995,7 +3261,7 @@ if (g_forcePortal == FORCE_PORTAL_MAGIC) {
 void loop() {
   if (systemReady) esp_task_wdt_reset();
 
-  if(pendingResetCfg){
+  if (pendingResetCfg) {
     pendingResetCfg = false;
     resetWifiAndEnterConfig();
   }
@@ -3028,6 +3294,7 @@ void loop() {
     Serial.println(code);
     launchHttpForCode(code, "HID Scanner USB");
   }
+  checkAutoReboot();
   // (opcional) si teclado visible, no hagas nada extra aquí
   delay(20);
 }
