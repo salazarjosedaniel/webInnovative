@@ -1,16 +1,199 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
-  <title>BCV Display • Panel Administrativo</title>
-  <link rel="stylesheet" href="/panel/style.css" />
+  <title>iVisor Cloud • Device Management</title>
+
+  <style>
+    :root{
+      --teal:#089088;
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:rgba(15,23,42,.08);
+      --radius:18px;
+      --shadow:0 18px 45px rgba(15,23,42,.08);
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;
+      background:var(--bg);
+      color:var(--ink);
+    }
+
+    /* HEADER */
+
+    .topbar{
+      padding:22px 32px;
+      background:linear-gradient(135deg,var(--teal),#0aaea4);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      box-shadow:0 12px 30px rgba(8,144,136,.25);
+    }
+
+    .topbar h1{
+      margin:0;
+      font-size:22px;
+      font-weight:700;
+      letter-spacing:.3px;
+    }
+
+    .topbar small{
+      opacity:.9;
+      font-weight:500;
+    }
+
+    /* LAYOUT */
+
+    .container{
+      max-width:1400px;
+      margin:40px auto;
+      padding:0 24px;
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+
+    .btn{
+      padding:10px 16px;
+      border-radius:12px;
+      border:none;
+      font-weight:600;
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .btn.primary{
+      background:var(--teal);
+      color:#fff;
+    }
+
+    .btn.success{
+      background:#16a34a;
+      color:#fff;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      opacity:.95;
+    }
+
+    input{
+      padding:10px 14px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#fff;
+      min-width:250px;
+      font-size:14px;
+    }
+
+    /* CARD */
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:24px;
+      box-shadow:var(--shadow);
+      border:1px solid var(--line);
+    }
+
+    .card h2{
+      margin-top:0;
+      font-size:18px;
+      font-weight:600;
+    }
+
+    /* TABLE */
+
+    .table-wrapper{
+      overflow:auto;
+      margin-top:16px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+
+    thead{
+      background:#f1f5f9;
+    }
+
+    th, td{
+      padding:12px 10px;
+      text-align:left;
+      border-bottom:1px solid var(--line);
+      white-space:nowrap;
+    }
+
+    th{
+      font-weight:600;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    tbody tr:hover{
+      background:#f9fafb;
+    }
+
+    /* BADGES */
+
+    .badge{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
+      display:inline-block;
+    }
+
+    .online{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .offline{
+      background:#fee2e2;
+      color:#991b1b;
+    }
+
+    .paid{
+      background:#dcfce7;
+      color:#166534;
+    }
+
+    .unpaid{
+      background:#fef3c7;
+      color:#92400e;
+    }
+
+    /* FOOTER */
+
+    .footer{
+      text-align:center;
+      padding:30px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+  </style>
 </head>
 
 <body>
 
   <header class="topbar">
-    <h1>📊 IoT — Panel Administrativo</h1>
+    <h1>iVisor Cloud Panel</h1>
+    <small>Device Management • OTA • Licensing • Fleet Monitoring</small>
   </header>
 
   <main class="container">
@@ -23,39 +206,41 @@
 
     <section class="card">
       <h2>📟 Dispositivos registrados</h2>
+
       <div class="table-wrapper">
-      <table id="devicesTable" class="styled-table">
-        <thead>
-          <tr>
-            <th>Device ID</th>
-            <th>Versión</th>
-            <th>URL Firmware</th>
-            <th>Pagado</th>
-            <th>Force</th>
-            <th>Notas</th>
-            <th>Name</th>
-            <th>Slogan</th>
-            <th>Instagram</th>
-            <th>Tlf</th>
-            <th>Banco</th>
-            <th>Rif</th>
-            <th>Última conexión</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+        <table id="devicesTable">
+          <thead>
+            <tr>
+              <th>Device ID</th>
+              <th>Versión</th>
+              <th>URL Firmware</th>
+              <th>Pagado</th>
+              <th>Force</th>
+              <th>Notas</th>
+              <th>Name</th>
+              <th>Slogan</th>
+              <th>Instagram</th>
+              <th>Tlf</th>
+              <th>Banco</th>
+              <th>Rif</th>
+              <th>Última conexión</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- apps.js llena esto automáticamente -->
+          </tbody>
+        </table>
       </div>
     </section>
 
   </main>
 
   <footer class="footer">
-    © 2025 BCV Display — Dashboard de administración
+    © 2025 iVisor Cloud — Plataforma IoT de Gestión
   </footer>
 
   <script src="/panel/apps.js"></script>
 </body>
-
 </html>
