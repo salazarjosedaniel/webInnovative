@@ -1,75 +1,615 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>BCV Display — Dashboard</title>
-  <link rel="stylesheet" href="/panel/style.css" />
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+<meta content="width=device-width, initial-scale=1" name="viewport"/><meta charset="utf-8"/>
+<title>BCV Display — Dashboard</title>
+<link href="/panel/style.css" rel="stylesheet"/>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --teal:#089088;
+    --teal-600:#077A73;
+    --teal-700:#06655F;
+
+    --ink:#0f172a;
+    --muted:#475569;
+    --muted2:#64748b;
+
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --line:rgba(15, 23, 42, .10);
+
+    --shadow: 0 18px 45px rgba(15,23,42,.10);
+    --shadow-soft: 0 10px 25px rgba(15,23,42,.08);
+
+    --radius:18px;
+    --radius-lg:22px;
+    --max:1200px;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 12% 15%, rgba(8,144,136,.10), transparent 55%),
+      radial-gradient(900px 600px at 90% 70%, rgba(8,144,136,.08), transparent 60%),
+      var(--bg);
+  }
+
+  a{ color:inherit; text-decoration:none; }
+
+  /* Premium Topbar (override legacy) */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background: rgba(246,248,251,.80);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 0;
+  }
+  .topbar__left, .topbar__right{ display:flex; align-items:center; gap:10px; }
+  .topbar__left{ gap:12px; }
+  .logo-icon{
+    width:38px;height:38px;border-radius:14px;
+    display:inline-flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg, rgba(8,144,136,1), rgba(8,144,136,.70));
+    box-shadow: 0 10px 24px rgba(8,144,136,.18);
+    font-size:18px;
+  }
+  .logo-text{
+    font-weight:800;
+    letter-spacing:.2px;
+    line-height:1.1;
+  }
+  .logo-sub{
+    display:block;
+    font-size:12px;
+    color:var(--muted2);
+    font-weight:600;
+    margin-top:2px;
+  }
+
+  header.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    padding: 14px 20px;
+  }
+
+  .topbar-link{
+    padding:8px 10px;
+    border-radius:12px;
+    color:var(--muted);
+    font-weight:700;
+    font-size:14px;
+    border:1px solid transparent;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, transform .08s ease;
+  }
+  .topbar-link:hover{
+    background: rgba(8,144,136,.08);
+    color:var(--ink);
+  }
+  .topbar-link--active{
+    background: rgba(8,144,136,.12);
+    border-color: rgba(8,144,136,.25);
+    color: var(--teal-700);
+  }
+
+  /* Buttons (override any legacy) */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    gap:10px;
+    padding:10px 14px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    transition: transform .08s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+    background: var(--card);
+    color: var(--ink);
+  }
+  .btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+  .btn-secondary{
+    background: rgba(255,255,255,.75);
+  }
+  .btn-sm{ padding:9px 12px; font-size:13px; border-radius:12px; }
+
+  /* Layout */
+  .layout{
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 22px 20px 56px;
+  }
+
+  .page-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    margin: 4px 0 14px;
+  }
+  .page-title{
+    margin:0;
+    font-size: 26px;
+    letter-spacing: -.3px;
+    line-height: 1.15;
+  }
+  .page-desc{
+    margin:6px 0 0;
+    color: var(--muted);
+    font-weight:600;
+    line-height:1.5;
+    font-size: 14px;
+  }
+  .page-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  /* Cards */
+  .card{
+    background: var(--card);
+    border:1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+
+  .cards-row{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .kpi-card{
+    grid-column: span 12;
+    padding: 16px;
+    box-shadow: var(--shadow-soft);
+    border-radius: var(--radius-lg);
+    background: rgba(255,255,255,.85);
+  }
+
+  .kpi-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .kpi-left{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    min-width: 0;
+  }
+  .kpi-ico{
+    width:42px;height:42px;border-radius:16px;
+    background: rgba(8,144,136,.12);
+    border:1px solid rgba(8,144,136,.18);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--teal-700);
+    font-weight:900;
+    flex: 0 0 auto;
+  }
+  .kpi-card h3{
+    margin:0;
+    font-size: 13px;
+    color: var(--muted2);
+    letter-spacing:.2px;
+    font-weight:800;
+    text-transform: uppercase;
+  }
+  .kpi-value{
+    margin: 8px 0 0;
+    font-size: 34px;
+    letter-spacing: -.6px;
+    font-weight: 900;
+    line-height:1;
+    color: var(--ink);
+  }
+  .kpi-sub{
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.4;
+  }
+
+  /* Keep your old semantic classes (just restyle) */
+  .kpi-value--green{ color: #0f766e; }
+  .kpi-value--red{ color: #b42318; }
+  .kpi-value--gray{ color: #475569; }
+
+  /* Charts */
+  .charts-row{
+    display:grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .chart-card{
+    grid-column: span 12;
+    padding: 16px;
+    box-shadow: var(--shadow-soft);
+    background: rgba(255,255,255,.85);
+  }
+  .chart-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom: 10px;
+  }
+  .chart-card h3{
+    margin:0;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -.2px;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border:1px solid rgba(8,144,136,.18);
+    background: rgba(8,144,136,.10);
+    color: var(--teal-700);
+    font-weight: 800;
+    font-size: 12px;
+  }
+  .badge .dot{
+    width:8px;height:8px;border-radius:999px;
+    background: var(--teal);
+    box-shadow: 0 0 0 4px rgba(8,144,136,.14);
+  }
+  canvas{ width:100% !important; height:320px !important; }
+
+  /* Meta footer card */
+  .dashboard-meta{
+    display:block;
+    padding: 14px 16px;
+    color: var(--muted2);
+    font-weight:650;
+  }
+
+  /* Responsive */
+  @media (min-width: 820px){
+    .kpi-card{ grid-column: span 4; }
+    .cards-row{ gap:16px; }
+    .charts-row{ gap:16px; }
+    .charts-row .chart-card:nth-child(1){ grid-column: span 6; }
+    .charts-row .chart-card:nth-child(2){ grid-column: span 6; }
+  }
+  @media (min-width: 980px){
+    canvas{ height:340px !important; }
+  }
+  @media (max-width: 560px){
+    header.topbar{ padding: 12px 14px; }
+    .layout{ padding: 18px 14px 48px; }
+    .page-title{ font-size: 22px; }
+    .kpi-value{ font-size: 30px; }
+  }
+
+  /* Devices table */
+  .sec{ padding: 42px 0; }
+  .wrap{ max-width:var(--max); margin:0 auto; padding:0 20px; }
+
+  .sec-head{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:14px;
+    margin-bottom: 12px; flex-wrap:wrap;
+  }
+  .sec-head h2{ margin:0 0 6px; font-size:28px; letter-spacing:-.3px; }
+  .sec-head p{ margin:0; color:var(--muted); line-height:1.6; max-width: 80ch; }
+
+  .sec-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  .field{
+    display:flex; align-items:center; gap:10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.85);
+    box-shadow: var(--shadow-soft);
+  }
+  .field-ico{ opacity:.8; }
+  .field input{
+    border:none; outline:none; background:transparent;
+    width: min(340px, 72vw);
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .select{
+    padding: 11px 12px;
+    border-radius: 14px;
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.85);
+    font-weight:700;
+    color: var(--ink);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .table-card{ overflow:hidden; }
+  .table-wrap{ overflow:auto; }
+  table.table{ width:100%; border-collapse:separate; border-spacing:0; min-width: 860px; }
+  .table thead th{
+    text-align:left;
+    font-size: 12px;
+    letter-spacing:.2px;
+    text-transform: uppercase;
+    color: var(--muted2);
+    padding: 12px 14px;
+    background: rgba(8,144,136,.06);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .table tbody td{
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(15,23,42,.08);
+    color: var(--ink);
+    font-size: 14px;
+    vertical-align: middle;
+    background: rgba(255,255,255,.92);
+  }
+  .table tbody tr:hover td{
+    background: rgba(8,144,136,.05);
+  }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border:1px solid var(--line);
+    background: rgba(255,255,255,.8);
+    font-weight:800;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .pill.ok{
+    border-color: rgba(8,144,136,.25);
+    background: rgba(8,144,136,.10);
+    color: var(--teal-700);
+  }
+  .pill.bad{
+    border-color: rgba(239,68,68,.25);
+    background: rgba(239,68,68,.08);
+    color: #991b1b;
+  }
+  .pill.neutral{
+    border-color: rgba(100,116,139,.18);
+    background: rgba(100,116,139,.08);
+    color: var(--muted2);
+  }
+
+  .action-btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding: 9px 12px;
+    border-radius: 12px;
+    border:1px solid var(--line);
+    background: #fff;
+    font-weight:800;
+    font-size: 13px;
+    cursor:pointer;
+    transition: transform .08s ease, box-shadow .15s ease;
+    box-shadow: var(--shadow-soft);
+    white-space:nowrap;
+  }
+  .action-btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow); }
+
+  .empty{
+    display:flex; gap:12px; align-items:flex-start;
+    padding: 16px;
+    border-top: 1px solid var(--line);
+    background: rgba(248,250,252,.9);
+  }
+  .empty-ico{
+    width: 38px; height: 38px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius: 14px;
+    background: rgba(8,144,136,.10);
+    border: 1px solid rgba(8,144,136,.16);
+  }
+  .muted{ color: var(--muted2); margin-top:4px; line-height:1.5; font-size: 13px; }
+
+  @media (max-width: 980px){
+    .sec-head h2{ font-size: 24px; }
+  }
+</style></head>
 <body>
-  <header class="topbar">
-    <div class="topbar__left">
-      <span class="logo-icon">📊</span>
-      <span class="logo-text">BCV Display — Dashboard</span>
+<header class="topbar">
+<div class="topbar__left">
+<span class="logo-icon">📊</span>
+<div><span class="logo-text">BCV Display — Dashboard</span><span class="logo-sub">Fleet &amp; Analytics</span></div>
+</div>
+<nav class="topbar__right">
+<a class="topbar-link" href="/panel/index.html">Panel</a>
+<a class="topbar-link topbar-link--active" href="/panel/dashboard.html">Dashboard</a>
+<button class="btn btn-secondary btn-sm" id="logoutBtn">Cerrar sesión</button>
+</nav>
+</header>
+<main class="layout">
+<section aria-label="Resumen del dashboard" class="page-head">
+<div>
+<h1 class="page-title">Dashboard de Dispositivos</h1>
+<p class="page-desc">Monitorea suscripción, estado de conexión y distribución de firmware. La operación premium (OTA + panel) se gestiona desde la nube; los precios se consultan desde el ERP/POS del cliente vía REST API.</p>
+</div>
+<div class="page-actions">
+<a class="btn" href="/panel/dashboard.html">Actualizar</a>
+</div>
+</section>
+
+<!-- Tarjetas resumen -->
+<section class="cards-row">
+<div class="card kpi-card">
+<div class="kpi-top">
+<div class="kpi-left">
+<div aria-hidden="true" class="kpi-ico">📦</div>
+<div style="min-width:0">
+<h3>Total dispositivos</h3>
+<p class="kpi-value kpi-value" id="kpiTotal">—</p>
+</div>
+</div>
+</div>
+<div class="kpi-sub">Unidades registradas en tu flota.</div></div>
+<div class="card kpi-card">
+<div class="kpi-top">
+<div class="kpi-left">
+<div aria-hidden="true" class="kpi-ico">💳</div>
+<div style="min-width:0">
+<h3>Pagando</h3>
+<p class="kpi-value kpi-value kpi-value--green" id="kpiPaid">—</p>
+</div>
+</div>
+</div>
+<div class="kpi-sub">Suscripción activa (acceso Premium).</div></div>
+<div class="card kpi-card">
+<div class="kpi-top">
+<div class="kpi-left">
+<div aria-hidden="true" class="kpi-ico">⛔</div>
+<div style="min-width:0">
+<h3>No pagado</h3>
+<p class="kpi-value kpi-value kpi-value--red" id="kpiUnpaid">—</p>
+</div>
+</div>
+</div>
+<div class="kpi-sub">Licencia vencida o sin pago.</div></div>
+<div class="card kpi-card">
+<div class="kpi-top">
+<div class="kpi-left">
+<div aria-hidden="true" class="kpi-ico">🟢</div>
+<div style="min-width:0">
+<h3>Online</h3>
+<p class="kpi-value kpi-value kpi-value--green" id="kpiOnline">—</p>
+</div>
+</div>
+</div>
+<div class="kpi-sub">Conectados recientemente.</div></div>
+<div class="card kpi-card">
+<div class="kpi-top">
+<div class="kpi-left">
+<div aria-hidden="true" class="kpi-ico">⚫</div>
+<div style="min-width:0">
+<h3>Offline</h3>
+<p class="kpi-value kpi-value kpi-value--gray" id="kpiOffline">—</p>
+</div>
+</div>
+</div>
+<div class="kpi-sub">Sin reporte reciente.</div></div>
+</section>
+</div>
+</section>
+<section class="sec" id="devices">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <h2>Dispositivos</h2>
+        <p>Listado de tu flota. Los precios se consultan en el <b>ERP/POS del cliente</b> vía <b>REST API</b>; este panel es para <b>monitoreo</b>, <b>suscripción</b> y <b>OTA</b>.</p>
+      </div>
+      <div class="sec-actions">
+        <div class="field">
+          <span class="field-ico">🔎</span>
+          <input id="deviceSearch" type="search" placeholder="Buscar por DeviceId, tienda, IP, firmware…" />
+        </div>
+        <select id="deviceFilter" class="select">
+          <option value="all">Todos</option>
+          <option value="online">Online</option>
+          <option value="offline">Offline</option>
+          <option value="paid">Pagando</option>
+          <option value="unpaid">No pagado</option>
+        </select>
+      </div>
     </div>
-    <nav class="topbar__right">
-      <a href="/panel/index.html" class="topbar-link">Panel</a>
-      <a href="/panel/dashboard.html" class="topbar-link topbar-link--active">Dashboard</a>
-      <button id="logoutBtn" class="btn btn-secondary btn-sm">Cerrar sesión</button>
-    </nav>
-  </header>
 
-  <main class="layout">
-    <!-- Tarjetas resumen -->
-    <section class="cards-row">
-      <div class="card kpi-card">
-        <h3>Total dispositivos</h3>
-        <p class="kpi-value" id="kpiTotal">—</p>
-      </div>
-      <div class="card kpi-card">
-        <h3>Pagando</h3>
-        <p class="kpi-value kpi-value--green" id="kpiPaid">—</p>
-      </div>
-      <div class="card kpi-card">
-        <h3>No pagado</h3>
-        <p class="kpi-value kpi-value--red" id="kpiUnpaid">—</p>
-      </div>
-      <div class="card kpi-card">
-        <h3>Online</h3>
-        <p class="kpi-value kpi-value--green" id="kpiOnline">—</p>
-      </div>
-      <div class="card kpi-card">
-        <h3>Offline</h3>
-        <p class="kpi-value kpi-value--gray" id="kpiOffline">—</p>
-      </div>
-    </section>
-
-    <!-- Fila de gráficas -->
-    <section class="charts-row">
-      <div class="card chart-card">
-        <h3>Estado de pago</h3>
-        <canvas id="chartPaid"></canvas>
+    <div class="card table-card">
+      <div class="table-wrap">
+        <table class="table" aria-label="Listado de dispositivos">
+          <thead>
+            <tr>
+              <th>DeviceId</th>
+              <th>Tienda / Cliente</th>
+              <th>Estado</th>
+              <th>Pago</th>
+              <th>Firmware</th>
+              <th>IP</th>
+              <th>Último visto</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="devicesTbody">
+            <!-- dashboard.js debe renderizar filas aquí -->
+          </tbody>
+        </table>
       </div>
 
-      <div class="card chart-card">
-        <h3>Estado de conexión</h3>
-        <canvas id="chartStatus"></canvas>
+      <div id="devicesEmpty" class="empty" style="display:none;">
+        <div class="empty-ico">📦</div>
+        <div>
+          <b>No hay dispositivos para mostrar</b>
+          <div class="muted">Cuando el backend cargue la flota, aparecerán aquí. Si usas otro contenedor/ID en tu JS, dímelo y lo ajusto.</div>
+        </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
+<section class="card">
+<small class="dashboard-meta" id="dashboardMeta">Cargando datos…</small>
+</section>
+</main>
+<script src="/panel/dashboard.js"></script>
+<script>
+(() => {
+  const q = document.getElementById('deviceSearch');
+  const f = document.getElementById('deviceFilter');
+  const tbody = document.getElementById('devicesTbody');
+  const empty = document.getElementById('devicesEmpty');
 
-    <section class="charts-row">
-      <div class="card chart-card">
-        <h3>Distribución de firmware</h3>
-        <canvas id="chartFirmware"></canvas>
-      </div>
-    </section>
+  function norm(s){ return (s || '').toString().toLowerCase().trim(); }
 
-    <section class="card">
-      <small id="dashboardMeta" class="dashboard-meta">Cargando datos…</small>
-    </section>
-  </main>
+  function apply(){
+    if(!tbody) return;
+    const query = norm(q?.value);
+    const filter = (f?.value || 'all');
 
-  <script src="/panel/dashboard.js"></script>
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    let visible = 0;
+
+    rows.forEach(tr => {
+      const hay = norm(tr.innerText);
+      const status = tr.getAttribute('data-status'); // online/offline
+      const pay = tr.getAttribute('data-pay');       // paid/unpaid
+
+      const matchQ = !query || hay.includes(query);
+      const matchF =
+        filter === 'all' ||
+        (filter === 'online' && status === 'online') ||
+        (filter === 'offline' && status === 'offline') ||
+        (filter === 'paid' && pay === 'paid') ||
+        (filter === 'unpaid' && pay === 'unpaid');
+
+      const show = matchQ && matchF;
+      tr.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+
+    if(empty){
+      empty.style.display = (rows.length > 0 && visible === 0) ? '' : 'none';
+    }
+  }
+
+  q?.addEventListener('input', apply);
+  f?.addEventListener('change', apply);
+
+  // Run after dashboard.js renders (best-effort)
+  window.addEventListener('load', () => setTimeout(apply, 50));
+})();
+</script>
 </body>
 </html>
