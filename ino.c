@@ -2300,7 +2300,7 @@ static void scannerCentralTask(void* pv) {
       uiSetStatus("Scanner HID desconectado");
     }
 
-    uiSetStatus("Buscando scanner...");
+    uiSetStatus("OK...");
 
     bool okScan = scan->start(3, false);
     if (!okScan) {
