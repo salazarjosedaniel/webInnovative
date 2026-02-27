@@ -42,6 +42,7 @@
 #include <Update.h>
 #include <nvs_flash.h>
 #include <esp_wifi.h>
+#include <StreamUtils.h>
 
 #if ARDUINO_USB_MODE
 #error "This sketch should be used when USB is in OTG mode"
@@ -76,6 +77,25 @@ using namespace esp_panel::board;
 #include "hid_usage_keyboard.h"
 #include "hid_usage_mouse.h"
 
+
+#define DEBUG_MODE 0
+
+#if DEBUG_MODE
+
+  #define LOG(...)        Serial.printf(__VA_ARGS__)
+  #define LOGLN(x)        Serial.println(x)
+  #define LOGT(x)         Serial.print(x)
+  #define LOGF(fmt, ...)  Serial.printf(fmt, __VA_ARGS__)
+
+#else
+
+  #define LOG(...)
+  #define LOGLN(x)
+  #define LOGT(x)
+  #define LOGF(fmt, ...)
+
+#endif
+
 /**
  * @brief Key event
  */
@@ -103,7 +123,6 @@ static SemaphoreHandle_t gPanelReady = nullptr;
 static String g_barcode = "";
 static volatile bool g_barcode_ready = false;
 static String g_barcode_last = "";
-
 // (Opcional) filtro: longitudes típicas para scanner
 static bool looksLikeBarcode(const String& s) {
   return s.length() >= 3;  // ajusta a tu caso (EAN13=13, etc.)
@@ -454,7 +473,7 @@ void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle,
       ESP_LOGI(TAG, "HID Device, protocol '%s' DISCONNECTED",
                hid_proto_name_str[dev_params.proto]);
       ESP_ERROR_CHECK(hid_host_device_close(hid_device_handle));
-      Serial.printf("HID Device, protocol '%s' DISCONNECTED", hid_proto_name_str[dev_params.proto]);
+      LOGF("HID Device, protocol '%s' DISCONNECTED", hid_proto_name_str[dev_params.proto]);
       break;
     case HID_HOST_INTERFACE_EVENT_TRANSFER_ERROR:
       ESP_LOGI(TAG, "HID Device, protocol '%s' TRANSFER_ERROR",
@@ -463,7 +482,7 @@ void hid_host_interface_callback(hid_host_device_handle_t hid_device_handle,
     default:
       ESP_LOGE(TAG, "HID Device, protocol '%s' Unhandled event",
                hid_proto_name_str[dev_params.proto]);
-      Serial.printf("HID Device, protocol '%s' Unhandled event", hid_proto_name_str[dev_params.proto]);
+      LOGF("HID Device, protocol '%s' Unhandled event", hid_proto_name_str[dev_params.proto]);
       break;
   }
 }
@@ -488,7 +507,7 @@ void hid_host_device_event(hid_host_device_handle_t hid_device_handle,
     case HID_HOST_DRIVER_EVENT_CONNECTED:
       ESP_LOGI(TAG, "HID Device, protocol '%s' CONNECTED",
                hid_proto_name_str[dev_params.proto]);
-      Serial.printf("HID Device, protocol '%s' CONNECTED", hid_proto_name_str[dev_params.proto]);
+      LOGF("HID Device, protocol '%s' CONNECTED", hid_proto_name_str[dev_params.proto]);
       ESP_ERROR_CHECK(hid_host_device_open(hid_device_handle, &dev_config));
       if (HID_SUBCLASS_BOOT_INTERFACE == dev_params.sub_class) {
         ESP_ERROR_CHECK(hid_class_request_set_protocol(hid_device_handle,
@@ -526,7 +545,7 @@ static void usb_lib_task(void* arg) {
   };
 
   esp_err_t err = usb_host_install(&host_config);
-  Serial.printf("[USB] usb_host_install -> %d\n", (int)err);
+  LOGF("[USB] usb_host_install -> %d\n", (int)err);
 
   // Avisamos a app_main que el USB ya quedó instalado
   xTaskNotifyGive((TaskHandle_t)arg);
@@ -542,7 +561,7 @@ static void usb_lib_task(void* arg) {
     // 🔄 Alive cada 2 segundos
     if (millis() - last_alive > 60000) {
       last_alive = millis();
-      Serial.printf("[USB] alive | flags=0x%08lx\n",
+      LOGF("[USB] alive | flags=0x%08lx\n",
                     (unsigned long)event_flags);
     }
 
@@ -704,7 +723,7 @@ void app_main(void) {
 }
 
 /************ Firmware ************/
-#define FW_VERSION "1.0.0"
+#define FW_VERSION "1.0.1"
 
 /************ LED de estado ************/
 const uint8_t LED_PIN = 2;
@@ -767,6 +786,9 @@ static const uint32_t FORCE_PORTAL_MAGIC = 0xC0FFEE11;
 /************ WiFiManager buffers ************/
 char apiLegacyBuf[200] = "https://web-innovative.vercel.app/api/tasas";
 char apiProdBuf[200] = "http://192.168.100.242/api/product";
+char apiRegistro[200] = "https://web-innovative.vercel.app/api/device/ensure";
+char apiVerificarPago[200] = "https://web-innovative.vercel.app/api/device/status?deviceId=";
+char apiSendLog[200] = "https://web-innovative.vercel.app/api/device/log";
 
 /************ WiFiManager params ************/
 WiFiManagerParameter* p_apiLegacy = nullptr;
@@ -789,6 +811,11 @@ static lv_timer_t* timer_fw = nullptr;
 static lv_timer_t* timer_led = nullptr;
 static lv_timer_t* timer_ui = nullptr;
 static lv_timer_t* timer_ble_adv = nullptr;
+
+/**/
+static String g_lastSentCode = "";
+static uint32_t g_lastSentMs = 0;
+static const uint32_t SEND_ONCE_WINDOW_MS = 1000; // ajusta: 400-1200ms
 
 /************ Panel ************/
 Board* panelBoard = nullptr;
@@ -835,7 +862,7 @@ static String prevPriceUsd, prevRateUsd;
 /************ USD rate (API legacy) ************/
 static double usdRate = 0.0;
 static unsigned long lastUsdFetch = 0;
-static const unsigned long USD_FETCH_MS = 15000;  // cada 15s
+static const unsigned long USD_FETCH_MS = 2UL * 60UL * 60UL * 1000UL;;  // cada 2H
 
 /************ Flags ************/
 bool usarLVGL = true;
@@ -1089,7 +1116,7 @@ static void saveScannerModeOnly() {
 }
 
 static void applyScannerModeRuntime() {
-  Serial.printf("[CFG] Aplicando modo scanner = %d\n", scannerMode);
+  LOGF("[CFG] Aplicando modo scanner = %d\n", scannerMode);
 
   // Desconectar UART si estaba activo
   if (bleClientUart && bleClientUart->isConnected()) {
@@ -1143,7 +1170,6 @@ static void sendLog(const String& event) {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  String url = "https://web-innovative.vercel.app/api/device/log";
 
   StaticJsonDocument<256> doc;
   doc["deviceId"] = getDeviceId();
@@ -1154,7 +1180,7 @@ static void sendLog(const String& event) {
   serializeJson(doc, body);
 
   http.setTimeout(4000);
-  if (!httpBeginAuto(http, url)) return;
+  if (!httpBeginAuto(http, apiSendLog)) return;
   http.addHeader("Content-Type", "application/json");
   http.POST(body);
   http.end();
@@ -1164,8 +1190,6 @@ static void registrarDispositivo() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  String url = "https://web-innovative.vercel.app/api/device/ensure";
-
   StaticJsonDocument<256> doc;
   doc["deviceId"] = getDeviceId();
   doc["firmware"] = FW_VERSION;
@@ -1175,12 +1199,12 @@ static void registrarDispositivo() {
   serializeJson(doc, body);
 
   http.setTimeout(5000);
-  if (!httpBeginAuto(http, url)) return;
+  if (!httpBeginAuto(http, apiRegistro)) return;
   http.addHeader("Content-Type", "application/json");
   int code = http.POST(body);
   http.end();
 
-  Serial.print("Registro dispositivo → ");
+  LOGT("Registro dispositivo → ");
   Serial.println(code);
 
   if (code == 200 || code == 201) deviceRegistered = true;
@@ -1190,10 +1214,9 @@ static bool verificarPago() {
   if (WiFi.status() != WL_CONNECTED) return true;  // no bloquees por falta de wifi
 
   HTTPClient http;
-  String url = "https://web-innovative.vercel.app/api/device/status?deviceId=" + getDeviceId();
 
   http.setTimeout(5000);
-  if (!httpBeginAuto(http, url)) return true;
+  if (!httpBeginAuto(http, apiVerificarPago + getDeviceId())) return true;
 
   int code = http.GET();
   if (code != 200) {
@@ -1231,7 +1254,7 @@ static void verificarWiFi() {
     }
 
     if (millis() - wifiFallidaDesde > TIEMPO_MAX_SIN_WIFI) {
-      Serial.println("⛔ WiFi perdido mucho tiempo. Reset settings y restart...");
+      LOGLN("⛔ WiFi perdido mucho tiempo. Reset settings y restart...");
       WiFiManager wm;
       wm.resetSettings();
 
@@ -1289,7 +1312,7 @@ static void handleDoUpdateUpload() {
   HTTPUpload& upload = otaServer.upload();
 
   if (upload.status == UPLOAD_FILE_START) {
-    Serial.printf("🔄 OTA: start '%s'\n", upload.filename.c_str());
+    LOGF("🔄 OTA: start '%s'\n", upload.filename.c_str());
     esp_task_wdt_reset();
     if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
       Update.printError(Serial);
@@ -1302,7 +1325,7 @@ static void handleDoUpdateUpload() {
   } else if (upload.status == UPLOAD_FILE_END) {
     esp_task_wdt_reset();
     if (Update.end(true)) {
-      Serial.printf("✅ OTA: success, %u bytes\n", upload.totalSize);
+      LOGF("✅ OTA: success, %u bytes\n", upload.totalSize);
     } else {
       Update.printError(Serial);
     }
@@ -1342,9 +1365,19 @@ static void setupOtaHttpServer() {
 
 
 /************ OTA Remota ************/
+static int semverCmp(const String& a, const String& b) {
+  int a1=0,a2=0,a3=0,b1=0,b2=0,b3=0;
+  sscanf(a.c_str(), "%d.%d.%d", &a1,&a2,&a3);
+  sscanf(b.c_str(), "%d.%d.%d", &b1,&b2,&b3);
+  if (a1 != b1) return (a1 < b1) ? -1 : 1;
+  if (a2 != b2) return (a2 < b2) ? -1 : 1;
+  if (a3 != b3) return (a3 < b3) ? -1 : 1;
+  return 0;
+}
+
 static bool isNewerVersion(const String& remote, const String& local) {
-  if (remote == local) return false;
-  return (remote > local);  // simple string compare (si usas semver, puedes mejorar)
+  if (remote.length() == 0 || local.length() == 0) return false;
+  return semverCmp(remote, local) > 0;
 }
 
 static void debugHeadGet(const String& url) {
@@ -1363,7 +1396,7 @@ static void debugHeadGet(const String& url) {
   }
 
   int code = http.GET();
-  Serial.printf("[DBG] code=%d size=%d\n", code, http.getSize());
+  LOGF("[DBG] code=%d size=%d\n", code, http.getSize());
 
   // Importante: ver si hay Location (redirect)
   String loc = http.getLocation();
@@ -1397,7 +1430,7 @@ static void pauseTimersForOta(bool pause) {
 
 
 static bool testHttpsRaw(const char* host, const char* path) {
-  Serial.printf("\n[TEST] host=%s path=%s\n", host, path);
+  LOGF("\n[TEST] host=%s path=%s\n", host, path);
 
   // 1) DNS
   IPAddress ip;
@@ -1405,7 +1438,7 @@ static bool testHttpsRaw(const char* host, const char* path) {
     Serial.println("[TEST] ❌ DNS hostByName failed");
     return false;
   }
-  Serial.print("[TEST] DNS OK -> ");
+  LOGT("[TEST] DNS OK -> ");
   Serial.println(ip);
 
   // 2) TCP + TLS
@@ -1419,7 +1452,7 @@ static bool testHttpsRaw(const char* host, const char* path) {
 
     char errbuf[120];
     client.lastError(errbuf, sizeof(errbuf));
-    Serial.print("[TEST] TLS lastError: ");
+    LOGT("[TEST] TLS lastError: ");
     Serial.println(errbuf);
 
     return false;
@@ -1436,7 +1469,7 @@ static bool testHttpsRaw(const char* host, const char* path) {
 
   // lee status line
   String status = client.readStringUntil('\n');
-  Serial.print("[TEST] status line: ");
+  LOGT("[TEST] status line: ");
   Serial.println(status);
 
   return status.startsWith("HTTP/1.1 200");
@@ -1463,7 +1496,7 @@ static bool doHttpUpdate2(const String& fwUrl) {
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       esp_task_wdt_reset();
-      Serial.printf("❌ OTA falló. Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+      LOGF("❌ OTA falló. Error (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
       sendLog(String("OTA_FAIL ") + httpUpdate.getLastErrorString().c_str());
       return false;
     case HTTP_UPDATE_NO_UPDATES:
@@ -1534,10 +1567,10 @@ static bool runOtaBootModeIfPending() {
 
   Serial.println("🔄 [OTA-BOOT] GET: " + fwUrl);
   int code = http.GET();
-  Serial.printf("[OTA-BOOT] HTTP code=%d\n", code);
+  LOGF("[OTA-BOOT] HTTP code=%d\n", code);
 
   if (code != HTTP_CODE_OK) {
-    Serial.printf("[OTA-BOOT] Location=%s\n", http.header("Location").c_str());
+    LOGF("[OTA-BOOT] Location=%s\n", http.header("Location").c_str());
     http.end();
     Serial.println("❌ [OTA-BOOT] OTA failed. Rebooting (pending kept).");
     delay(1500);
@@ -1547,7 +1580,7 @@ static bool runOtaBootModeIfPending() {
 
   // 5) Validaciones fuertes
   int totalLen = http.getSize();
-  Serial.printf("[OTA-BOOT] Content-Length=%d\n", totalLen);
+  LOGF("[OTA-BOOT] Content-Length=%d\n", totalLen);
 
   if (totalLen <= 0) {
     Serial.println("❌ [OTA-BOOT] Invalid Content-Length. Aborting OTA.");
@@ -1580,7 +1613,7 @@ static bool runOtaBootModeIfPending() {
   }
 
   size_t written = Update.writeStream(*stream);
-  Serial.printf("[OTA-BOOT] Written=%u\n", (unsigned)written);
+  LOGF("[OTA-BOOT] Written=%u\n", (unsigned)written);
 
   if (written != (size_t)totalLen) {
     Serial.println("❌ [OTA-BOOT] Incomplete write");
@@ -1634,7 +1667,7 @@ static void checkForFirmwareUpdate(bool manualTrigger) {
   String payload = http.getString();
   http.end();
 
-  StaticJsonDocument<8096> doc;
+  StaticJsonDocument<512> doc;
   if (deserializeJson(doc, payload)) return;
 
   String remoteVersion = doc["version"] | "";
@@ -1660,14 +1693,14 @@ static void checkForFirmwareUpdate(bool manualTrigger) {
 
 /************ USD rate (API legacy) ************/
 static double parseUsdRateFromJson(const String& payload) {
-  StaticJsonDocument<1024> doc;
+  StaticJsonDocument<512> doc;
   if (deserializeJson(doc, payload)) return 0.0;
   return doc["usd"].as<double>();
 }
 
 static bool fetchUsdRate() {
 
-  Serial.println(WiFi.status());
+  LOGLN(WiFi.status());
 
 
   if (WiFi.status() != WL_CONNECTED) return false;
@@ -1675,14 +1708,14 @@ static bool fetchUsdRate() {
   String url = apiUrl;
   url.trim();
 
-  Serial.println(url);
+  LOGLN(url);
 
   if (url.length() == 0) return false;
 
   HTTPClient http;
   http.setTimeout(4000);
   if (!httpBeginAuto(http, url)) {
-    Serial.println("httpBeginAuto");
+    LOGLN("httpBeginAuto");
     return false;
   }
 
@@ -1700,7 +1733,7 @@ static bool fetchUsdRate() {
   if (r <= 0.000001) return false;
 
   usdRate = r;
-  Serial.printf("[USD] Rate updated: %.6f\n", usdRate);
+  LOGF("[USD] Rate updated: %.6f\n", usdRate);
   return true;
 }
 
@@ -1709,7 +1742,105 @@ struct HttpTaskParam {
   String code;
 };
 
-static bool consultarProductoPorCodigo(const String& code, String& outPayload, int& outHttpCode) {
+
+static void skipToJsonStart(Stream& s) {
+  // 1) Saltar BOM UTF-8 si aparece (EF BB BF)
+  int p = s.peek();
+  if (p == 0xEF) {
+    uint8_t bom[3];
+    size_t n = s.readBytes((char*)bom, 3);
+    if (!(n == 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)) {
+      // Si no era BOM real, ya se consumieron bytes; normalmente esto no pasa
+      // si tu server no usa 0xEF al inicio.
+    }
+  }
+
+  // 2) Saltar cualquier cosa hasta '{' o '['
+  while (true) {
+    int c = s.peek();
+    if (c < 0) return;                 // EOF
+    if (c == '{' || c == '[') return;  // inicio JSON
+    s.read();                           // descarta
+  }
+}
+
+
+static bool consultarProductoPorCodigo(const String& code, double& outPriceWithTax, char* outName, size_t outNameLen, int& outHttpCode) {
+  outHttpCode = -999;
+  outPriceWithTax = 0.0;
+
+  if (WiFi.status() != WL_CONNECTED) {
+    uiSetStatus("WiFi desconectado");
+    return false;
+  }
+
+  String url;
+  url.reserve(apiProductUrl.length() + code.length() + 32);
+  url = apiProductUrl;
+  url += (apiProductUrl.indexOf('?') >= 0) ? "&code=" : "?code=";
+  url += code;
+
+  LOGLN(url);
+
+  HTTPClient http;
+  http.setTimeout(10000);
+
+  if (!httpBeginAuto(http, url)) {
+    uiSetStatus("HTTP begin() fallo");
+    return false;
+  }
+
+  int httpCode = http.GET();
+  outHttpCode = httpCode;
+
+  if (httpCode != 200) {
+    LOGLN(httpCode);
+    LOGLN(http.errorToString(httpCode));
+    http.end();
+    return false;
+  }
+
+  WiFiClient* raw = http.getStreamPtr();
+  if (!raw) {
+    LOGLN("Error: stream NULL\n");
+    http.end();
+    return false;
+  }
+
+  // Esperar un poquito a que llegue body (a veces 200 llega antes de que haya bytes disponibles)
+  unsigned long t0 = millis();
+  while (!raw->available() && (millis() - t0) < 250) {
+    delay(1);
+  }
+
+  // Buffer para no depender de lecturas byte-a-byte (más estable)
+  ReadBufferingStream stream(*raw, 256);
+
+  // Saltar BOM / basura antes del JSON
+  skipToJsonStart(stream);
+
+  StaticJsonDocument<512> doc;
+  DeserializationError err = deserializeJson(doc, stream);
+
+  http.end();
+
+  if (err) {
+    LOGF("JSON Error: %s\n", err.c_str());
+    // Tip extra: si quieres más señal, imprime Content-Type/Length
+    LOGF("CT=%s CL=%d\n", http.header("Content-Type").c_str(), http.getSize());
+    return false;
+  }
+
+  bool ok = doc["ok"] | false;
+  bool found = doc["found"] | false;
+  if (!ok || !found) return false;
+  const char* name = doc["name"] | "";
+  strlcpy(outName,name,outNameLen);
+  outPriceWithTax = doc["priceWithTax"] | 0.0;
+  return true;
+}
+
+static bool consultarProductoPorCodigo2(const String& code, String& outPayload, int& outHttpCode) {
   outPayload = "";
   outHttpCode = -999;
 
@@ -1718,17 +1849,10 @@ static bool consultarProductoPorCodigo(const String& code, String& outPayload, i
     return false;
   }
 
-  String base = apiProductUrl;
-  base.trim();
-  if (base.length() == 0) {
-    uiSetStatus("API Producto vacia");
-    return false;
-  }
-
   String url;
-  url.reserve(base.length() + code.length() + 32);
-  url = base;
-  url += (base.indexOf('?') >= 0) ? "&code=" : "?code=";
+  url.reserve(apiProductUrl.length() + code.length() + 32);
+  url = apiProductUrl;
+  url += (apiProductUrl.indexOf('?') >= 0) ? "&code=" : "?code=";
   url += code;
 
   HTTPClient http;
@@ -1784,152 +1908,58 @@ static void httpWorkerTask(void* pv) {
 
     String payload;
     int httpCode;
-    bool okReq = consultarProductoPorCodigo(code, payload, httpCode);
+    double priceWithTax = 0.0;
+    char name[40];
+    bool okReq = consultarProductoPorCodigo(code, priceWithTax, name,sizeof(name), httpCode);
 
-    if (okReq) {
-      StaticJsonDocument<512> doc;
-      if (deserializeJson(doc, payload)) {
-        uiSetStatus("JSON error");
-        uiSetDesc("JSON ERROR");
-        uiSetPrice("0.00");
-        uiSetPriceUsd("0.00");
-        uiSetRateUsd("--.--");
-        scheduleClearIn5s();
-        continue;
-      }
-
-      bool ok = doc["ok"] | false;
-      bool found = doc["found"] | false;
-
-      if (!ok || !found) {
-        uiSetStatus("No encontrado");
-        uiSetDesc("PRODUCTO NO ENCONTRADO");
-        uiSetPrice("0.00");
-        uiSetPriceUsd("0.00");
-        uiSetRateUsd("--.--");
-        scheduleClearIn5s();
-        continue;
-      }
-
-      const char* name = doc["name"] | "";
-      double priceWithTax = doc["priceWithTax"] | 0.0;
-
-      uiSetDesc(String(name));
-
-      char buf[32];
-      snprintf(buf, sizeof(buf), "%.2f", priceWithTax);
-      uiSetPrice(String(buf));
-
-      if (usdRate > 0.000001) {
-        double usd = priceWithTax / usdRate;
-
-        char bufUsd[32];
-        snprintf(bufUsd, sizeof(bufUsd), "%.2f", usd);
-        uiSetPriceUsd(String(bufUsd));
-
-        char bufRate[32];
-        snprintf(bufRate, sizeof(bufRate), "%.2f", usdRate);
-        uiSetRateUsd(String(bufRate));
-      } else {
-        uiSetPriceUsd("--.--");
-        uiSetRateUsd("--.--");
-      }
-
-      uiSetStatus("OK");
+    if (!okReq) {
+      uiSetStatus("No encontrado / Error");
+      uiSetPrice("0.00");
+      uiSetPriceUsd("0.00");
       scheduleClearIn5s();
-    } else {
-      uiSetStatus("Error consultando");
-      scheduleClearIn5s();
+      continue;
     }
 
-    // pequeño yield
-    vTaskDelay(1);
+uiSetDesc(name);
+
+char buf[32];
+snprintf(buf, sizeof(buf), "%.2f", priceWithTax);
+uiSetPrice(String(buf));
+
+if (usdRate > 0.000001) {
+  double usd = priceWithTax / usdRate;
+  char bufUsd[32]; snprintf(bufUsd, sizeof(bufUsd), "%.2f", usd);
+  uiSetPriceUsd(String(bufUsd));
+
+  char bufRate[32]; snprintf(bufRate, sizeof(bufRate), "%.2f", usdRate);
+  uiSetRateUsd(String(bufRate));
+} else {
+  uiSetPriceUsd("--.--");
+  uiSetRateUsd("--.--");
+}
+
+uiSetStatus("OK");
+scheduleClearIn5s();
+// pequeño yield
+ vTaskDelay(1);
   }
 }
 
+static bool shouldSendCodeOnce(const String& code) {
+  String c = code;
+  c.trim();
+  if (c.length() == 0) return false;
 
-static void httpTask(void* pv) {
-  HttpTaskParam* p = (HttpTaskParam*)pv;
-  String code = p->code;
-  delete p;
+  uint32_t now = millis();
 
-  if (!servicePaid) {
-    uiSetStatus("Servicio suspendido");
-    uiSetDesc("SUSPENDIDO");
-    uiSetPrice("--.--");
-    uiSetPriceUsd("--.--");
-    uiSetRateUsd("--.--");
-    scheduleClearIn5s();
-    vTaskDelete(NULL);
-    return;
+  // Mismo código dentro de la ventana => ignorar
+  if (c == g_lastSentCode && (now - g_lastSentMs) < SEND_ONCE_WINDOW_MS) {
+    return false;
   }
 
-  uiSetStatus("Consultando...");
-
-  String payload;
-  int httpCode;
-  bool okReq = consultarProductoPorCodigo(code, payload, httpCode);
-
-  if (okReq) {
-    StaticJsonDocument<512> doc;
-    if (deserializeJson(doc, payload)) {
-      uiSetStatus("JSON error");
-      uiSetDesc("JSON ERROR");
-      uiSetPrice("0.00");
-      uiSetPriceUsd("0.00");
-      uiSetRateUsd("--.--");
-      scheduleClearIn5s();
-      vTaskDelete(NULL);
-      return;
-    }
-
-    bool ok = doc["ok"] | false;
-    bool found = doc["found"] | false;
-
-    if (!ok || !found) {
-      uiSetStatus("No encontrado");
-      uiSetDesc("PRODUCTO NO ENCONTRADO");
-      uiSetPrice("0.00");
-      uiSetPriceUsd("0.00");
-      uiSetRateUsd("--.--");
-      scheduleClearIn5s();
-      vTaskDelete(NULL);
-      return;
-    }
-
-    const char* name = doc["name"] | "";
-    double priceWithTax = doc["priceWithTax"] | 0.0;
-
-    uiSetDesc(String(name));
-
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%.2f", priceWithTax);
-    uiSetPrice(String(buf));
-
-    Serial.printf("USD Rate %2.f", usdRate);
-
-    if (usdRate > 0.000001) {
-      double usd = priceWithTax / usdRate;
-      char bufUsd[32];
-      snprintf(bufUsd, sizeof(bufUsd), "%.2f", usd);
-      uiSetPriceUsd(String(bufUsd));
-
-      char bufRate[32];
-      snprintf(bufRate, sizeof(bufRate), "%.2f", usdRate);
-      uiSetRateUsd(String(bufRate));
-    } else {
-      uiSetPriceUsd("--.--");
-      uiSetRateUsd("--.--");
-    }
-
-    uiSetStatus("OK");
-    scheduleClearIn5s();
-  } else {
-    uiSetStatus("Error consultando");
-    scheduleClearIn5s();
-  }
-
-  vTaskDelete(NULL);
+  g_lastSentCode = c;
+  g_lastSentMs = now;
+  return true;
 }
 
 static void launchHttpForCodeEx(const String& code, const String& sourceLabel, bool setTextArea) {
@@ -1942,10 +1972,17 @@ static void launchHttpForCodeEx(const String& code, const String& sourceLabel, b
     return;
   }
 
+  if(!shouldSendCodeOnce(c)){
+    LOGLN("Code DUP!");
+    return;
+  }
+
   if (!httpQueue) {
     uiSetStatus("HTTP worker no listo");
     return;
   }
+
+
 
   HttpJob job{};
   strncpy(job.code, c.c_str(), sizeof(job.code) - 1);
@@ -1954,32 +1991,6 @@ static void launchHttpForCodeEx(const String& code, const String& sourceLabel, b
 
   if (xQueueSend(httpQueue, &job, 0) != pdTRUE) {
     uiSetStatus("Cola ocupada (intente de nuevo)");
-  }
-}
-
-static void launchHttpForCodeExOld(const String& code, const String& sourceLabel, bool setTextArea) {
-  String c = code;
-  c.trim();
-  if (c.length() == 0) return;
-
-  if (!servicePaid) {
-    uiSetStatus("Servicio suspendido");
-    return;
-  }
-
-  curCode = c;
-  if (setTextArea) uiSetBarcode(curCode);
-  uiSetStatus(sourceLabel);
-
-  HttpTaskParam* param = new HttpTaskParam();
-  param->code = curCode;
-
-  BaseType_t ok = xTaskCreatePinnedToCore(
-    httpTask, "httpTask", 12288, param, 1, NULL, 0);
-
-  if (ok != pdPASS) {
-    uiSetStatus("Error creando task");
-    delete param;
   }
 }
 
@@ -2035,7 +2046,7 @@ static void scannerUartNotifyCB(NimBLERemoteCharacteristic* pRC, uint8_t* data, 
         centralUartRxBuffer = "";
         code.trim();
         if (code.length()) {
-          Serial.println("[SCANNER UART] CODE=" + code);
+          LOGLN("[SCANNER UART] CODE=" + code);
           launchHttpForCode(code, "Scanner BLE UART");
         }
       }
@@ -2047,7 +2058,7 @@ static void scannerUartNotifyCB(NimBLERemoteCharacteristic* pRC, uint8_t* data, 
 }
 
 static bool connectToScannerUart(const NimBLEAdvertisedDevice& adv) {
-  Serial.println("[SCANNER UART] Connecting...");
+  LOGLN("[SCANNER UART] Connecting...");
 
   if (bleClientUart == nullptr) {
     bleClientUart = NimBLEDevice::createClient();
@@ -2056,34 +2067,34 @@ static bool connectToScannerUart(const NimBLEAdvertisedDevice& adv) {
   }
 
   if (!bleClientUart->connect((NimBLEAdvertisedDevice*)&adv)) {
-    Serial.println("[SCANNER UART] Connect failed");
+    LOGLN("[SCANNER UART] Connect failed");
     return false;
   }
 
   NimBLERemoteService* svc = bleClientUart->getService(UART_SERVICE_UUID);
   if (!svc) {
-    Serial.println("[SCANNER UART] NUS service not found");
+    LOGLN("[SCANNER UART] NUS service not found");
     bleClientUart->disconnect();
     return false;
   }
 
   uartNotify = svc->getCharacteristic(UART_NOTIFY_UUID);
   if (!uartNotify || !uartNotify->canNotify()) {
-    Serial.println("[SCANNER UART] Notify char invalid");
+    LOGLN("[SCANNER UART] Notify char invalid");
     bleClientUart->disconnect();
     return false;
   }
 
   bool subOk = uartNotify->subscribe(true, scannerUartNotifyCB, true);
   if (!subOk) {
-    Serial.println("[SCANNER UART] Subscribe failed");
+    LOGLN("[SCANNER UART] Subscribe failed");
     bleClientUart->disconnect();
     return false;
   }
 
   scannerUartConnected = true;
   uiSetStatus("Scanner UART conectado");
-  Serial.println("[SCANNER UART] Connected OK");
+  LOGLN("[SCANNER UART] Connected OK");
   return true;
 }
 
@@ -2152,7 +2163,7 @@ static void processHidKeyboardReport(const uint8_t* data, size_t len) {
     centralHidRxBuffer = "";
     code.trim();
     if (code.length()) {
-      Serial.println("[SCANNER HID] CODE=" + code);
+      LOGLN("[SCANNER HID] CODE=" + code);
       launchHttpForCode(code, "Scanner BLE HID");
     }
     return;
@@ -2169,7 +2180,7 @@ static void hidNotifyCB(NimBLERemoteCharacteristic* pRC, uint8_t* data, size_t l
 }
 
 static bool connectToScannerHid(const NimBLEAdvertisedDevice& adv) {
-  Serial.println("[SCANNER HID] Connecting...");
+  LOGLN("[SCANNER HID] Connecting...");
 
   if (bleClientHid == nullptr) {
     bleClientHid = NimBLEDevice::createClient();
@@ -2178,7 +2189,7 @@ static bool connectToScannerHid(const NimBLEAdvertisedDevice& adv) {
   }
 
   if (!bleClientHid->connect((NimBLEAdvertisedDevice*)&adv)) {
-    Serial.println("[SCANNER HID] Connect failed");
+    LOGLN("[SCANNER HID] Connect failed");
     return false;
   }
 
@@ -2186,26 +2197,26 @@ static bool connectToScannerHid(const NimBLEAdvertisedDevice& adv) {
   if (!svc) svc = bleClientHid->getService(HID_SERVICE_UUID);
 
   if (!svc) {
-    Serial.println("[SCANNER HID] HID service not found");
+    LOGLN("[SCANNER HID] HID service not found");
     bleClientHid->disconnect();
     return false;
   }
 
   hidReportChar = svc->getCharacteristic(HID_REPORT_UUID);
   if (!hidReportChar) {
-    Serial.println("[SCANNER HID] Report char not found");
+    LOGLN("[SCANNER HID] Report char not found");
     bleClientHid->disconnect();
     return false;
   }
   if (!hidReportChar->canNotify() && !hidReportChar->canIndicate()) {
-    Serial.println("[SCANNER HID] Report char no notify/indicate");
+    LOGLN("[SCANNER HID] Report char no notify/indicate");
     bleClientHid->disconnect();
     return false;
   }
 
   bool subOk = hidReportChar->subscribe(true, hidNotifyCB, true);
   if (!subOk) {
-    Serial.println("[SCANNER HID] Subscribe failed");
+    LOGLN("[SCANNER HID] Subscribe failed");
     bleClientHid->disconnect();
     return false;
   }
@@ -2214,7 +2225,7 @@ static bool connectToScannerHid(const NimBLEAdvertisedDevice& adv) {
   centralHidRxBuffer = "";
   lastHidReportLen = 0;
   uiSetStatus("Scanner HID conectado");
-  Serial.println("[SCANNER HID] Connected OK");
+  LOGLN("[SCANNER HID] Connected OK");
   return true;
 }
 
@@ -2248,15 +2259,15 @@ static void printDevice(const NimBLEAdvertisedDevice* adv) {
   String addr = adv->getAddress().toString().c_str();
   int rssi = adv->getRSSI();
 
-  Serial.printf("DEV addr=%s rssi=%d name='%s' ",
+  LOGF("DEV addr=%s rssi=%d name='%s' ",
                 addr.c_str(), rssi, name.c_str());
 
   if (adv->haveServiceUUID()) {
-    Serial.print(" uuids=");
+    LOGT(" uuids=");
     for (int i = 0; i < adv->getServiceUUIDCount(); i++) {
       NimBLEUUID u = adv->getServiceUUID(i);
-      Serial.print(u.toString().c_str());
-      if (i < adv->getServiceUUIDCount() - 1) Serial.print(",");
+      LOGT(u.toString().c_str());
+      if (i < adv->getServiceUUIDCount() - 1) LOGT(",");
     }
   }
   Serial.println();
@@ -2299,7 +2310,7 @@ static void scannerCentralTask(void* pv) {
 
     NimBLEScanResults results = scan->getResults();
     int count = results.getCount();
-    Serial.println("[SCANNER] Scanning... mode=" + String(scannerMode) + " prefix=" + scannerNamePrefix + " Count=" + count);
+    LOGLN("[SCANNER] Scanning... mode=" + String(scannerMode) + " prefix=" + scannerNamePrefix + " Count=" + count);
     bool connectedNow = false;
 
     // Pasada 1: UART
@@ -2312,7 +2323,7 @@ static void scannerCentralTask(void* pv) {
 
 
         if (matchesPrefix(adv) || advHasService(adv, UART_SERVICE_UUID)) {
-          Serial.println("[SCANNER] Candidate UART: " + String(adv->getName().c_str()));
+          LOGLN("[SCANNER] Candidate UART: " + String(adv->getName().c_str()));
           connectedNow = connectToScannerUart(*adv);
           if (connectedNow) break;
         }
@@ -2328,7 +2339,7 @@ static void scannerCentralTask(void* pv) {
         } else printDevice(adv);
 
         if (advHasService(adv, HID_SERVICE_UUID) || matchesPrefix(adv)) {
-          Serial.println("[SCANNER] Candidate HID: " + String(adv->getName().c_str()));
+          LOGLN("[SCANNER] Candidate HID: " + String(adv->getName().c_str()));
           connectedNow = connectToScannerHid(*adv);
           if (connectedNow) break;
         }
@@ -2349,7 +2360,7 @@ static void ensureAdvertising() {
   NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   if (!adv) return;
   if (!adv->isAdvertising()) {
-    Serial.println("[BLE] Advertising was OFF -> restarting");
+    LOGLN("[BLE] Advertising was OFF -> restarting");
     adv->start();
   }
 }
@@ -2357,13 +2368,13 @@ static void ensureAdvertising() {
 class ServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
     (void)pServer;
-    Serial.println("[BLE] App connected");
+    LOGLN("[BLE] App connected");
     uiSetStatus("BLE conectado (App)");
   }
   void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override {
     (void)pServer;
     (void)connInfo;
-    Serial.printf("[BLE] App disconnected. reason=%d\n", reason);
+    LOGF("[BLE] App disconnected. reason=%d\n", reason);
     // Re-anunciar siempre (iPhone BT toggle a veces deja adv apagado)
     ensureAdvertising();
     uiSetStatus("BLE listo. Buscando scanner...");
@@ -2496,7 +2507,7 @@ static void timer_api_cb(lv_timer_t* t) {
   // refresca tasa USD
   if (now - lastUsdFetch >= USD_FETCH_MS) {
     lastUsdFetch = now;
-    Serial.println("Fetching...");
+    LOGLN("Fetching...");
     fetchUsdRate();
   }
 
@@ -2540,7 +2551,7 @@ static void cfgSaveBtn_cb(lv_event_t* e) {
   scannerMode = newMode;
   saveScannerModeOnly();
 
-  Serial.printf("[CFG] Guardado scannerMode=%d (apply deferred)\n", scannerMode);
+  LOGF("[CFG] Guardado scannerMode=%d (apply deferred)\n", scannerMode);
 
   // 3) marcar apply para el loop() (NO BLE aquí)
   pendingScannerModeValue = newMode;
@@ -2565,16 +2576,16 @@ static void doFactoryResetNow() {
 
   // Intenta restaurar estado WiFi (borra credenciales del stack)
   esp_err_t e1 = esp_wifi_restore();
-  Serial.printf("[RST] esp_wifi_restore -> %d\n", (int)e1);
+  LOGF("[RST] esp_wifi_restore -> %d\n", (int)e1);
   delay(200);
 
   // Borra TODO el NVS (incluye WiFi + tu Preferences)
   esp_err_t e2 = nvs_flash_erase();
-  Serial.printf("[RST] nvs_flash_erase -> %d\n", (int)e2);
+  LOGF("[RST] nvs_flash_erase -> %d\n", (int)e2);
   delay(200);
 
   esp_err_t e3 = nvs_flash_init();
-  Serial.printf("[RST] nvs_flash_init -> %d\n", (int)e3);
+  LOGF("[RST] nvs_flash_init -> %d\n", (int)e3);
   delay(200);
 
   Serial.println("[RST] Factory reset DONE -> restart");
@@ -2593,7 +2604,7 @@ static void reset_mbox_event_cb(lv_event_t* e) {
   const char* txt = lv_btnmatrix_get_btn_text(btnm, idx);
 
   // DEBUG rápido (quita luego)
-  Serial.printf("[MB] idx=%u txt=%s\n", idx, txt ? txt : "NULL");
+  LOGF("[MB] idx=%u txt=%s\n", idx, txt ? txt : "NULL");
 
   if (txt && (strcmp(txt, "SI") == 0 || strcmp(txt, "Sí") == 0 || strcmp(txt, "YES") == 0)) {
     pendingResetCfg = true;  // SOLO bandera
@@ -2888,7 +2899,7 @@ void setup() {
   g_barcode_last.reserve(80);
   delay(400);
 
-  Serial.print("reset reason: ");
+  LOGT("reset reason: ");
   Serial.println((int)esp_reset_reason());
 
   bootTime = millis();
@@ -3136,8 +3147,8 @@ void setup() {
   app_main();
   delay(5000);
 
-  Serial.printf("[BOOT] WiFi.SSID()='%s'\n", WiFi.SSID().c_str());
-  Serial.printf("[BOOT] forcePortal=%s\n",
+  LOGF("[BOOT] WiFi.SSID()='%s'\n", WiFi.SSID().c_str());
+  LOGF("[BOOT] forcePortal=%s\n",
                 (g_forcePortal == FORCE_PORTAL_MAGIC) ? "YES" : "NO");
 
   if (g_forcePortal == FORCE_PORTAL_MAGIC) {
@@ -3180,9 +3191,9 @@ void setup() {
   wm.setConfigPortalTimeout(30);
   wm.setConnectTimeout(30);
 
-  Serial.println("📡 Iniciando portal WiFi (Visor-Precios) si no hay config...");
+  LOGLN("📡 Iniciando portal WiFi (Visor-Precios) si no hay config...");
   if (!wm.autoConnect("Visor-Precios")) {
-    Serial.println("❌ Fallo en portal. Reiniciando...");
+    LOGLN("❌ Fallo en portal. Reiniciando...");
     uiSetStatus("Portal WiFi fallo");
     delay(60000);
     ESP.restart();
@@ -3200,15 +3211,15 @@ void setup() {
 
   saveConfigToNVS();
 
-  Serial.print("📡 IP: ");
+  LOGT("📡 IP: ");
   Serial.println(WiFi.localIP());
-  Serial.print("🔗 API legacy: ");
+  LOGT("🔗 API legacy: ");
   Serial.println(apiUrl);
-  Serial.print("🔗 API producto: ");
+  LOGT("🔗 API producto: ");
   Serial.println(apiProductUrl);
-  Serial.print("🔎 Scanner prefix: ");
+  LOGT("🔎 Scanner prefix: ");
   Serial.println(scannerNamePrefix);
-  Serial.print("🔎 Scanner mode: ");
+  LOGT("🔎 Scanner mode: ");
   Serial.println(scannerMode);
 
   // ---- HTTP worker init ----
@@ -3279,7 +3290,7 @@ void loop() {
     pendingApplyScannerMode = false;
 
     int newMode = pendingScannerModeValue;
-    Serial.printf("[CFG] Aplicando modo scanner = %d (en loop)\n", newMode);
+    LOGF("[CFG] Aplicando modo scanner = %d (en loop)\n", newMode);
 
     // Aquí sí es seguro tocar BLE:
     scannerMode = newMode;
@@ -3289,9 +3300,9 @@ void loop() {
   if (g_barcode_ready) {
     g_barcode_ready = false;
     String code = g_barcode_last;
-
-    Serial.print("Barcode: ");
-    Serial.println(code);
+    esp_task_wdt_reset();
+    LOGT("Barcode: ");
+    LOGLN(code);
     launchHttpForCode(code, "HID Scanner USB");
   }
   checkAutoReboot();
