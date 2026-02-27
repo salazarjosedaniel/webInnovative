@@ -1,1290 +1,731 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Visor Inteligente de Precios | Plataforma SaaS Retail</title>
-  <meta name="description" content="Pantalla inteligente para consulta de precios en tiendas. Escanea el código y muestra el precio actualizado en tiempo real. Plataforma SaaS con monitoreo, OTA y control de flota." />
-
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Clash+Display:wght@500;600;700&family=General+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>iVisor | Visor Inteligente de Precios + Plataforma SaaS</title>
+  <meta name="description" content="iVisor: visor inteligente de precios para tiendas. Escaneo de código de barras, consulta por REST API al ERP/POS del cliente (local o cloud) y plataforma SaaS con panel, monitoreo y actualizaciones OTA." />
 
   <style>
     :root{
-      --bg:#0A0E27;
-      --panel:#0f1638;
-      --glass: rgba(255,255,255,0.035);
-      --glass2: rgba(255,255,255,0.055);
-      --border: rgba(255,255,255,0.10);
+      /* Estilo visual alineado a landing2 (Kairo) */
+      --teal:#089088;
+      --teal-600:#077A73;
+      --teal-700:#06655F;
 
-      --txt:#FFFFFF;
-      --muted:#94A3B8;
-      --muted2:#64748B;
+      --ink:#0f172a;
+      --muted:#475569;
+      --muted2:#64748b;
 
-      --cyan:#00F5FF;
-      --blue:#0066FF;
-      --purple:#8B5CF6;
-      --orange:#FF6B35;
-      --green:#10B981;
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --line:rgba(15, 23, 42, .10);
+      --shadow: 0 18px 45px rgba(15,23,42,.10);
+      --shadow-soft: 0 10px 25px rgba(15,23,42,.08);
 
-      --shadow: 0 20px 60px rgba(0,245,255,0.18);
-      --shadowSoft: 0 18px 50px rgba(0,0,0,0.35);
-
-      --radius: 24px;
-      --radius2: 18px;
-      --max: 1200px;
-
-      --focus: 0 0 0 4px rgba(0,245,255,0.16);
+      --radius:18px;
+      --radius-lg:22px;
+      --max:1120px;
     }
 
-    *{ box-sizing:border-box; margin:0; padding:0; }
-    html,body{ height:100%; }
+    *{ box-sizing:border-box; }
     body{
-      font-family:'General Sans',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: var(--bg);
-      color: var(--txt);
-      overflow-x:hidden;
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      background: radial-gradient(1200px 700px at 12% 15%, rgba(8,144,136,.10), transparent 55%),
+                  radial-gradient(900px 600px at 90% 70%, rgba(8,144,136,.08), transparent 60%),
+                  var(--bg);
     }
-
-    /* Background */
-    .bgGlow{
-      position:fixed; inset:0; pointer-events:none; z-index:-2;
-      background:
-        radial-gradient(900px 600px at 20% 15%, rgba(0,102,255,0.12), transparent 55%),
-        radial-gradient(900px 600px at 80% 85%, rgba(139,92,246,0.12), transparent 55%),
-        radial-gradient(1100px 800px at 50% 55%, rgba(0,245,255,0.07), transparent 60%);
-    }
-    .noise{
-      position:fixed; inset:-50%;
-      width:200%; height:200%;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      opacity:.45; pointer-events:none; z-index:-1;
-    }
-
     a{ color:inherit; text-decoration:none; }
-    .container{ width:min(var(--max), calc(100% - 48px)); margin:0 auto; }
+    img{ max-width:100%; display:block; }
+    .wrap{ max-width:var(--max); margin:0 auto; padding:0 20px; }
 
-    /* Nav */
-    .nav{
+    /* Header */
+    header{
       position:sticky; top:0; z-index:50;
-      backdrop-filter: blur(18px);
-      background: linear-gradient(180deg, rgba(10,14,39,0.75), rgba(10,14,39,0.25));
-      border-bottom:1px solid rgba(255,255,255,0.06);
+      background: rgba(246,248,251,.75);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
     }
-    .navInner{
+    .nav{
       display:flex; align-items:center; justify-content:space-between;
       padding:14px 0;
+      gap:14px;
     }
-    .brand{ flex-wrap:wrap; max-width: 60vw; 
-      display:flex; align-items:center; gap:12px;
-      font-family:'IBM Plex Mono',monospace;
-      letter-spacing:1px;
-      font-weight:700;
+    .brand{ display:flex; align-items:center; gap:10px; }
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(8,144,136,1), rgba(8,144,136,.65));
+      box-shadow: 0 10px 24px rgba(8,144,136,.18);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:900;
+      letter-spacing:-.4px;
+      font-size:14px;
     }
-    .brandDot{
-      width:10px; height:10px; border-radius:50%;
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      box-shadow: 0 0 24px rgba(0,245,255,0.35);
-    }
-    .navLinks{
-      display:flex; align-items:center; gap:18px; flex-wrap:wrap;
-      color: var(--muted);
-      font-weight:600;
-      font-size:0.95rem;
-    }
-    .navLinks a{ opacity:.9; }
-    .navLinks a:hover{ color: #fff; opacity:1; }
+    .brand strong{ letter-spacing:.2px; }
+    .menu{ display:flex; gap:18px; color:var(--muted); font-size:14px; }
+    .menu a{ padding:8px 10px; border-radius:12px; }
+    .menu a:hover{ background: rgba(8,144,136,.08); color:var(--ink); }
 
-    .navCtas{ display:flex; gap:10px; align-items:center; }
+    .actions{ display:flex; gap:10px; align-items:center; }
+
+    /* Buttons */
     .btn{
-      border:1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.04);
-      color:#fff;
-      padding:10px 14px;
-      border-radius: 999px;
-      font-weight:700;
-      transition:.22s ease;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+      display:inline-flex; align-items:center; justify-content:center;
       gap:10px;
+      padding:12px 16px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-weight:600;
+      font-size:14px;
       cursor:pointer;
-      user-select:none;
+      transition: transform .08s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+      background: var(--card);
+      white-space:nowrap;
     }
-    .btn:hover{ transform: translateY(-1px); border-color: rgba(0,245,255,0.25); box-shadow: 0 10px 30px rgba(0,245,255,0.10); }
-    .btn:focus{ outline:none; box-shadow: var(--focus); }
-    .btnPrimary{
-      background: linear-gradient(135deg, rgba(0,245,255,0.18), rgba(139,92,246,0.18));
-      border-color: rgba(0,245,255,0.30);
+    .btn:hover{ transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+    .btn.primary{
+      background: linear-gradient(135deg, var(--teal), rgba(8,144,136,.78));
+      border-color: rgba(8,144,136,.0);
+      color:#fff;
+      box-shadow: 0 16px 40px rgba(8,144,136,.22);
     }
-    .btnPrimary:hover{ box-shadow: var(--shadow); }
-    .btnGhost{ background: transparent; border-color: rgba(255,255,255,0.12); color: var(--muted); }
-    .btnGhost:hover{ color:#fff; border-color: rgba(255,255,255,0.22); box-shadow: var(--shadowSoft); }
-
-
-    .product-preview {
-  padding: 80px 20px;
-  background: linear-gradient(180deg, #0b1020 0%, #0f162d 100%);
-}
-
-    .product-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: 60px;
-    }
-
-    .product-image {
-    text-align: center;
-    }
-
-    .product-image img {
-    max-width: 100%;
-    width: 420px;
-    border-radius: 18px;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
-    }
-
-    .product-content h2 {
-    font-size: 32px;
-    margin-bottom: 20px;
-    }
-
-    .product-content p {
-    color: #aab3c5;
-    margin-bottom: 25px;
-    line-height: 1.6;
-    }
-
-    .product-features {
-    list-style: none;
-    padding: 0;
-    }
-
-    .product-features li {
-    margin-bottom: 10px;
-    font-weight: 500;
-    color: #e4e9f5;
-    }
-
-    /* RESPONSIVE FIX */
-    @media (max-width: 900px) {
-    .product-wrapper {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
-    .product-image img {
-        width: 280px;
-    }
-    }
+    .btn.primary:hover{ box-shadow: 0 18px 48px rgba(8,144,136,.28); }
+    .btn.ghost{ background: transparent; }
 
     /* Hero */
-    .hero{ padding: 70px 0 30px; }
-    .badge{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:8px 16px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.04);
-      border-radius: 999px;
-      color: var(--cyan);
-      font-weight:800;
-      letter-spacing:1.2px;
-      text-transform: uppercase;
-      font-size:0.75rem;
-      backdrop-filter: blur(12px);
-    }
-    .badge i{
-      width:7px; height:7px; border-radius:50%;
-      background: var(--cyan);
-      display:inline-block;
-      box-shadow: 0 0 18px rgba(0,245,255,0.55);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    .heroGrid{
+    .hero{ padding:52px 0 28px; }
+    .hero-grid{
       display:grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 26px;
-      align-items: stretch;
-      margin-top: 18px;
-    }
-    .heroTitle{
-      font-family:'Clash Display',sans-serif;
-      font-weight:800;
-      letter-spacing:-1.8px;
-      line-height:1.05;
-      font-size: clamp(2.3rem, 5vw, 4.3rem);
-      margin-top:18px;
-      background: linear-gradient(135deg, #FFFFFF 0%, var(--cyan) 45%, var(--purple) 100%);
-      -webkit-background-clip:text;
-      background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-size: 220% auto;
-      animation: shimmer 3.2s ease-in-out infinite;
-    }
-    .heroSub{
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: clamp(1.05rem, 1.8vw, 1.2rem);
-      line-height:1.6;
-      font-weight:600;
-    }
-    .heroBullets{
-      display:flex; flex-wrap:wrap;
-      gap:10px;
-      margin-top: 18px;
+      grid-template-columns: 1.05fr .95fr;
+      gap:22px;
+      align-items:start;
     }
     .pill{
-      display:inline-flex; align-items:center; gap:8px;
+      display:inline-flex; gap:8px; align-items:center;
       padding:8px 12px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      border-radius: 999px;
-      color: var(--muted);
+      border-radius:999px;
+      background: rgba(8,144,136,.10);
+      border:1px solid rgba(8,144,136,.20);
+      color: var(--teal-700);
+      font-size:13px;
       font-weight:700;
-      font-size:0.9rem;
     }
-    .pill span{
-      width:8px; height:8px; border-radius:50%;
-      background: linear-gradient(135deg, var(--cyan), var(--blue));
-      display:inline-block;
-      opacity:.9;
+    h1{
+      margin:14px 0 10px;
+      font-size:44px;
+      line-height:1.05;
+      letter-spacing:-.6px;
     }
-
-    .heroCard{
-      border-radius: var(--radius);
-      border:1px solid rgba(255,255,255,0.10);
-      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,102,255,0.06));
-      padding: 22px;
-      box-shadow: var(--shadowSoft);
-      position: relative;
-      overflow:hidden;
-    }
-    .heroCard::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(circle at 20% 20%, rgba(0,245,255,0.14), transparent 45%),
-                  radial-gradient(circle at 80% 80%, rgba(139,92,246,0.14), transparent 45%);
-      opacity: .75;
-      z-index:0;
-    }
-    .heroCardInner{ position:relative; z-index:1; }
-    .kpiGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-top: 10px;
-    }
-    .kpi{
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      border-radius: 16px;
-      padding: 14px 14px;
-    }
-    .kpi .n{
-      font-family:'IBM Plex Mono',monospace;
-      font-size: 1.5rem;
-      font-weight:900;
-      letter-spacing:-1px;
-      background: linear-gradient(135deg, var(--cyan), var(--blue));
-      -webkit-background-clip:text;
-      background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .kpi .l{
-      margin-top:6px;
-      color: var(--muted);
-      font-weight:700;
-      font-size:0.92rem;
-      line-height:1.3;
-    }
-
-    .heroCtas{
-      margin-top: 20px;
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .note{
-      margin-top: 14px;
-      color: var(--muted2);
-      font-weight:600;
-      font-size:0.92rem;
-      line-height:1.4;
-    }
-    .note b{ color:#fff; }
-
-    /* Sections */
-    section{ padding: 40px 0; }
-    .sectionHead{
-      display:flex; align-items:flex-end; justify-content:space-between;
-      gap:20px;
-      margin-bottom: 18px;
-    }
-    .h2{
-      font-family:'Clash Display',sans-serif;
-      font-size: clamp(1.6rem, 3vw, 2.2rem);
-      letter-spacing:-0.8px;
-      font-weight:800;
-    }
-    .desc{
-      color: var(--muted);
-      font-weight:600;
+    .sub{
+      color:var(--muted);
+      font-size:16px;
       line-height:1.6;
-      max-width: 62ch;
-      font-size: 1.02rem;
+      margin:0 0 16px;
+    }
+    .callout{
+      margin-top:10px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(8,144,136,.22);
+      background: rgba(8,144,136,.08);
+      color: var(--teal-700);
+      font-weight:800;
+      line-height:1.5;
+    }
+    .callout small{
+      display:block;
+      font-weight:650;
+      color: var(--muted2);
+      margin-top:4px;
+    }
+    .hero-ctas{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .mini{
+      display:flex; gap:14px; flex-wrap:wrap;
+      margin-top:18px;
+      color:var(--muted2);
+      font-size:13px;
+    }
+    .mini span{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius:14px;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;
+      background: var(--teal);
+      box-shadow: 0 0 0 4px rgba(8,144,136,.14);
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 18px;
-    }
     .card{
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.035);
-      border-radius: var(--radius);
-      padding: 22px;
-      position: relative;
-      overflow:hidden;
-      transition: .25s ease;
-    }
-    .card:hover{
-      transform: translateY(-4px);
-      border-color: rgba(0,245,255,0.18);
+      background: var(--card);
+      border:1px solid var(--line);
+      border-radius: var(--radius-lg);
       box-shadow: var(--shadow);
     }
-    .cardTitle{
-      font-weight:900;
-      font-size:1.05rem;
-      letter-spacing:-0.2px;
-      margin-bottom: 8px;
-      display:flex; align-items:center; gap:10px;
+    .card.pad{ padding:18px; }
+
+    /* Preview / tabs */
+    .tabs{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin:6px 0 12px;
     }
-    .iconBox{
-      width:38px; height:38px;
-      border-radius: 12px;
+    .tab{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.6);
+      color:var(--muted);
+      font-weight:800;
+      font-size:13px;
+      cursor:pointer;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .tab.active{
+      background: rgba(8,144,136,.12);
+      border-color: rgba(8,144,136,.25);
+      color: var(--teal-700);
+    }
+    .shot{
+      border-top: 1px solid var(--line);
+      padding:14px;
+    }
+    .shot-frame{
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid rgba(15,23,42,.08);
+      background:#fff;
+      box-shadow: 0 14px 35px rgba(15,23,42,.10);
+    }
+    .shot-note{
+      margin:10px 2px 0;
+      color:var(--muted2);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    /* Sections */
+    .sec{ padding:44px 0; }
+    .sec h2{
+      margin:0 0 10px;
+      font-size:30px;
+      letter-spacing:-.3px;
+    }
+    .sec p{ margin:0; color:var(--muted); line-height:1.7; }
+
+    .grid3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+      margin-top:18px;
+    }
+    .feat{
+      padding:18px;
+      border-radius: var(--radius);
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.75);
+      box-shadow: var(--shadow-soft);
+    }
+    .feat h3{ margin:8px 0 6px; font-size:16px; }
+    .feat p{ font-size:14px; color:var(--muted2); margin:0; }
+    .icon{
+      width:40px;height:40px;border-radius:14px;
+      background: rgba(8,144,136,.12);
+      border:1px solid rgba(8,144,136,.18);
       display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(255,255,255,0.12);
-      background: linear-gradient(135deg, rgba(0,245,255,0.10), rgba(139,92,246,0.10));
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      flex: 0 0 auto;
+      color: var(--teal-700);
+      font-weight:900;
     }
-    .card p{
+
+    .noteBox{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.65);
       color: var(--muted);
-      font-weight:600;
       line-height:1.6;
-      font-size:0.98rem;
-    }
-    .list{
-      margin-top: 12px;
-      display:grid;
-      gap:10px;
-    }
-    .li{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      color: var(--muted);
       font-weight:650;
-      line-height:1.5;
     }
-    .li i{
-      color: var(--green);
-      font-weight:900;
-      margin-top:2px;
-      font-style:normal;
-    }
+    .noteBox b{ color: var(--ink); }
 
-    /* How it works */
-    .steps{
-      grid-column: 1 / -1;
-      padding: 26px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,102,255,0.05));
-    }
-    .stepsGrid{
+    /* Pricing */
+    .pricing{
       display:grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 14px;
-      margin-top: 16px;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+      margin-top:18px;
     }
-    .step{
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      border-radius: 18px;
-      padding: 16px;
-      position: relative;
+    .plan{ padding:18px; }
+    .plan .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(8,144,136,.10);
+      border:1px solid rgba(8,144,136,.18);
+      color: var(--teal-700);
+      font-weight:900;
+      font-size:12px;
+    }
+    .price{ font-size:38px; margin:10px 0 6px; letter-spacing:-.6px; }
+    .per{ color:var(--muted2); font-size:13px; }
+    .ul{ margin:14px 0 0; padding-left:18px; color:var(--muted); line-height:1.8; }
+    .best{
+      border-color: rgba(8,144,136,.28);
+      box-shadow: 0 22px 55px rgba(8,144,136,.18);
+      position:relative;
       overflow:hidden;
     }
-    .step .num{
-      font-family:'IBM Plex Mono',monospace;
-      color: var(--cyan);
-      font-weight:900;
-      font-size:0.75rem;
-      letter-spacing:1px;
-    }
-    .step .t{
-      margin-top: 10px;
-      font-weight:900;
-      letter-spacing:-0.2px;
-    }
-    .step .d{
-      margin-top: 8px;
-      color: var(--muted);
-      font-weight:650;
-      line-height:1.5;
-      font-size:0.92rem;
+    .best:before{
+      content:"";
+      position:absolute; inset:-60px -80px auto auto;
+      width:200px;height:200px;border-radius:999px;
+      background: rgba(8,144,136,.12);
     }
 
-    /* Use cases */
-    .uc1{ grid-column: 1 / 7; }
-    .uc2{ grid-column: 7 / -1; }
-    .tagRow{ display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px; }
-    .tag{
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-weight:800;
-      font-size:0.88rem;
-    }
-
-    /* Platform */
-    .platA{ grid-column: 1 / 8; }
-    .platB{ grid-column: 8 / -1; }
-
-    .miniTable{
-      margin-top: 14px;
-      border:1px solid rgba(255,255,255,0.10);
-      border-radius: 18px;
-      overflow:hidden;
-    }
-    .row{
-      display:flex; gap:12px;
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      background: rgba(255,255,255,0.02);
-      align-items:flex-start;
-    }
-    .row:last-child{ border-bottom:none; }
-    .row b{ min-width: 240px; color:#fff; letter-spacing:-0.2px; }
-    .row span{ color: var(--muted); font-weight:650; line-height:1.5; }
-
-    /* Plans */
-    .plan{ grid-column: span 4; }
-    .price{
-      font-family:'IBM Plex Mono',monospace;
-      font-weight:900;
-      font-size: 2rem;
-      letter-spacing:-1px;
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      -webkit-background-clip:text;
-      background-clip:text;
-      -webkit-text-fill-color:transparent;
-      margin-top: 6px;
-    }
-    .small{
-      margin-top: 6px;
-      color: var(--muted2);
-      font-weight:650;
-      font-size:0.92rem;
-      line-height:1.5;
-    }
-    .chip{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding: 7px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.03);
-      color: var(--muted);
-      font-weight:900;
-      font-size:0.8rem;
-      letter-spacing:1px;
-      text-transform: uppercase;
-    }
-    .chip.hot{
-      color:#fff;
-      border-color: rgba(0,245,255,0.25);
-      background: linear-gradient(135deg, rgba(0,245,255,0.10), rgba(139,92,246,0.10));
-    }
-
-    /* Demo */
-    .demoWrap{
-      background: linear-gradient(135deg, rgba(0,245,255,0.08), rgba(139,92,246,0.08));
-      border:1px solid rgba(0,245,255,0.20);
+    /* FAQ */
+    details{
+      background: rgba(255,255,255,.75);
+      border:1px solid var(--line);
       border-radius: var(--radius);
-      padding: 26px;
-      position: relative;
-      overflow:hidden;
+      padding:14px 16px;
+      box-shadow: var(--shadow-soft);
     }
-    .demoGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      align-items: start;
+    details + details{ margin-top:10px; }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      color: var(--ink);
+      list-style:none;
     }
-    .form{
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.03);
-      border-radius: var(--radius);
-      padding: 18px;
-    }
-    label{
-      display:block;
-      font-weight:800;
-      color: var(--muted);
-      font-size:0.88rem;
-      margin-bottom:6px;
-    }
-    input, textarea, select{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(10,14,39,0.6);
-      color:#fff;
-      font-weight:650;
-      outline:none;
-      transition:.2s ease;
-    }
-    input:focus, textarea:focus, select:focus{ box-shadow: var(--focus); border-color: rgba(0,245,255,0.28); }
-    textarea{ min-height: 108px; resize: vertical; }
-    .formRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .formRow1{ grid-template-columns: 1fr; }
-    .formActions{
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-      margin-top: 10px;
-    }
-    .formNote{
-      margin-top: 10px;
-      color: var(--muted2);
-      font-weight:650;
-      line-height:1.5;
-      font-size:0.92rem;
-    }
-    .toast{
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.03);
-      color: var(--muted);
-      font-weight:750;
-      display:none;
-    }
-    .toast.ok{
-      display:block;
-      border-color: rgba(16,185,129,0.35);
-      color:#eafff6;
-      background: rgba(16,185,129,0.08);
-    }
-    .toast.err{
-      display:block;
-      border-color: rgba(255,107,53,0.35);
-      color:#fff3ef;
-      background: rgba(255,107,53,0.08);
-    }
+    summary::-webkit-details-marker{ display:none; }
+    details p{ margin:10px 0 0; color:var(--muted); }
 
     /* Footer */
     footer{
-      padding: 46px 0 70px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      margin-top: 30px;
-      color: var(--muted);
-    }
-    .footRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap: 18px;
-      flex-wrap:wrap;
-    }
-    .footBrand{
-      font-family:'IBM Plex Mono',monospace;
-      font-weight:900;
-      letter-spacing:1px;
-      color:#fff;
-    }
-    .footTags{ display:flex; gap:10px; flex-wrap:wrap; }
-    .footTag{
-      padding: 7px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      font-weight:800;
-      font-size:0.78rem;
-      text-transform: uppercase;
-      letter-spacing:1px;
-      color: var(--muted2);
+      border-top:1px solid var(--line);
+      padding:26px 0;
+      color:var(--muted2);
     }
 
     /* Responsive */
     @media (max-width: 980px){
-      .heroGrid{ grid-template-columns: 1fr; }
-      .stepsGrid{ grid-template-columns: repeat(2, 1fr); }
-      .uc1,.uc2,.platA,.platB{ grid-column: 1 / -1; }
-      .plan{ grid-column: 1 / -1; }
-      .demoGrid{ grid-template-columns: 1fr; }
-      .navLinks{ display:none; }
-    }
-    @media (max-width: 520px){
-      .container{ width: calc(100% - 28px); }
-      .stepsGrid{ grid-template-columns: 1fr; }
-      .formRow{ grid-template-columns: 1fr; }
+      .hero-grid{ grid-template-columns: 1fr; }
+      .grid3, .pricing{ grid-template-columns: 1fr; }
+      h1{ font-size:38px; }
+      .menu{ display:none; }
     }
 
-    /* Animations */
-    @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.15); opacity:0.55; } }
-    @keyframes shimmer{ 0%{ background-position:-200% center; } 100%{ background-position:200% center; } }
-  
-    /* --- Responsive fixes (no text cut) --- */
-    body, .container, .card, .row, .step, .kpi, .pill, .tag, .footTag,
-    h1, h2, h3, p, a, label, input, textarea, select, button {
-      overflow-wrap: anywhere;
-      word-break: break-word;
+    /* Accessibility / overflow */
+    body, .wrap, .card, .feat, h1, h2, h3, p, a, button, summary, li{
+      overflow-wrap:anywhere;
+      word-break:break-word;
     }
-
-    /* Ensure long monospace tokens don't overflow */
-    .price, .kpi .n, .badge, .brand, .chip {
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
-
-    /* Prevent horizontal overflow on small screens */
-    .heroCard, .card, .demoWrap, .form, .miniTable {
-      max-width: 100%;
-    }
-
-    /* Make "miniTable" rows responsive */
-    .row b { min-width: 220px; }
-
-    @media (max-width: 640px){
-      .row{
-        flex-direction: column;
-        gap: 6px;
-      }
-      .row b{
-        min-width: auto;
-        width: 100%;
-      }
-      .row span{
-        width: 100%;
-      }
-
-      /* tighten paddings */
-      .hero{ padding: 56px 0 22px; }
-      section{ padding: 30px 0; }
-      .card{ padding: 18px; border-radius: 20px; }
-      .demoWrap{ padding: 18px; }
-      .form{ padding: 16px; }
-
-      /* better heading line-break on mobile */
-      .heroTitle{
-        letter-spacing: -1.2px;
-        line-height: 1.07;
-      }
-
-      /* pills and tags */
-      .pill, .tag, .footTag{
-        font-size: 0.86rem;
-      }
-
-      /* KPIs */
-      .kpi .n{ font-size: 1.35rem; }
-      .kpi .l{ font-size: 0.88rem; }
-
-      /* Footer spacing */
-      footer{ padding: 36px 0 56px; }
-    }
-
-    @media (max-width: 420px){
-      /* extra small devices */
-      .heroTitle{ font-size: 2.05rem; }
-      .desc{ font-size: 0.98rem; }
-      .navCtas .btn{ padding: 9px 12px; }
-    }
-
-  
-    /* --- Fix: PROBLEMA cards stacking on mobile (override inline grid-column) --- */
-    @media (max-width: 900px){
-      #problema .grid{ grid-template-columns: 1fr; }
-      #problema .grid .card{ grid-column: 1 / -1 !important; }
-    }
-
-</style>
+  </style>
 </head>
 
 <body>
-  <div class="bgGlow"></div>
-  <div class="noise"></div>
-
-  <!-- NAV -->
-  <div class="nav">
-    <div class="container">
-      <div class="navInner">
-        <a class="brand" href="#top" aria-label="Innovative Solutions">
-          <span class="brandDot"></span>
-          INNOVATIVE SOLUTIONS
-        </a>
-
-        <nav class="navLinks" aria-label="Secciones">
-          <a href="#problema">Problema</a>
-          <a href="#como-funciona">Cómo funciona</a>
-          <a href="#plataforma">Plataforma</a>
-          <a href="#planes">Planes</a>
-          <a href="#demo">Solicitar demo</a>
-        </nav>
-
-        <div class="navCtas">
-          <a class="btn btnGhost" href="#plataforma">Ver plataforma</a>
-          <a class="btn btnPrimary" href="#demo">Solicitar demo</a>
+<header>
+  <div class="wrap">
+    <div class="nav">
+      <a class="brand" href="#inicio" aria-label="iVisor">
+        <div class="logo" aria-hidden="true">IV</div>
+        <div>
+          <strong>iVisor</strong><br>
+          <span style="font-size:12px;color:var(--muted2);font-weight:650;">Visor de precios + Plataforma SaaS</span>
         </div>
+      </a>
+
+      <nav class="menu" aria-label="Navegación">
+        <a href="#valor">Valor</a>
+        <a href="#funciona">Cómo funciona</a>
+        <a href="#integracion">Integración</a>
+        <a href="#premium">Premium</a>
+        <a href="#planes">Planes</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="actions">
+        <a class="btn ghost" href="https://wa.me/528124797788" target="_blank" rel="noreferrer">WhatsApp</a>
+        <a class="btn primary" href="#cta">Solicitar demo</a>
       </div>
     </div>
   </div>
+</header>
 
+<main id="inicio">
   <!-- HERO -->
-  <main id="top" class="hero">
-    <div class="container">
-      <div class="badge"><i></i> Plataforma SaaS Retail</div>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill">✅ Hardware inteligente + Integración REST API</span>
+        <h1>Consulta precios en segundos. Sin filas. Sin errores.</h1>
+        <p class="sub">
+          iVisor es una pantalla inteligente para <b>farmacias</b>, <b>supermercados</b> y comercios.
+          El cliente escanea el código de barras y ve el precio actualizado en tiempo real.
+        </p>
 
-      <div class="heroGrid">
-        <div>
-          <h1 class="heroTitle">
-            Consulta precios en segundos.<br/>
-            Sin filas. Sin errores.
-          </h1>
-
-          <p class="heroSub">
-            Pantalla inteligente para <b>farmacias</b>, <b>supermercados</b> y comercios.
-            El cliente escanea el código de barras y ve el precio actualizado en tiempo real.
-            Todo controlado desde la nube, con monitoreo, logs y actualizaciones remotas.
-          </p>
-
-          <div class="heroBullets" aria-label="Beneficios clave">
-            <div class="pill"><span></span> Instalación en ~15 min</div>
-            <div class="pill"><span></span> Operación 24/7</div>
-            <div class="pill"><span></span> Gestión centralizada</div>
-            <div class="pill"><span></span> Actualización OTA</div>
-            <div class="pill"><span></span> Tráfico cifrado HTTPS</div>
-          </div>
-
-          <div class="heroCtas">
-            <a class="btn btnPrimary" href="#demo">Solicitar demo</a>
-            <a class="btn btnGhost" href="#como-funciona">Ver cómo funciona</a>
-          </div>
-
-          <p class="note">
-            Diseñado para integrarse a tu API / ERP / POS.
-            <b>Sin instalaciones complicadas</b> y sin depender del personal para consultas repetitivas.
-          </p>
+        <div class="callout">
+          Tus precios <b>no viven en nuestra nube</b>.
+          El visor consulta el precio <b>directamente en el sistema del cliente</b> (ERP/POS local o en la nube) mediante <b>REST API segura (HTTPS)</b>.
+          <small>Nuestra nube se usa para <b>panel</b>, <b>monitoreo</b>, <b>licencias</b> y <b>actualizaciones OTA</b>.</small>
         </div>
 
-        <aside class="heroCard" aria-label="KPIs">
-          <div class="heroCardInner">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px;">
-              <div>
-                <div style="font-weight:900; letter-spacing:-0.5px; font-size:1.15rem;">Resultados esperados</div>
-                <div style="color:var(--muted); font-weight:650; margin-top:6px; line-height:1.5;">
-                  Métricas típicas para puntos de venta con alta rotación y cambios frecuentes de precio.
-                </div>
-              </div>
-              <div class="chip hot">Ready-to-scale</div>
-            </div>
+        <div class="hero-ctas">
+          <a class="btn primary" href="#cta">Quiero una demo</a>
+          <a class="btn" href="#planes">Ver planes</a>
+        </div>
 
-            <div class="kpiGrid">
-              <div class="kpi">
-                <div class="n">-40%</div>
-                <div class="l">Consultas al personal (aprox.)</div>
-              </div>
-              <div class="kpi">
-                <div class="n">&lt;15W</div>
-                <div class="l">Consumo continuo</div>
-              </div>
-              <div class="kpi">
-                <div class="n">24/7</div>
-                <div class="l">Uptime monitoreado</div>
-              </div>
-              <div class="kpi">
-                <div class="n">15min</div>
-                <div class="l">Puesta en marcha</div>
-              </div>
-            </div>
-
-            <div style="margin-top:14px; color:var(--muted2); font-weight:650; font-size:0.92rem; line-height:1.5;">
-              * Depende del flujo de clientes y operación. En demo te damos un estimado por tipo de tienda.
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
-  </main>
-
-  <section class="product-preview">
-  <div class="product-wrapper">
-    <div class="product-image">
-      <img src="/public/img/visor-equipo.png" alt="Visor Inteligente de Precios LCD 7 pulgadas">
-    </div>
-
-    <div class="product-content">
-      <h2>Así se ve en tienda</h2>
-      <p>
-        Equipo compacto con pantalla LCD 7" de alta visibilidad.
-        Diseñado para mostrador, pasillo o punto estratégico.
-      </p>
-
-      <ul class="product-features">
-        <li>✔ Pantalla LCD 7"</li>
-        <li>✔ Escáner 2D USB incluido</li>
-        <li>✔ Conectividad WiFi segura</li>
-        <li>✔ Instalación en menos de 15 minutos</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-
-  <!-- PROBLEMA -->
-  <section id="problema">
-    <div class="container">
-      <div class="sectionHead">
-        <div>
-          <div class="h2">El problema del retail hoy</div>
-          <div class="desc">Cuando los precios cambian, los clientes preguntan y el equipo se detiene. Ese tiempo se vuelve costo y mala experiencia.</div>
+        <div class="mini">
+          <span><span class="dot"></span> Instalación rápida (~15 min)</span>
+          <span><span class="dot"></span> REST API (Local o Cloud)</span>
+          <span><span class="dot"></span> Panel + OTA (Premium)</span>
+          <span><span class="dot"></span> Operación 24/7</span>
         </div>
       </div>
 
-      <div class="grid">
-        <div class="card" style="grid-column: 1 / 5;">
-          <div class="cardTitle">
-            <span class="iconBox">⏱️</span>
-            Tiempo perdido
+      <!-- Preview con tabs -->
+      <div class="card">
+        <div class="card pad">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div>
+              <strong style="font-size:14px;">Vista del producto</strong><br>
+              <span style="font-size:12px;color:var(--muted2);font-weight:650;">Equipo + Panel (opcional)</span>
+            </div>
+            <span class="pill" style="padding:6px 10px;">iVisor v2</span>
           </div>
-          <p>El personal interrumpe tareas para responder precios una y otra vez, especialmente en hora pico.</p>
-          <div class="list">
-            <div class="li"><i>✓</i> Menos atención en caja</div>
-            <div class="li"><i>✓</i> Menos reposición en anaqueles</div>
-            <div class="li"><i>✓</i> Menos control operativo</div>
+
+          <div class="tabs" role="tablist" aria-label="Vistas de iVisor">
+            <button class="tab active" data-shot="device" role="tab" aria-selected="true">Equipo</button>
+            <button class="tab" data-shot="panel" role="tab" aria-selected="false">Panel</button>
+            <button class="tab" data-shot="ota" role="tab" aria-selected="false">OTA</button>
           </div>
         </div>
 
-        <div class="card" style="grid-column: 5 / 9;">
-          <div class="cardTitle">
-            <span class="iconBox">⚠️</span>
-            Errores y reclamos
+        <div class="shot">
+          <div class="shot-frame">
+            <img id="shotImg" src="/public/img/visor-equipo.png" alt="Equipo iVisor en tienda" />
           </div>
-          <p>Si el precio del sistema y el anaquel no coinciden, aparecen reclamos y pérdida de confianza.</p>
-          <div class="list">
-            <div class="li"><i>✓</i> Evita “precio distinto”</div>
-            <div class="li"><i>✓</i> Reduce fricción con el cliente</div>
-            <div class="li"><i>✓</i> Consulta consistente</div>
-          </div>
+          <div class="shot-note" id="shotNote">Equipo compacto con pantalla LCD 7&quot; y escáner 2D USB.</div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="card" style="grid-column: 9 / -1;">
-          <div class="cardTitle">
-            <span class="iconBox">📉</span>
-            Experiencia deficiente
-          </div>
-          <p>Cuando no hay claridad del precio, el cliente pierde tiempo y puede abandonar la compra.</p>
-          <div class="list">
-            <div class="li"><i>✓</i> Autoservicio real</div>
-            <div class="li"><i>✓</i> Compra más rápida</div>
-            <div class="li"><i>✓</i> Mejor percepción de marca</div>
-          </div>
+  <!-- VALOR -->
+  <section class="sec" id="valor">
+    <div class="wrap">
+      <h2>Propuesta de valor</h2>
+      <p>Menos interrupciones al personal, menos reclamos por “precio distinto” y mejor experiencia para el cliente.</p>
+
+      <div class="grid3">
+        <div class="feat">
+          <div class="icon">⏱</div>
+          <h3>Menos tiempo perdido</h3>
+          <p>Reduce consultas repetitivas al personal, especialmente en hora pico.</p>
         </div>
+        <div class="feat">
+          <div class="icon">⚠</div>
+          <h3>Menos errores y reclamos</h3>
+          <p>El precio mostrado viene del ERP/POS del cliente: consistente con su operación.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">🛒</div>
+          <h3>Compra más rápida</h3>
+          <p>Autoservicio real: el cliente decide más rápido con información clara.</p>
+        </div>
+      </div>
+
+      <div class="noteBox">
+        <b>Nota para integradores:</b> iVisor no “inventará” precios en la nube.
+        Se integra al sistema existente del cliente y consulta el precio por API (local o cloud).
       </div>
     </div>
   </section>
 
   <!-- CÓMO FUNCIONA -->
-  <section id="como-funciona">
-    <div class="container">
-      <div class="sectionHead">
-        <div>
-          <div class="h2">Cómo funciona</div>
-          <div class="desc">Flujo simple para el cliente y control total para el administrador. Sin puertas abiertas hacia la tienda: solo conexión segura hacia la nube.</div>
+  <section class="sec" id="funciona">
+    <div class="wrap">
+      <h2>Cómo funciona</h2>
+      <p>Flujo simple en tienda + control de operación (cuando aplica) desde la plataforma.</p>
+
+      <div class="grid3">
+        <div class="feat">
+          <div class="icon">01</div>
+          <h3>Escaneo</h3>
+          <p>El cliente escanea el código de barras con lector 2D USB.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">02</div>
+          <h3>Consulta REST API (ERP/POS del cliente)</h3>
+          <p>El visor consulta el ERP/POS del cliente vía HTTPS/REST. El endpoint puede estar en red local o cloud.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">03</div>
+          <h3>Respuesta del ERP/POS</h3>
+          <p>Respuesta JSON optimizada: precio, descripción, impuestos/promos (y stock opcional).</p>
         </div>
       </div>
 
-      <div class="grid">
-        <div class="card steps">
-          <div class="cardTitle">
-            <span class="iconBox">🔁</span>
-            Flujo operativo en 5 pasos
-          </div>
-
-          <div class="stepsGrid">
-            <div class="step">
-              <div class="num">01</div>
-              <div class="t">Escaneo</div>
-              <div class="d">Lector USB 2D (HID). El cliente escanea el código del producto.</div>
-            </div>
-            <div class="step">
-              <div class="num">02</div>
-              <div class="t">Consulta API</div>
-              <div class="d">El visor consulta tu API/ERP/POS vía HTTPS (puerto 443).</div>
-            </div>
-            <div class="step">
-              <div class="num">03</div>
-              <div class="t">Respuesta cloud</div>
-              <div class="d">Respuesta JSON optimizada con precio, descripción, promos y stock (si aplica).</div>
-            </div>
-            <div class="step">
-              <div class="num">04</div>
-              <div class="t">Visualización</div>
-              <div class="d">Pantalla LCD 7" con UI rápida (producto / precio / promo / aviso).</div>
-            </div>
-            <div class="step">
-              <div class="num">05</div>
-              <div class="t">Registro y control</div>
-              <div class="d">Logs centralizados, estado del dispositivo, suscripción activa y métricas.</div>
-            </div>
-          </div>
-
-          <div class="list" style="margin-top:16px;">
-            <div class="li"><i>✓</i> Seguridad: HTTPS + validación de dispositivo antes de operar</div>
-            <div class="li"><i>✓</i> Resiliencia: watchdog + auto-reconexión + recuperación ante fallas</div>
-            <div class="li"><i>✓</i> Operación: actualizaciones OTA y monitoreo remoto de flota</div>
-          </div>
+      <div class="grid3" style="margin-top:14px;">
+        <div class="feat">
+          <div class="icon">04</div>
+          <h3>Visualización</h3>
+          <p>UI rápida en pantalla LCD 7&quot; (producto, precio, promos, avisos).</p>
         </div>
-
-        <div class="card uc1">
-          <div class="cardTitle"><span class="iconBox">🛒</span>Casos de uso ideales</div>
-          <p>Donde hay rotación, promociones o alto volumen de clientes, el visor se vuelve autoservicio y reduce carga al equipo.</p>
-          <div class="tagRow">
-            <div class="tag">Farmacias</div>
-            <div class="tag">Abarrotes</div>
-            <div class="tag">Tiendas de conveniencia</div>
-            <div class="tag">Ferreterías</div>
-            <div class="tag">Electrónica</div>
-            <div class="tag">Repuestos</div>
-          </div>
-          <div class="list">
-            <div class="li"><i>✓</i> Mostrar precios por unidad / presentación</div>
-            <div class="li"><i>✓</i> Promociones y avisos legales</div>
-            <div class="li"><i>✓</i> Opcional: stock / ubicación de pasillo</div>
-          </div>
+        <div class="feat">
+          <div class="icon">05</div>
+          <h3>Registro y diagnóstico</h3>
+          <p>Logs y estado del dispositivo para soporte (básico o avanzado según plan).</p>
         </div>
-
-        <div class="card uc2">
-          <div class="cardTitle"><span class="iconBox">🔧</span>Instalación y operación</div>
-          <p>Implementación rápida pensada para integradores: conectar, configurar WiFi y URL de API.</p>
-          <div class="miniTable" role="table" aria-label="Instalación">
-            <div class="row" role="row"><b>Hardware</b><span>LCD 7" + controlador + lector USB (montaje en panel).</span></div>
-            <div class="row" role="row"><b>Conectividad</b><span>WiFi 2.4GHz (portal de configuración incluido).</span></div>
-            <div class="row" role="row"><b>Integración</b><span>URL de API configurable por tienda / integrador.</span></div>
-            <div class="row" role="row"><b>Soporte</b><span>Logs + diagnóstico remoto + actualizaciones OTA.</span></div>
-          </div>
+        <div class="feat">
+          <div class="icon">06</div>
+          <h3>Plataforma (Premium)</h3>
+          <p>Panel de control, licencias y OTA remota para administrar flotas sin visitas.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- PLATAFORMA -->
-  <section id="plataforma">
-    <div class="container">
-      <div class="sectionHead">
-        <div>
-          <div class="h2">No es solo una pantalla: es plataforma</div>
-          <div class="desc">Administra una o miles de unidades desde un panel web. Controla suscripción, firmware, estatus y métricas sin visitas técnicas.</div>
+  <!-- INTEGRACIÓN -->
+  <section class="sec" id="integracion">
+    <div class="wrap">
+      <h2>Integración REST API (Local o Cloud)</h2>
+      <p>iVisor se conecta al sistema que ya tiene el cliente. No obliga a migrar datos ni a cambiar de ERP/POS.</p>
+
+      <div class="grid3">
+        <div class="feat">
+          <div class="icon">🏢</div>
+          <h3>ERP/POS Local (On‑Premise)</h3>
+          <p>Los precios viven en el servidor local del cliente. El visor consulta un endpoint dentro de la red (o vía gateway/VPN según el caso).</p>
+        </div>
+        <div class="feat">
+          <div class="icon">☁</div>
+          <h3>ERP/POS en la nube</h3>
+          <p>Si el cliente ya usa un ERP/POS cloud, el visor consulta la API pública segura (HTTPS) o un middleware autorizado.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">🧩</div>
+          <h3>Middleware del integrador (opcional)</h3>
+          <p>Si el cliente no expone API, el integrador puede crear un servicio REST estándar que traduzca datos del ERP y entregue el JSON a iVisor.</p>
         </div>
       </div>
 
-      <div class="grid">
-        <div class="card platA">
-          <div class="cardTitle"><span class="iconBox">📊</span>Panel SaaS centralizado</div>
-          <p>Control de flota y operación en un solo lugar. Ideal para integradores y cadenas con múltiples sucursales.</p>
+      <div class="noteBox">
+        <b>Importante:</b> la plataforma cloud de iVisor <b>no almacena precios</b> por defecto.
+        Se utiliza para <b>gestión de dispositivos</b>, <b>suscripciones</b>, <b>logs</b> y <b>OTA</b>.
+      </div>
+    </div>
+  </section>
 
-          <div class="miniTable" role="table" aria-label="Funciones SaaS">
-            <div class="row" role="row"><b>Gestión de dispositivos</b><span>Alta automática por DeviceId + IP + firmware, con “lastSeen”.</span></div>
-            <div class="row" role="row"><b>Suscripción y bloqueo</b><span>Validación de pago antes de operar, sin intervención manual en tienda.</span></div>
-            <div class="row" role="row"><b>Logs y auditoría</b><span>Registro de eventos para troubleshooting, calidad y soporte.</span></div>
-            <div class="row" role="row"><b>OTA / firmware remoto</b><span>Actualiza versiones, fuerza update y gestiona URLs de binarios.</span></div>
-            <div class="row" role="row"><b>Analytics</b><span>Consultas por dispositivo, horarios pico y productos consultados (opcional).</span></div>
-          </div>
+  <!-- PREMIUM -->
+  <section class="sec" id="premium">
+    <div class="wrap">
+      <h2>Servicios Premium por Suscripción</h2>
+      <p>La suscripción Premium <b>no es para precios</b>: es para panel, OTA, monitoreo, licencias y soporte.</p>
+
+      <div class="grid3">
+        <div class="feat">
+          <div class="icon">📊</div>
+          <h3>Panel de control</h3>
+          <p>Estado, IP, versión, lastSeen y administración centralizada de dispositivos.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">⬆</div>
+          <h3>Actualización remota (OTA)</h3>
+          <p>Despliegue de firmware y configuración sin visitas técnicas a tienda.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">🔒</div>
+          <h3>Validación de suscripción</h3>
+          <p>El dispositivo valida licencia antes de operar (control automático).</p>
         </div>
 
-        <div class="card platB">
-          <div class="cardTitle"><span class="iconBox">🔒</span>Seguridad y continuidad</div>
-          <p>Arquitectura “outbound-only”: sin abrir puertos hacia la tienda. Cifrado, validación y recuperación automática.</p>
-          <div class="list">
-            <div class="li"><i>✓</i> HTTPS + TLS</div>
-            <div class="li"><i>✓</i> Zero-trust (dispositivo autenticado)</div>
-            <div class="li"><i>✓</i> Watchdog y auto-reconexión</div>
-            <div class="li"><i>✓</i> Sin acceso remoto directo a la red local</div>
-          </div>
-
-          <div style="margin-top:14px; padding:14px; border-radius:18px; border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.02);">
-            <div style="font-weight:900;">Integración flexible</div>
-            <div style="margin-top:8px; color:var(--muted); font-weight:650; line-height:1.55;">
-              Puedes integrar a tu API existente o usar un endpoint estándar. El visor solo necesita
-              una URL y el formato de respuesta acordado.
-            </div>
-          </div>
+        <div class="feat">
+          <div class="icon">📈</div>
+          <h3>Analytics</h3>
+          <p>Consultas por dispositivo, horarios pico y productos más consultados (opcional).</p>
+        </div>
+        <div class="feat">
+          <div class="icon">⚙</div>
+          <h3>Configuración remota</h3>
+          <p>URL de API, parámetros y comportamiento administrados desde panel.</p>
+        </div>
+        <div class="feat">
+          <div class="icon">🛟</div>
+          <h3>Soporte prioritario</h3>
+          <p>Diagnóstico remoto y asistencia para integradores y cadenas.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- PLANES -->
-  <section id="planes">
-    <div class="container">
-      <div class="sectionHead">
-        <div>
-          <div class="h2">Planes para retail e integradores</div>
-          <div class="desc">Modelo SaaS mensual con hardware. Puedes vender como integrador o implementarlo directo en tu comercio.</div>
-        </div>
-      </div>
+  <section class="sec" id="planes">
+    <div class="wrap">
+      <h2>Planes</h2>
+      <p>Modelo modular: hardware + (opcional) suscripción para servicios premium.</p>
 
-      <div class="grid">
+      <div class="pricing">
         <div class="card plan">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-            <div>
-              <div class="chip">Retail</div>
-              <div style="margin-top:10px; font-weight:900; font-size:1.2rem;">Starter</div>
-              <div class="price">SaaS</div>
-              <div class="small">Para 1–3 dispositivos en tienda.</div>
-            </div>
-          </div>
-          <div class="list">
-            <div class="li"><i>✓</i> Gestión de dispositivos</div>
-            <div class="li"><i>✓</i> Logs + monitoreo básico</div>
-            <div class="li"><i>✓</i> OTA habilitado</div>
-            <div class="li"><i>✓</i> Integración por URL de API</div>
+          <span class="tag">Hardware Only</span>
+          <div class="price">Equipo</div>
+          <div class="per">Pago único · integración por API</div>
+          <ul class="ul">
+            <li>Equipo LCD 7&quot; + escáner 2D USB</li>
+            <li>Configuración WiFi + URL de API</li>
+            <li>Consulta REST API al ERP/POS del cliente</li>
+            <li>Soporte estándar</li>
+          </ul>
+          <div style="margin-top:16px;">
+            <a class="btn primary" href="#cta" style="width:100%;">Cotizar equipo</a>
           </div>
         </div>
 
-        <div class="card plan" style="border-color: rgba(0,245,255,0.22); background: linear-gradient(135deg, rgba(0,245,255,0.06), rgba(139,92,246,0.06));">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-            <div>
-              <div class="chip hot">Más popular</div>
-              <div style="margin-top:10px; font-weight:900; font-size:1.2rem;">Business</div>
-              <div class="price">SaaS+</div>
-              <div class="small">Para cadenas y multi-sucursal.</div>
-            </div>
-          </div>
-          <div class="list">
-            <div class="li"><i>✓</i> Todo Starter</div>
-            <div class="li"><i>✓</i> Métricas y reportes</div>
-            <div class="li"><i>✓</i> Configuración avanzada (por tienda)</div>
-            <div class="li"><i>✓</i> SLA de soporte remoto</div>
-            <div class="li"><i>✓</i> OTA / firmware remoto</div>
+        <div class="card plan best">
+          <span class="tag">SaaS Basic (Recomendado)</span>
+          <div class="price">Premium</div>
+          <div class="per">Suscripción mensual · por dispositivo/flota</div>
+          <ul class="ul">
+            <li>Panel de control</li>
+            <li>Monitoreo + logs</li>
+            <li>Actualización OTA remota</li>
+            <li>Validación de suscripción</li>
+          </ul>
+          <div style="margin-top:16px;">
+            <a class="btn primary" href="#cta" style="width:100%;">Elegir Premium</a>
           </div>
         </div>
 
         <div class="card plan">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-            <div>
-              <div class="chip">Integradores</div>
-              <div style="margin-top:10px; font-weight:900; font-size:1.2rem;">Partner</div>
-              <div class="price">MRR</div>
-              <div class="small">Modelo de colaboración para vender e instalar.</div>
-            </div>
-          </div>
-          <div class="list">
-            <div class="li"><i>✓</i> Panel para administrar clientes</div>
-            <div class="li"><i>✓</i> Comisión / participación mensual</div>
-            <div class="li"><i>✓</i> Soporte L2/L3 desde Innovative</div>
-            <div class="li"><i>✓</i> Kit de instalación + manual</div>
+          <span class="tag">SaaS Pro</span>
+          <div class="price">Pro</div>
+          <div class="per">Suscripción mensual · multi-sucursal</div>
+          <ul class="ul">
+            <li>Todo Premium</li>
+            <li>Analytics + reportes</li>
+            <li>Configuración avanzada por tienda</li>
+            <li>Soporte prioritario (SLA)</li>
+          </ul>
+          <div style="margin-top:16px;">
+            <a class="btn primary" href="https://wa.me/528124797788" target="_blank" rel="noreferrer" style="width:100%;">Hablar con ventas</a>
           </div>
         </div>
       </div>
 
-      <div style="margin-top:16px; border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03); border-radius: var(--radius); padding: 18px;">
-        <div style="font-weight:900;">Instalación</div>
-        <div style="margin-top:8px; color:var(--muted); font-weight:650; line-height:1.6;">
-          La instalación puede ser realizada por integrador autorizado o por tu equipo. Si ofreces instalación como servicio,
-          puedes incluir tu tarifa de instalación en tu propuesta comercial.
-        </div>
+      <div class="noteBox">
+        Si ya eres integrador: podemos definir un esquema <b>partner</b> con panel multi-cliente y comisión mensual por flota.
       </div>
     </div>
   </section>
 
-  <!-- DEMO -->
-  <section id="demo">
-    <div class="container">
-      <div class="sectionHead">
-        <div>
-          <div class="h2">Solicitar demo</div>
-          <div class="desc">Déjanos tus datos y te contactamos. Se registra en la base (Redis) vía API en Vercel.</div>
-        </div>
-      </div>
+  <!-- FAQ -->
+  <section class="sec" id="faq">
+    <div class="wrap">
+      <h2>Preguntas frecuentes</h2>
+      <p>Resolvemos lo típico antes de iniciar.</p>
 
-      <div class="demoWrap">
-        <div class="demoGrid">
-          <div>
-            <div class="cardTitle"><span class="iconBox">✅</span>Qué obtienes en la demo</div>
-            <div class="list" style="margin-top:12px;">
-              <div class="li"><i>✓</i> Demo funcional de consulta por código</div>
-              <div class="li"><i>✓</i> Guía de integración (formato JSON)</div>
-              <div class="li"><i>✓</i> Alcance de instalación y despliegue</div>
-              <div class="li"><i>✓</i> Estimación de ROI por tipo de tienda</div>
-            </div>
+      <div style="margin-top:18px;">
+        <details>
+          <summary>¿Dónde están los precios: en la nube o en el sistema del cliente?</summary>
+          <p>En el sistema del cliente (ERP/POS), ya sea local (on‑premise) o cloud. iVisor consulta por REST API (HTTPS). La nube de iVisor es para panel, licencias, monitoreo y OTA.</p>
+        </details>
 
-            <div style="margin-top:16px; padding:14px; border-radius:18px; border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.02);">
-              <div style="font-weight:900;">Innovative Solutions Tecnológica, C.A.</div>
-              <div style="margin-top:8px; color:var(--muted); font-weight:650; line-height:1.55;">
-                Plataforma SaaS para retail e integradores. Escalamiento por flota, soporte remoto y actualizaciones OTA.
-              </div>
-            </div>
-          </div>
+        <details>
+          <summary>¿Necesito cambiar de ERP/POS para usar iVisor?</summary>
+          <p>No. iVisor se integra al sistema existente mediante un endpoint REST (del cliente o del integrador).</p>
+        </details>
 
-          <form class="form" id="demoForm" autocomplete="on">
-            <input type="text" name="website" autocomplete="off" tabindex="-1"
-                   style="position:absolute; left:-9999px; opacity:0;" />
+        <details>
+          <summary>¿La integración es solo cloud?</summary>
+          <p>No. Puede ser con ERP local (red interna) o cloud. En casos on‑premise, se define el mecanismo de conectividad (gateway/VPN/proxy) según la política del cliente.</p>
+        </details>
 
-            <div class="formRow">
-              <div>
-                <label for="nombre">Nombre*</label>
-                <input id="nombre" name="nombre" required placeholder="Nombre y apellido" />
-              </div>
-              <div>
-                <label for="empresa">Empresa*</label>
-                <input id="empresa" name="empresa" required placeholder="Nombre del comercio / integrador" />
-              </div>
-            </div>
-
-            <div class="formRow">
-              <div>
-                <label for="telefono">Teléfono*</label>
-                <input id="telefono" name="telefono" required placeholder="+52 ..." />
-              </div>
-              <div>
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email" placeholder="correo@dominio.com" />
-              </div>
-            </div>
-
-            <div class="formRow">
-              <div>
-                <label for="ciudad">Ciudad</label>
-                <input id="ciudad" name="ciudad" placeholder="Monterrey, Apodaca..." />
-              </div>
-              <div>
-                <label for="giro">Giro</label>
-                <select id="giro" name="giro">
-                  <option value="">Selecciona</option>
-                  <option value="farmacia">Farmacia</option>
-                  <option value="abarrotes">Abarrotes</option>
-                  <option value="ferreteria">Ferretería</option>
-                  <option value="conveniencia">Conveniencia</option>
-                  <option value="electronica">Electrónica</option>
-                  <option value="otros">Otros</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="formRow formRow1">
-              <div>
-                <label for="mensaje">Mensaje</label>
-                <textarea id="mensaje" name="mensaje" placeholder="Cuéntanos cuántas sucursales/dispositivos estimas y tu sistema actual (POS/ERP)."></textarea>
-              </div>
-            </div>
-
-            <input type="hidden" name="source" value="landing" />
-
-            <div class="formActions">
-              <button class="btn btnPrimary" type="submit">Enviar solicitud</button>
-              <a class="btn btnGhost" href="#como-funciona">Ver cómo funciona</a>
-            </div>
-
-            <div class="formNote">
-              Al enviar, aceptas ser contactado para una demo. Tu solicitud se guarda para seguimiento comercial.
-            </div>
-
-            <div id="demoToast" class="toast" aria-live="polite"></div>
-          </form>
-        </div>
+        <details>
+          <summary>¿Qué incluye la suscripción Premium?</summary>
+          <p>Panel de control, licenciamiento, logs, monitoreo y actualizaciones OTA remotas. No es para “guardar precios”.</p>
+        </details>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
-  <footer>
-    <div class="container">
-      <div class="footRow">
+  <!-- CTA FINAL -->
+  <section class="sec" id="cta">
+    <div class="wrap">
+      <div class="card pad" style="display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:center;">
         <div>
-          <div class="footBrand">INNOVATIVE SOLUTIONS TECNOLÓGICA, C.A.</div>
-          <div style="margin-top:10px; color:var(--muted2); font-weight:650; line-height:1.6; max-width:70ch;">
-            Sistema de gestión inteligente de precios para retail. Arquitectura SaaS, operación 24/7, monitoreo y OTA.
+          <h2 style="margin:0 0 8px;">Agenda una demo de iVisor</h2>
+          <p style="margin:0;color:var(--muted);">
+            Te mostramos el flujo completo: escaneo → REST API del ERP/POS del cliente → pantalla,
+            y (si aplica) el panel Premium con OTA y gestión de flota.
+          </p>
+          <div class="hero-ctas" style="margin-top:14px;">
+            <a class="btn primary" href="https://wa.me/528124797788" target="_blank" rel="noreferrer">WhatsApp</a>
+            <a class="btn" href="#integracion">Ver integración</a>
           </div>
-          <div style="margin-top:10px; color:var(--muted2); font-weight:700;">Infografía técnico‑comercial · Febrero 2026</div>
         </div>
-        <div class="footTags" aria-label="Tecnologías">
-          <span class="footTag">IoT</span>
-          <span class="footTag">SaaS</span>
-          <span class="footTag">ESP32‑S3</span>
-          <span class="footTag">LCD 7&quot;</span>
-          <span class="footTag">HTTPS</span>
-          <span class="footTag">OTA</span>
+        <div class="feat" style="margin:0;">
+          <h3 style="margin:0 0 8px;">Checklist para demo</h3>
+          <p style="margin:0;color:var(--muted2);">
+            1) Tipo de ERP/POS<br>
+            2) ¿Local o cloud?<br>
+            3) Formato JSON disponible<br>
+            4) Cantidad de dispositivos / sucursales
+          </p>
         </div>
       </div>
     </div>
-  </footer>
+  </section>
+</main>
 
-  <script>
-    // Smooth anchor scroll
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-      a.addEventListener('click', (e) => {
-        const href = a.getAttribute('href');
-        if (!href || href === '#') return;
-        const el = document.querySelector(href);
-        if (!el) return;
-        e.preventDefault();
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        history.replaceState(null, '', href);
-      });
-    });
+<footer>
+  <div class="wrap" style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+    <div>
+      <strong>Innovative Solutions</strong><br>
+      <span>iVisor · Visor Inteligente de Precios</span>
+    </div>
+    <div style="text-align:right;">
+      <span>Integración REST API · Panel · OTA</span><br>
+      <span style="font-size:12px;">© <script>document.write(new Date().getFullYear())</script></span>
+    </div>
+  </div>
+</footer>
 
-    // Demo form -> Vercel API (Redis)
-    const demoForm = document.getElementById('demoForm');
-    const toast = document.getElementById('demoToast');
-
-    function showToast(type, msg){
-      toast.className = 'toast ' + (type === 'ok' ? 'ok' : 'err');
-      toast.textContent = msg;
+<script>
+  // Tabs preview
+  const shots = {
+    device: {
+      src: "/public/img/visor-equipo.png",
+      alt: "Equipo iVisor en tienda",
+      note: "Equipo compacto con pantalla LCD 7\" y escáner 2D USB."
+    },
+    panel: {
+      src: "/public/img/visor-panel.png",
+      alt: "Panel de control iVisor",
+      note: "Panel web (Premium): estado, flota, logs, licencias y control centralizado."
     }
+  };
 
-    demoForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  const tabs = document.querySelectorAll(".tab");
+  const img = document.getElementById("shotImg");
+  const note = document.getElementById("shotNote");
 
-      const btn = demoForm.querySelector('button[type="submit"]');
-      if (btn) { btn.disabled = true; btn.style.opacity = 0.8; btn.textContent = 'Enviando...'; }
+  tabs.forEach(t => {
+    t.addEventListener("click", () => {
+      tabs.forEach(x => { x.classList.remove("active"); x.setAttribute("aria-selected","false"); });
+      t.classList.add("active");
+      t.setAttribute("aria-selected","true");
 
-      const data = Object.fromEntries(new FormData(demoForm).entries());
-
-      try{
-        // Endpoint recomendado: /pages/api/demo/request.js  -> /api/demo/request
-        const r = await fetch('/api/request', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        
-        const j = await r.json();
-        if (!r.ok) throw new Error(j.error || 'Error');
-
-        showToast('ok', '✅ Solicitud enviada. Te contactaremos pronto.');
-        demoForm.reset();
-      }catch(err){
-        console.error(err);
-        showToast('err', '❌ No se pudo enviar. Revisa tu conexión e intenta de nuevo.');
-      }finally{
-        if (btn) { btn.disabled = false; btn.style.opacity = 1; btn.textContent = 'Enviar solicitud'; }
-      }
+      const key = t.dataset.shot;
+      const s = shots[key] || shots.device;
+      img.src = s.src;
+      img.alt = s.alt;
+      note.textContent = s.note;
     });
-  </script>
+  });
+</script>
 </body>
 </html>
