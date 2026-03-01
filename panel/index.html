@@ -88,15 +88,26 @@
       opacity:.95;
     }
 
-    input{
-      padding:10px 14px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:#fff;
-      min-width:250px;
-      font-size:14px;
+    /* Por esto: */
+    input {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 14px;
+      /* sin min-width global */
     }
 
+    td input[type="text"],
+    td input[type="number"] {
+        width: auto;
+        min-width: unset;
+        max-width: 100%;
+      }
+
+      td {
+        white-space: nowrap;
+      }
     /* CARD */
 
     .card{
