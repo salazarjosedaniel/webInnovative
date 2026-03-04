@@ -148,12 +148,12 @@ async function save(id) {
     paid:    document.getElementById("pg_"+id).checked,
     force:   document.getElementById("f_"+id).checked,
     notes:   document.getElementById("n_"+id).value,
-    name:   document.getElementById("e_"+id).value,
-    slogan:   document.getElementById("s_"+id).value,
-    instagram:   document.getElementById("i_"+id).value,
-    tlf:   document.getElementById("t_"+id).value,
-    banco:   document.getElementById("b_"+id).value,
-    rif:   document.getElementById("r_"+id).value
+    //name:   document.getElementById("e_"+id).value,
+    //slogan:   document.getElementById("s_"+id).value,
+    //instagram:   document.getElementById("i_"+id).value,
+    //tlf:   document.getElementById("t_"+id).value,
+    //banco:   document.getElementById("b_"+id).value,
+    //rif:   document.getElementById("r_"+id).value
   };
 
   const paidGlobal = document.getElementById(`pg_${id}`).checked;
