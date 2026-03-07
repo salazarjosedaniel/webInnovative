@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Precio Venezuela</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 32px;
+      color: #ffffff;
+    }
+
+    .title p {
+      margin-top: 8px;
+      color: #cbd5e1;
+      font-size: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 18px;
+      color: #ffffff;
+      font-size: 22px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #e2e8f0;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #22c55e;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #16a34a;
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .result-box {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .result-label {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .result-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffffff;
+      word-break: break-word;
+    }
+
+    .highlight {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border: none;
+    }
+
+    .highlight .result-label,
+    .highlight .result-value {
+      color: #ffffff;
+    }
+
+    .formula-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #0b1220;
+      border: 1px solid #1e293b;
+      line-height: 1.7;
+      color: #cbd5e1;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .small-note {
+      margin-top: 14px;
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .error-box {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fecaca;
+      display: none;
+    }
+
+    .success-box {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: #bbf7d0;
+      display: none;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .grid,
+      .results {
+        grid-template-columns: 1fr;
+      }
+
+      .title h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">
+      <h1>Calculadora de Precio Venezuela</h1>
+      <p>Calcula cuánto cobrar en bolívares para proteger tu reposición en USDT y asegurar tu ganancia.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Datos de entrada</h2>
+
+        <div class="form-group">
+          <label for="costoUsd">Costo del producto (USD)</label>
+          <input type="number" id="costoUsd" step="0.0001" placeholder="Ej: 100" value="100" />
+        </div>
+
+        <div class="form-group">
+          <label for="tasaBCV">Tasa BCV (Bs/USD)</label>
+          <input type="number" id="tasaBCV" step="0.0001" placeholder="Ej: 36.50" value="36.50" />
+        </div>
+
+        <div class="form-group">
+          <label for="tasaUSDT">Tasa USDT (Bs/USDT)</label>
+          <input type="number" id="tasaUSDT" step="0.0001" placeholder="Ej: 39.20" value="39.20" />
+        </div>
+
+        <div class="form-group">
+          <label for="tipoMargen">Tipo de margen</label>
+          <select id="tipoMargen">
+            <option value="sobreCosto">Ganancia sobre costo</option>
+            <option value="sobreVenta">Ganancia sobre precio final</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="gananciaPct">% de ganancia deseada</label>
+          <input type="number" id="gananciaPct" step="0.0001" placeholder="Ej: 20" value="20" />
+        </div>
+
+        <div class="form-group">
+          <label for="comisionPct">% de comisión adicional</label>
+          <input type="number" id="comisionPct" step="0.0001" placeholder="Ej: 3" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="colchonPct">% colchón / riesgo</label>
+          <input type="number" id="colchonPct" step="0.0001" placeholder="Ej: 2" value="0" />
+        </div>
+
+        <div class="buttons">
+          <button class="btn-primary" onclick="calcular()">Calcular</button>
+          <button class="btn-secondary" onclick="limpiar()">Limpiar</button>
+          <button class="btn-secondary" onclick="copiarResumen()">Copiar resumen</button>
+        </div>
+
+        <div id="errorBox" class="error-box"></div>
+        <div id="successBox" class="success-box"></div>
+
+        <div class="small-note">
+          Nota: esta calculadora usa la tasa USDT como base real de reposición y la tasa BCV solo como referencia comparativa.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Resultados</h2>
+
+        <div class="results">
+          <div class="result-box highlight">
+            <div class="result-label">Debes cobrar</div>
+            <div class="result-value" id="precioVentaBs">Bs 0.00</div>
+          </div>
+
+          <div class="result-box">
+            <div class="result-label">Equivalente final en USDT</div>
+            <div class="result-value" id="precioObjetivoUSDT">0.00 USDT</div>
+          </div>
+
+          <div class="result-box">
+            <div class="result-label">Ganancia estimada</div>
+            <div class="result-value" id="gananciaUSDT">0.00 USDT</div>
+          </div>
+
+          <div class="result-box">
+            <div class="result-label">Referencia BCV</div>
+            <div class="result-value" id="precioReferenciaBCV">Bs 0.00</div>
+          </div>
+
+          <div class="result-box">
+            <div class="result-label">Brecha USDT vs BCV</div>
+            <div class="result-value" id="brechaPct">0.00%</div>
+          </div>
+
+          <div class="result-box">
+            <div class="result-label">Extra sobre referencia BCV</div>
+            <div class="result-value" id="extraBs">Bs 0.00</div>
+          </div>
+        </div>
+
+        <div class="formula-box" id="detalleCalculo">
+Esperando cálculo...
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Herramienta para estimación comercial. Puedes adaptarla luego para guardar productos, historial y tasas automáticamente.
+    </div>
+  </div>
+
+  <script>
+    function formatearNumero(valor, decimales = 2) {
+      return Number(valor).toLocaleString("es-VE", {
+        minimumFractionDigits: decimales,
+        maximumFractionDigits: decimales
+      });
+    }
+
+    function obtenerNumero(id) {
+      const valor = document.getElementById(id).value.trim();
+      return valor === "" ? NaN : parseFloat(valor);
+    }
+
+    function mostrarError(mensaje) {
+      const errorBox = document.getElementById("errorBox");
+      const successBox = document.getElementById("successBox");
+      successBox.style.display = "none";
+      successBox.textContent = "";
+      errorBox.style.display = "block";
+      errorBox.textContent = mensaje;
+    }
+
+    function mostrarExito(mensaje) {
+      const errorBox = document.getElementById("errorBox");
+      const successBox = document.getElementById("successBox");
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+      successBox.style.display = "block";
+      successBox.textContent = mensaje;
+      setTimeout(() => {
+        successBox.style.display = "none";
+        successBox.textContent = "";
+      }, 2500);
+    }
+
+    function limpiarMensajes() {
+      document.getElementById("errorBox").style.display = "none";
+      document.getElementById("errorBox").textContent = "";
+      document.getElementById("successBox").style.display = "none";
+      document.getElementById("successBox").textContent = "";
+    }
+
+    function calcular() {
+      limpiarMensajes();
+
+      const costoUsd = obtenerNumero("costoUsd");
+      const tasaBCV = obtenerNumero("tasaBCV");
+      const tasaUSDT = obtenerNumero("tasaUSDT");
+      const tipoMargen = document.getElementById("tipoMargen").value;
+      const gananciaPct = obtenerNumero("gananciaPct");
+      const comisionPct = obtenerNumero("comisionPct");
+      const colchonPct = obtenerNumero("colchonPct");
+
+      if (
+        isNaN(costoUsd) || isNaN(tasaBCV) || isNaN(tasaUSDT) ||
+        isNaN(gananciaPct) || isNaN(comisionPct) || isNaN(colchonPct)
+      ) {
+        mostrarError("Por favor llena todos los campos numéricos.");
+        return;
+      }
+
+      if (costoUsd <= 0) {
+        mostrarError("El costo del producto debe ser mayor que cero.");
+        return;
+      }
+
+      if (tasaBCV <= 0 || tasaUSDT <= 0) {
+        mostrarError("Las tasas deben ser mayores que cero.");
+        return;
+      }
+
+      if (gananciaPct < 0 || comisionPct < 0 || colchonPct < 0) {
+        mostrarError("Los porcentajes no pueden ser negativos.");
+        return;
+      }
+
+      const ganancia = gananciaPct / 100;
+      const comision = comisionPct / 100;
+      const colchon = colchonPct / 100;
+      const extras = comision + colchon;
+
+      let precioObjetivoUSDT = 0;
+
+      if (tipoMargen === "sobreCosto") {
+        precioObjetivoUSDT = costoUsd * (1 + ganancia + extras);
+      } else {
+        const margenTotal = ganancia + extras;
+        if (margenTotal >= 1) {
+          mostrarError("En modo 'sobre precio final', la suma de ganancia + comisión + colchón no puede ser igual o mayor a 100%.");
+          return;
+        }
+        precioObjetivoUSDT = costoUsd / (1 - margenTotal);
+      }
+
+      const precioVentaBs = precioObjetivoUSDT * tasaUSDT;
+      const precioReferenciaBCV = costoUsd * tasaBCV;
+      const gananciaUSDT = precioObjetivoUSDT - costoUsd;
+      const brechaPct = ((tasaUSDT - tasaBCV) / tasaBCV) * 100;
+      const extraBs = precioVentaBs - precioReferenciaBCV;
+
+      document.getElementById("precioVentaBs").textContent = "Bs " + formatearNumero(precioVentaBs);
+      document.getElementById("precioObjetivoUSDT").textContent = formatearNumero(precioObjetivoUSDT) + " USDT";
+      document.getElementById("gananciaUSDT").textContent = formatearNumero(gananciaUSDT) + " USDT";
+      document.getElementById("precioReferenciaBCV").textContent = "Bs " + formatearNumero(precioReferenciaBCV);
+      document.getElementById("brechaPct").textContent = formatearNumero(brechaPct) + "%";
+      document.getElementById("extraBs").textContent = "Bs " + formatearNumero(extraBs);
+
+      let detalle = "";
+      detalle += "RESUMEN DEL CÁLCULO\n\n";
+      detalle += "Costo del producto: $" + formatearNumero(costoUsd, 2) + " USD\n";
+      detalle += "Tasa BCV: " + formatearNumero(tasaBCV, 4) + " Bs/USD\n";
+      detalle += "Tasa USDT: " + formatearNumero(tasaUSDT, 4) + " Bs/USDT\n";
+      detalle += "Tipo de margen: " + (tipoMargen === "sobreCosto" ? "Ganancia sobre costo" : "Ganancia sobre precio final") + "\n";
+      detalle += "Ganancia: " + formatearNumero(gananciaPct, 2) + "%\n";
+      detalle += "Comisión: " + formatearNumero(comisionPct, 2) + "%\n";
+      detalle += "Colchón: " + formatearNumero(colchonPct, 2) + "%\n\n";
+
+      if (tipoMargen === "sobreCosto") {
+        detalle += "FÓRMULA USADA\n";
+        detalle += "Precio objetivo USDT = costo × (1 + ganancia + comisión + colchón)\n";
+        detalle += "Precio objetivo USDT = " + formatearNumero(costoUsd, 2) + " × (1 + " + formatearNumero(ganancia, 4) + " + " + formatearNumero(comision, 4) + " + " + formatearNumero(colchon, 4) + ")\n";
+        detalle += "Precio objetivo USDT = " + formatearNumero(precioObjetivoUSDT, 4) + " USDT\n\n";
+      } else {
+        detalle += "FÓRMULA USADA\n";
+        detalle += "Precio objetivo USDT = costo / (1 - ganancia - comisión - colchón)\n";
+        detalle += "Precio objetivo USDT = " + formatearNumero(costoUsd, 2) + " / (1 - " + formatearNumero(ganancia, 4) + " - " + formatearNumero(comision, 4) + " - " + formatearNumero(colchon, 4) + ")\n";
+        detalle += "Precio objetivo USDT = " + formatearNumero(precioObjetivoUSDT, 4) + " USDT\n\n";
+      }
+
+      detalle += "Precio de venta en bolívares = precio objetivo USDT × tasa USDT\n";
+      detalle += "Precio de venta en bolívares = " + formatearNumero(precioObjetivoUSDT, 4) + " × " + formatearNumero(tasaUSDT, 4) + "\n";
+      detalle += "Precio de venta en bolívares = Bs " + formatearNumero(precioVentaBs, 2) + "\n\n";
+
+      detalle += "Referencia BCV = costo USD × tasa BCV\n";
+      detalle += "Referencia BCV = " + formatearNumero(costoUsd, 2) + " × " + formatearNumero(tasaBCV, 4) + "\n";
+      detalle += "Referencia BCV = Bs " + formatearNumero(precioReferenciaBCV, 2) + "\n\n";
+
+      detalle += "Ganancia estimada = " + formatearNumero(gananciaUSDT, 2) + " USDT\n";
+      detalle += "Brecha USDT vs BCV = " + formatearNumero(brechaPct, 2) + "%\n";
+      detalle += "Diferencia en bolívares sobre BCV = Bs " + formatearNumero(extraBs, 2) + "\n\n";
+
+      detalle += "RECOMENDACIÓN\n";
+      detalle += "Debes cobrar aproximadamente Bs " + formatearNumero(precioVentaBs, 2) + " para que al convertirlo a USDT obtengas " + formatearNumero(precioObjetivoUSDT, 2) + " USDT.";
+
+      document.getElementById("detalleCalculo").textContent = detalle;
+    }
+
+    function limpiar() {
+      document.getElementById("costoUsd").value = "";
+      document.getElementById("tasaBCV").value = "";
+      document.getElementById("tasaUSDT").value = "";
+      document.getElementById("tipoMargen").value = "sobreCosto";
+      document.getElementById("gananciaPct").value = "";
+      document.getElementById("comisionPct").value = "0";
+      document.getElementById("colchonPct").value = "0";
+
+      document.getElementById("precioVentaBs").textContent = "Bs 0.00";
+      document.getElementById("precioObjetivoUSDT").textContent = "0.00 USDT";
+      document.getElementById("gananciaUSDT").textContent = "0.00 USDT";
+      document.getElementById("precioReferenciaBCV").textContent = "Bs 0.00";
+      document.getElementById("brechaPct").textContent = "0.00%";
+      document.getElementById("extraBs").textContent = "Bs 0.00";
+      document.getElementById("detalleCalculo").textContent = "Esperando cálculo...";
+      limpiarMensajes();
+    }
+
+    async function copiarResumen() {
+      const texto = document.getElementById("detalleCalculo").textContent.trim();
+
+      if (!texto || texto === "Esperando cálculo...") {
+        mostrarError("Primero debes realizar un cálculo.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(texto);
+        mostrarExito("Resumen copiado al portapapeles.");
+      } catch (error) {
+        mostrarError("No se pudo copiar el resumen.");
+      }
+    }
+
+    calcular();
+  </script>
+</body>
+</html>
