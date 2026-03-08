@@ -82,17 +82,17 @@ using namespace esp_panel::board;
 
 #if DEBUG_MODE
 
-  #define LOG(...)        Serial.printf(__VA_ARGS__)
-  #define LOGLN(x)        Serial.println(x)
-  #define LOGT(x)         Serial.print(x)
-  #define LOGF(fmt, ...)  Serial.printf(fmt, __VA_ARGS__)
+#define LOG(...) Serial.printf(__VA_ARGS__)
+#define LOGLN(x) Serial.println(x)
+#define LOGT(x) Serial.print(x)
+#define LOGF(fmt, ...) Serial.printf(fmt, __VA_ARGS__)
 
 #else
 
-  #define LOG(...)
-  #define LOGLN(x)
-  #define LOGT(x)
-  #define LOGF(fmt, ...)
+#define LOG(...)
+#define LOGLN(x)
+#define LOGT(x)
+#define LOGF(fmt, ...)
 
 #endif
 
@@ -562,7 +562,7 @@ static void usb_lib_task(void* arg) {
     if (millis() - last_alive > 60000) {
       last_alive = millis();
       LOGF("[USB] alive | flags=0x%08lx\n",
-                    (unsigned long)event_flags);
+           (unsigned long)event_flags);
     }
 
     if (event_flags & USB_HOST_LIB_EVENT_FLAGS_NO_CLIENTS) {
@@ -783,6 +783,7 @@ static const char* KEY_OTA_VER = "ota_ver";          // string (opcional)
 bool pendingResetCfg = false;
 RTC_DATA_ATTR uint32_t g_forcePortal = 0x0;
 static const uint32_t FORCE_PORTAL_MAGIC = 0xC0FFEE11;
+static volatile bool g_portalMode = false;
 /************ WiFiManager buffers ************/
 char apiLegacyBuf[200] = "https://web-innovative.vercel.app/api/tasas";
 char apiProdBuf[200] = "http://192.168.100.242/api/product";
@@ -815,7 +816,7 @@ static lv_timer_t* timer_ble_adv = nullptr;
 /**/
 static String g_lastSentCode = "";
 static uint32_t g_lastSentMs = 0;
-static const uint32_t SEND_ONCE_WINDOW_MS = 1000; // ajusta: 400-1200ms
+static const uint32_t SEND_ONCE_WINDOW_MS = 1000;  // ajusta: 400-1200ms
 
 /************ Panel ************/
 Board* panelBoard = nullptr;
@@ -826,6 +827,7 @@ lv_obj_t* taBarcode = nullptr;
 lv_obj_t* lblDesc = nullptr;
 lv_obj_t* lblPrice = nullptr;
 lv_obj_t* lblPriceUsd = nullptr;
+lv_obj_t* lblIva = nullptr;
 lv_obj_t* lblCurrency = nullptr;
 lv_obj_t* lblRateUsd = nullptr;
 lv_obj_t* lblStatus = nullptr;
@@ -858,12 +860,13 @@ static String curPrice = "--.--";
 
 /************ Cache prev para evitar flicker ************/
 static String prevCode, prevDesc, prevPrice, prevStatus, prevDevice;
-static String prevPriceUsd, prevRateUsd, prevCurrency;
+static String prevPriceUsd, prevRateUsd, prevCurrency, prevIva;
 
 /************ USD rate (API legacy) ************/
 static double usdRate = 0.0;
 static unsigned long lastUsdFetch = 0;
-static const unsigned long USD_FETCH_MS = 2UL * 60UL * 60UL * 1000UL;;  // cada 2H
+static const unsigned long USD_FETCH_MS = 2UL * 60UL * 60UL * 1000UL;
+;  // cada 2H
 
 /************ Flags ************/
 bool usarLVGL = true;
@@ -962,7 +965,7 @@ static void uiSetPrice(const String& priceOnly) {
   if (!usarLVGL || !lblPrice) return;
   if (priceOnly == prevPrice) return;
   lvgl_port_lock(-1);
-  lv_label_set_text_fmt(lblPrice, "%s MXN", priceOnly.c_str());
+  lv_label_set_text_fmt(lblPrice, "%s Bs.", priceOnly.c_str());
   lvgl_port_unlock();
   prevPrice = priceOnly;
 }
@@ -989,9 +992,18 @@ static void uiSetRateUsd(const String& rateUsdOnly) {
   if (!usarLVGL || !lblRateUsd) return;
   if (rateUsdOnly == prevRateUsd) return;
   lvgl_port_lock(-1);
-  lv_label_set_text_fmt(lblRateUsd, "%s MXN", rateUsdOnly.c_str());
+  lv_label_set_text_fmt(lblRateUsd, "%s Bs.", rateUsdOnly.c_str());
   lvgl_port_unlock();
   prevRateUsd = rateUsdOnly;
+}
+
+static void uiSetIva(const String& ivaText) {
+  if (!usarLVGL || !lblIva) return;
+  if (ivaText == prevIva) return;
+  lvgl_port_lock(-1);
+  lv_label_set_text(lblIva, ivaText.c_str());
+  lvgl_port_unlock();
+  prevIva = ivaText;
 }
 
 static void clearProductUI() {
@@ -1002,6 +1014,7 @@ static void clearProductUI() {
   uiSetDesc(curDesc);
   uiSetPrice(curPrice);
   uiSetPriceUsd("--.--");
+  uiSetIva("IVA: --.-- Bs.");
   uiSetStatus(servicePaid ? "Listo. Escanee..." : "Servicio suspendido");
 }
 
@@ -1165,6 +1178,8 @@ static void resetWifiAndEnterConfig() {
   uiSetStatus("Modo configuracion...");
   Serial.println("CFG → reset WiFi + NVS");
 
+  enterPortalMode();
+
   WiFiManager wm;
   wm.resetSettings();
 
@@ -1172,7 +1187,15 @@ static void resetWifiAndEnterConfig() {
   prefs.clear();
   prefs.end();
 
-  delay(1500);
+  delay(500);
+
+  wm.setConfigPortalTimeout(0);
+  wm.setBreakAfterConfig(true);
+  wm.startConfigPortal("iVisor");
+
+  exitPortalMode();
+
+  delay(500);
   ESP.restart();
 }
 
@@ -1377,9 +1400,9 @@ static void setupOtaHttpServer() {
 
 /************ OTA Remota ************/
 static int semverCmp(const String& a, const String& b) {
-  int a1=0,a2=0,a3=0,b1=0,b2=0,b3=0;
-  sscanf(a.c_str(), "%d.%d.%d", &a1,&a2,&a3);
-  sscanf(b.c_str(), "%d.%d.%d", &b1,&b2,&b3);
+  int a1 = 0, a2 = 0, a3 = 0, b1 = 0, b2 = 0, b3 = 0;
+  sscanf(a.c_str(), "%d.%d.%d", &a1, &a2, &a3);
+  sscanf(b.c_str(), "%d.%d.%d", &b1, &b2, &b3);
   if (a1 != b1) return (a1 < b1) ? -1 : 1;
   if (a2 != b2) return (a2 < b2) ? -1 : 1;
   if (a3 != b3) return (a3 < b3) ? -1 : 1;
@@ -1537,7 +1560,7 @@ static bool runOtaBootModeIfPending() {
 
   // 2) WiFi mínimo
   WiFi.mode(WIFI_STA);
-  WiFi.begin(); // usa credenciales guardadas
+  WiFi.begin();  // usa credenciales guardadas
 
   const unsigned long t0 = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - t0 < 30000) {
@@ -1561,11 +1584,11 @@ static bool runOtaBootModeIfPending() {
   HTTPClient http;
   http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
 
-  const char* hdrKeys[] = {"Location", "Content-Length", "Content-Type"};
+  const char* hdrKeys[] = { "Location", "Content-Length", "Content-Type" };
   http.collectHeaders(hdrKeys, 3);
 
   WiFiClientSecure client;
-  client.setInsecure();       // OK para Vercel (si quieres pinning luego lo hacemos)
+  client.setInsecure();  // OK para Vercel (si quieres pinning luego lo hacemos)
   client.setTimeout(20000);
 
   if (!http.begin(client, fwUrl)) {
@@ -1659,7 +1682,6 @@ static bool runOtaBootModeIfPending() {
   delay(500);
   ESP.restart();
   return true;
-  
 }
 
 static void checkForFirmwareUpdate(bool manualTrigger) {
@@ -1771,14 +1793,24 @@ static void skipToJsonStart(Stream& s) {
     int c = s.peek();
     if (c < 0) return;                 // EOF
     if (c == '{' || c == '[') return;  // inicio JSON
-    s.read();                           // descarta
+    s.read();                          // descarta
   }
 }
 
-
-static bool consultarProductoPorCodigo(const String& code, double& outPriceWithTax, char* outName, size_t outNameLen, int& outHttpCode) {
+static bool consultarProductoPorCodigo(
+  const String& code,
+  double& outPriceWithTax,
+  double& outPriceBase,
+  double& outTaxPercent,
+  double& outTaxAmount,
+  char* outName,
+  size_t outNameLen,
+  int& outHttpCode) {
   outHttpCode = -999;
   outPriceWithTax = 0.0;
+  outPriceBase = 0.0;
+  outTaxPercent = 0.0;
+  outTaxAmount = 0.0;
 
   if (WiFi.status() != WL_CONNECTED) {
     uiSetStatus("WiFi desconectado");
@@ -1786,7 +1818,11 @@ static bool consultarProductoPorCodigo(const String& code, double& outPriceWithT
   }
 
   char url[200];
-  snprintf(url,sizeof(url),"%s%s%s",apiProductUrl.c_str(),(apiProductUrl.indexOf('?') >= 0) ? "&code=" : "?code=",code.c_str());
+  snprintf(url, sizeof(url), "%s%s%s",
+           apiProductUrl.c_str(),
+           (apiProductUrl.indexOf('?') >= 0) ? "&code=" : "?code=",
+           code.c_str());
+
   LOGLN(url);
 
   HTTPClient http;
@@ -1814,74 +1850,45 @@ static bool consultarProductoPorCodigo(const String& code, double& outPriceWithT
     return false;
   }
 
-  // Esperar un poquito a que llegue body (a veces 200 llega antes de que haya bytes disponibles)
   unsigned long t0 = millis();
   while (!raw->available() && (millis() - t0) < 250) {
     delay(1);
   }
 
-  // Buffer para no depender de lecturas byte-a-byte (más estable)
   ReadBufferingStream stream(*raw, 256);
-
-  // Saltar BOM / basura antes del JSON
   skipToJsonStart(stream);
 
-  StaticJsonDocument<256> doc;
+  StaticJsonDocument<512> doc;
   DeserializationError err = deserializeJson(doc, stream);
 
   http.end();
 
   if (err) {
     LOGF("JSON Error: %s\n", err.c_str());
-    // Tip extra: si quieres más señal, imprime Content-Type/Length
-    LOGF("CT=%s CL=%d\n", http.header("Content-Type").c_str(), http.getSize());
     return false;
   }
 
   bool ok = doc["ok"] | false;
   bool found = doc["found"] | false;
   if (!ok || !found) return false;
+
   const char* name = doc["name"] | "";
-  strlcpy(outName,name,outNameLen);
+  strlcpy(outName, name, outNameLen);
+
+  outPriceBase = doc["priceBase"] | 0.0;
+  outTaxPercent = doc["taxPercent"] | 0.0;
   outPriceWithTax = doc["priceWithTax"] | 0.0;
-  return true;
-}
 
-static bool consultarProductoPorCodigo2(const String& code, String& outPayload, int& outHttpCode) {
-  outPayload = "";
-  outHttpCode = -999;
-
-  if (WiFi.status() != WL_CONNECTED) {
-    uiSetStatus("WiFi desconectado");
-    return false;
+  // Si la API trae taxAmount o iva, lo usamos.
+  // Si no, lo calculamos con priceWithTax - priceBase.
+  if (!doc["taxAmount"].isNull()) {
+    outTaxAmount = doc["taxAmount"].as<double>();
+  } else if (!doc["iva"].isNull()) {
+    outTaxAmount = doc["iva"].as<double>();
+  } else {
+    outTaxAmount = outPriceWithTax - outPriceBase;
+    if (outTaxAmount < 0) outTaxAmount = 0;
   }
-
-  String url;
-  url.reserve(apiProductUrl.length() + code.length() + 32);
-  url = apiProductUrl;
-  url += (apiProductUrl.indexOf('?') >= 0) ? "&code=" : "?code=";
-  url += code;
-
-  HTTPClient http;
-  http.setTimeout(4000);
-  if (!httpBeginAuto(http, url)) {
-    uiSetStatus("HTTP begin() fallo");
-    return false;
-  }
-  http.addHeader("X-Device-ID", getDeviceId());
-
-  int httpCode = http.GET();
-  outHttpCode = httpCode;
-  if (httpCode != 200) {
-    uiSetStatus(String("HTTP Producto: ") + httpCode);
-    http.end();
-    return false;
-  }
-
-  String payload = http.getString();
-  http.end();
-
-  outPayload = payload;
 
   return true;
 }
@@ -1903,6 +1910,7 @@ static void httpWorkerTask(void* pv) {
       uiSetPrice("--.--");
       uiSetPriceUsd("--.--");
       uiSetRateUsd("--.--");
+      uiSetIva("IVA: --.-- Bs.");
       scheduleClearIn5s();
       continue;
     }
@@ -1913,42 +1921,67 @@ static void httpWorkerTask(void* pv) {
     uiSetStatus(String(job.source));
     uiSetStatus("Consultando...");
 
-    String payload;
     int httpCode;
     double priceWithTax = 0.0;
-    char name[40];
-    bool okReq = consultarProductoPorCodigo(code, priceWithTax, name,sizeof(name), httpCode);
+    double priceBase = 0.0;
+    double taxPercent = 0.0;
+    double taxAmount = 0.0;
+    char name[80];
+
+    bool okReq = consultarProductoPorCodigo(
+      code,
+      priceWithTax,
+      priceBase,
+      taxPercent,
+      taxAmount,
+      name,
+      sizeof(name),
+      httpCode);
 
     if (!okReq) {
       uiSetStatus("No encontrado / Error");
       uiSetPrice("0.00");
       uiSetPriceUsd("0.00");
+      uiSetIva("IVA: 0.00 Bs.");
       scheduleClearIn5s();
       continue;
     }
 
-uiSetDesc(name);
+    uiSetDesc(name);
 
-char buf[32];
-snprintf(buf, sizeof(buf), "%.2f", priceWithTax);
-uiSetPrice(String(buf));
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%.2f", priceWithTax);
+    uiSetPrice(String(buf));
 
-if (usdRate > 0.000001) {
-  double usd = priceWithTax / usdRate;
-  char bufUsd[32]; snprintf(bufUsd, sizeof(bufUsd), "%.2f", usd);
-  uiSetPriceUsd(String(bufUsd));
+    // IVA real traído/calculado desde API
+    char bufIva[32];
+    snprintf(bufIva, sizeof(bufIva), "%.2f", taxAmount);
 
-  char bufRate[32]; snprintf(bufRate, sizeof(bufRate), "%.2f", usdRate);
-  uiSetRateUsd(String(bufRate));
-} else {
-  uiSetPriceUsd("--.--");
-  uiSetRateUsd("--.--");
-}
+    char ivaText[64];
+    if (taxPercent > 0.0) {
+      snprintf(ivaText, sizeof(ivaText), "IVA (%.0f%%): %s Bs.", taxPercent, bufIva);
+    } else {
+      snprintf(ivaText, sizeof(ivaText), "IVA: %s Bs.", bufIva);
+    }
+    uiSetIva(String(ivaText));
 
-uiSetStatus("OK");
-scheduleClearIn5s();
-// pequeño yield
- vTaskDelay(1);
+    if (usdRate > 0.000001) {
+      double usd = priceWithTax / usdRate;
+      char bufUsd[32];
+      snprintf(bufUsd, sizeof(bufUsd), "%.2f", usd);
+      uiSetPriceUsd(String(bufUsd));
+
+      char bufRate[32];
+      snprintf(bufRate, sizeof(bufRate), "%.2f", usdRate);
+      uiSetRateUsd(String(bufRate));
+    } else {
+      uiSetPriceUsd("--.--");
+      uiSetRateUsd("--.--");
+    }
+
+    uiSetStatus("OK");
+    scheduleClearIn5s();
+    vTaskDelay(1);
   }
 }
 
@@ -1979,7 +2012,7 @@ static void launchHttpForCodeEx(const String& code, const String& sourceLabel, b
     return;
   }
 
-  if(!shouldSendCodeOnce(c)){
+  if (!shouldSendCodeOnce(c)) {
     LOGLN("Code DUP!");
     return;
   }
@@ -2267,7 +2300,7 @@ static void printDevice(const NimBLEAdvertisedDevice* adv) {
   int rssi = adv->getRSSI();
 
   LOGF("DEV addr=%s rssi=%d name='%s' ",
-                addr.c_str(), rssi, name.c_str());
+       addr.c_str(), rssi, name.c_str());
 
   if (adv->haveServiceUUID()) {
     LOGT(" uuids=");
@@ -2307,7 +2340,7 @@ static void scannerCentralTask(void* pv) {
       uiSetStatus("Scanner HID desconectado");
     }
 
-    uiSetStatus("OK...");
+    uiSetStatus("Status: OK...");
 
     bool okScan = scan->start(3, false);
     if (!okScan) {
@@ -2531,6 +2564,7 @@ static void timer_api_cb(lv_timer_t* t) {
         uiSetPrice("--.--");
         uiSetPriceUsd("--.--");
         uiSetRateUsd("--.--");
+        uiSetIva("IVA: --.-- Bs.");
       }
     }
   }
@@ -2831,6 +2865,50 @@ static void showSavedPopupAndCloseConfig() {
 
 /************ Popup confirmación (reusable y seguro) ************/
 
+static void enterPortalMode() {
+  g_portalMode = true;
+  Serial.println("[PORTAL] Enter portal mode");
+
+  // Pausa timers no esenciales
+  if (timer_api) lv_timer_pause(timer_api);
+  if (timer_fw) lv_timer_pause(timer_fw);
+  if (timer_ble_adv) lv_timer_pause(timer_ble_adv);
+  if (timer_ui) lv_timer_pause(timer_ui);
+
+  // Si quieres máxima estabilidad, también pausa timer_wifi:
+  // if (timer_wifi) lv_timer_pause(timer_wifi);
+
+  // Detén BLE advertising
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
+  if (adv && adv->isAdvertising()) adv->stop();
+
+  // Desconecta scanners BLE
+  disconnectUartIfAny();
+  disconnectHidIfAny();
+
+  uiSetStatus("Modo configuracion WiFi...");
+}
+
+static void exitPortalMode() {
+  Serial.println("[PORTAL] Exit portal mode");
+
+  // Reanuda timers
+  if (timer_api) lv_timer_resume(timer_api);
+  if (timer_fw) lv_timer_resume(timer_fw);
+  if (timer_ble_adv) lv_timer_resume(timer_ble_adv);
+  if (timer_ui) lv_timer_resume(timer_ui);
+
+  // Si pausaste timer_wifi, reanúdalo:
+  // if (timer_wifi) lv_timer_resume(timer_wifi);
+
+  // Reanuda BLE advertising
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
+  if (adv && !adv->isAdvertising()) adv->start();
+
+  g_portalMode = false;
+  uiSetStatus(servicePaid ? "Listo. Escanee..." : "Servicio suspendido");
+}
+
 // Cierra pantalla config -> vuelve a tu pantalla principal
 static void closeConfigAndGoHome() {
   // OJO: aquí NO hacemos lv_scr_load(lv_scr_act()) (no tiene sentido)
@@ -2939,15 +3017,15 @@ void setup() {
             */
     if (lcd_bus->getBasicAttributes().type == ESP_PANEL_BUS_TYPE_RGB) {
       //static_cast<BusRGB *>(lcd_bus)->configRGB_BounceBufferSize(lcd->getFrameWidth() * 10);
-      auto rgb_bus = static_cast<esp_panel::drivers::BusRGB*>(lcd_bus);
-      //rgb_bus->configRGB_BounceBufferSize(lcd->getFrameWidth() * 10);
+      //auto rgb_bus = static_cast<esp_panel::drivers::BusRGB*>(lcd_bus);
+      //rgb_bus->configRGB_BounceBufferSize(lcd->getFrameWidth() * 20);
       // Si notas líneas saltando, añade esta línea:
-      rgb_bus->configRgbTimingFreqHz(14 * 1000 * 1000);  // Baja a 12MHz para máxima estabilidad
+      //rgb_bus->configRgbTimingFreqHz(14 * 1000 * 1000);  // Baja a 12MHz para máxima estabilidad
     }
 #endif
 #endif
     bool okPanel = panelBoard->begin();
-   
+
     if (!okPanel) {
       Serial.println("❌ Error al iniciar panel. LVGL deshabilitado.");
       usarLVGL = false;
@@ -3071,41 +3149,54 @@ void setup() {
       lv_label_set_text(lblPriceTitle, "Precio:");
       lv_obj_set_style_text_font(lblPriceTitle, &font_mont_22, 0);
       lv_obj_set_style_text_color(lblPriceTitle, lv_color_hex(0x111827), 0);
-      lv_obj_align(lblPriceTitle, LV_ALIGN_TOP_LEFT, 40, 350);
+      lv_obj_align(lblPriceTitle, LV_ALIGN_TOP_LEFT, 30, 348);
 
-      /*lv_obj_t* lblRateTitle = lv_label_create(scr);
-      lv_label_set_text(lblRateTitle, "Tasa USD BCV:");
-      lv_obj_set_style_text_font(lblRateTitle, &font_mont_22, 0);
-      lv_obj_set_style_text_color(lblRateTitle, lv_color_hex(0x111827), 0);
-      lv_obj_align(lblRateTitle, LV_ALIGN_TOP_LEFT, 540, 350);*/
-
-      // Precio 
+      // Precio Bs
       lblPrice = lv_label_create(scr);
-      lv_label_set_text(lblPrice, "--.-- MXN");
+      lv_label_set_text(lblPrice, "--.-- Bs.");
       lv_obj_set_style_text_font(lblPrice, &font_mont_44, 0);
       lv_obj_set_style_text_color(lblPrice, lv_color_hex(0x111827), 0);
-      lv_obj_align(lblPrice, LV_ALIGN_TOP_LEFT, 40, 380);
+      lv_obj_align(lblPrice, LV_ALIGN_TOP_LEFT, 30, 378);
+
+      // IVA debajo del precio
+      lblIva = lv_label_create(scr);
+      lv_label_set_text(lblIva, "IVA: --.-- Bs.");
+      lv_obj_set_style_text_font(lblIva, &lv_font_montserrat_20, 0);
+      lv_obj_set_style_text_color(lblIva, lv_color_hex(0x374151), 0);
+      lv_obj_align(lblIva, LV_ALIGN_TOP_LEFT, 35, 435);
 
       // Precio USD
-      /*lblPriceUsd = lv_label_create(scr);
+      lv_obj_t* lblUsdTitle = lv_label_create(scr);
+      lv_label_set_text(lblUsdTitle, "Precio USD:");
+      lv_obj_set_style_text_font(lblUsdTitle, &font_mont_22, 0);
+      lv_obj_set_style_text_color(lblUsdTitle, lv_color_hex(0x111827), 0);
+      lv_obj_align(lblUsdTitle, LV_ALIGN_TOP_LEFT, 330, 348);
+
+      lblPriceUsd = lv_label_create(scr);
       lv_label_set_text(lblPriceUsd, "--.-- $");
       lv_obj_set_style_text_font(lblPriceUsd, &font_mont_44, 0);
       lv_obj_set_style_text_color(lblPriceUsd, lv_color_hex(0x374151), 0);
-      lv_obj_align(lblPriceUsd, LV_ALIGN_TOP_LEFT, 340, 380);
+      lv_obj_align(lblPriceUsd, LV_ALIGN_TOP_LEFT, 330, 378);
 
       // Tasa USD
+      lv_obj_t* lblRateTitle = lv_label_create(scr);
+      lv_label_set_text(lblRateTitle, "Tasa USD BCV:");
+      lv_obj_set_style_text_font(lblRateTitle, &font_mont_22, 0);
+      lv_obj_set_style_text_color(lblRateTitle, lv_color_hex(0x111827), 0);
+      lv_obj_align(lblRateTitle, LV_ALIGN_TOP_LEFT, 560, 348);
+
       lblRateUsd = lv_label_create(scr);
       lv_label_set_text(lblRateUsd, "--.-- Bs.");
       lv_obj_set_style_text_font(lblRateUsd, &font_mont_44, 0);
       lv_obj_set_style_text_color(lblRateUsd, lv_color_hex(0x374151), 0);
-      lv_obj_align(lblRateUsd, LV_ALIGN_TOP_LEFT, 540, 380);*/
+      lv_obj_align(lblRateUsd, LV_ALIGN_TOP_LEFT, 560, 378);
 
       // ---------- STATUS + DEVICE ----------
       lblStatus = lv_label_create(scr);
       lv_label_set_text(lblStatus, "Status: iniciando...");
       lv_obj_set_style_text_font(lblStatus, &lv_font_montserrat_18, 0);
       lv_obj_set_style_text_color(lblStatus, lv_color_hex(0x374151), 0);
-      lv_obj_align(lblStatus, LV_ALIGN_BOTTOM_LEFT, 20, -20);
+      lv_obj_align(lblStatus, LV_ALIGN_BOTTOM_LEFT, 320, -20);
 
       lblDevice = lv_label_create(scr);
       lv_label_set_text_fmt(lblDevice, "ID: %s", getDeviceId().c_str());
@@ -3155,25 +3246,31 @@ void setup() {
 
   LOGF("[BOOT] WiFi.SSID()='%s'\n", WiFi.SSID().c_str());
   LOGF("[BOOT] forcePortal=%s\n",
-                (g_forcePortal == FORCE_PORTAL_MAGIC) ? "YES" : "NO");
+       (g_forcePortal == FORCE_PORTAL_MAGIC) ? "YES" : "NO");
 
   if (g_forcePortal == FORCE_PORTAL_MAGIC) {
-    g_forcePortal = 0;  // limpiar flag
+    g_forcePortal = 0;
 
     Serial.println("[BOOT] Forcing config portal...");
     WiFiManager wm_force;
 
-    // IMPORTANTÍSIMO: no intentes autoconectar aquí, solo portal
-    wm_force.setConfigPortalTimeout(180);  // 3 min
+    enterPortalMode();
+
+    wm_force.setConfigPortalTimeout(0);
+    wm_force.setBreakAfterConfig(true);
     wm_force.startConfigPortal("iVisor");
 
-    Serial.println("[BOOT] Portal done/timeout -> restart");
+    exitPortalMode();
+
+    Serial.println("[BOOT] Portal closed -> restart");
     delay(500);
     ESP.restart();
   }
 
   /************ WiFiManager ************/
   loadConfigFromNVS();
+
+  WiFi.setMinSecurity(WIFI_AUTH_WPA2_PSK);
 
   WiFiManager wm;
 
@@ -3194,14 +3291,14 @@ void setup() {
   wm.addParameter(p_scannerMode);
 
   wm.setSaveConfigCallback(saveConfigCallback);
-  wm.setConfigPortalTimeout(30);
+  wm.setConfigPortalTimeout(0);
   wm.setConnectTimeout(30);
 
   LOGLN("📡 Iniciando portal WiFi (iVisor) si no hay config...");
   if (!wm.autoConnect("iVisor")) {
     LOGLN("❌ Fallo en portal. Reiniciando...");
     uiSetStatus("Portal WiFi fallo");
-    delay(60000);
+    delay(120000);
     ESP.restart();
   }
 
@@ -3256,8 +3353,8 @@ void setup() {
   delay(1000);
   setupOtaHttpServer();
   delay(1000);
-  uiSetStatus(servicePaid ? "WiFi OK - BLE iniciando..." : "Servicio suspendido");
-  setupBLE();
+  uiSetStatus(servicePaid ? "WiFi OK - Servicio iniciado..." : "Servicio suspendido");
+  //setupBLE();
 
   /************ Timers LVGL ************/
   timer_led = lv_timer_create(timer_led_cb, 50, NULL);
@@ -3267,12 +3364,12 @@ void setup() {
   timer_ui = lv_timer_create(timer_ui_cb, 3000, NULL);
 
   // ✅ Watchdog de advertising BLE (iOS BT toggle)
-  timer_ble_adv = lv_timer_create(timer_ble_adv_cb, 2000, NULL);
+  //timer_ble_adv = lv_timer_create(timer_ble_adv_cb, 2000, NULL);
 
   systemReady = true;
   initWatchdog();
 
-  uiSetStatus(servicePaid ? "Listo. Scanner BLE (UART/HID) o App BLE." : "Servicio suspendido");
+  uiSetStatus(servicePaid ? "Listo. Scanner." : "Servicio suspendido");
 }
 
 /************ LOOP ************/
@@ -3284,6 +3381,10 @@ void loop() {
     resetWifiAndEnterConfig();
   }
 
+    if (g_portalMode) {
+    delay(20);
+    return;
+  }
   // Si estaba mostrando resultado, limpiar a los 5s
   if (resultShowing && (long)(millis() - resultUntilMs) >= 0) {
     resultShowing = false;
