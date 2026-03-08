@@ -753,7 +753,7 @@ const int daylightOffset_sec = 0;
 
 /************ Boot safety ************/
 unsigned long bootTime = 0;
-const unsigned long MAX_UPTIME = 4UL * 60UL * 60UL * 1000UL;  // 4 horas
+const unsigned long MAX_UPTIME = 24UL * 60UL * 60UL * 1000UL;  // 4 horas
 
 /************ OTA Local ************/
 WebServer otaServer(80);
