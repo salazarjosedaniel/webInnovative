@@ -4,7 +4,7 @@ import { fetchAndParseBCV } from "../lib/bcv";
 
 const CACHE_KEY = "rates:bcv:latest";
 const TTL_FRESH = 60000;      // 60 min fresh
-const TTL_STALE = 2*86400;    // 24h stale aceptable
+const TTL_STALE = 5*86400;    // 24h stale aceptable
 
 async function getCached(redis) {
   const raw = await redis.get(CACHE_KEY);
