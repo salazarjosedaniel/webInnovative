@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tasa Manual BCV</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 24px;
+    }
+
+    .card {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    input {
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .box {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Tasa Manual BCV</h1>
+    <p class="muted">Usa esta pantalla para registrar una tasa manual de respaldo en Redis.</p>
+
+    <div class="row">
+      <div class="field">
+        <label for="usd">USD</label>
+        <input id="usd" type="number" step="0.01" placeholder="Ej. 414.04" />
+      </div>
+      <div class="field">
+        <label for="eur">EUR</label>
+        <input id="eur" type="number" step="0.01" placeholder="Ej. 488.60" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fecha">Fecha</label>
+      <input id="fecha" type="text" placeholder="Opcional. Ej. 08/03/2026" />
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" id="btnSave">Guardar tasa manual</button>
+      <button class="btn-secondary" id="btnLoad">Ver tasa manual actual</button>
+      <button class="btn-danger" id="btnClear">Limpiar tasa manual</button>
+    </div>
+
+    <div class="box" id="result">Esperando acción...</div>
+  </div>
+
+  <script src="./tasa-manual.js"></script>
+</body>
+</html>
