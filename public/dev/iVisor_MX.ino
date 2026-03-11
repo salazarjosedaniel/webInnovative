@@ -753,7 +753,7 @@ const int daylightOffset_sec = 0;
 
 /************ Boot safety ************/
 unsigned long bootTime = 0;
-const unsigned long MAX_UPTIME = 24UL * 60UL * 60UL * 1000UL;  // 4 horas
+const unsigned long MAX_UPTIME = 8UL * 60UL * 60UL * 1000UL;  // 4 horas
 
 /************ OTA Local ************/
 WebServer otaServer(80);
@@ -892,6 +892,85 @@ static NimBLERemoteCharacteristic* uartNotify = nullptr;
 static bool scannerUartConnected = false;
 static String centralUartRxBuffer = "";
 
+/************ IDLE PROMOS ************/
+static lv_obj_t* idleBox = nullptr;
+static lv_obj_t* lblIdleTitle = nullptr;
+static lv_obj_t* lblIdleBody = nullptr;
+
+static lv_timer_t* timer_idle_promo = nullptr;
+
+static bool idleModeActive = true;
+static unsigned long lastUserActivityMs = 0;
+static const unsigned long IDLE_RETURN_MS = 15000;   // volver a promos tras 15s sin actividad
+static const unsigned long IDLE_ROTATE_MS = 5000;    // cambiar promo cada 5s
+
+static int idlePromoIndex = 0;
+
+static const char* idlePromoTitles[] = {
+  "Promocion",
+  "Informacion",
+  "Oferta",
+  "Recordatorio"
+};
+
+static const char* idlePromoBodies[] = {
+  "Lleve 2 y pague 1 en productos seleccionados.",
+  "Consulte nuestros precios actualizados al instante.",
+  "Pregunte por descuentos especiales del dia.",
+  "Escanee un producto para ver precio y tasa BCV."
+};
+
+static const int idlePromoCount = sizeof(idlePromoTitles) / sizeof(idlePromoTitles[0]);
+
+static void updateIdlePromo() {
+  if (!usarLVGL || !idleBox || !lblIdleTitle || !lblIdleBody) return;
+  if (!idleModeActive) return;
+
+  lvgl_port_lock(-1);
+  lv_label_set_text(lblIdleTitle, idlePromoTitles[idlePromoIndex]);
+  lv_label_set_text(lblIdleBody, idlePromoBodies[idlePromoIndex]);
+  lvgl_port_unlock();
+
+  idlePromoIndex++;
+  if (idlePromoIndex >= idlePromoCount) idlePromoIndex = 0;
+}
+
+static void showIdleMode() {
+  idleModeActive = true;
+
+  if (!usarLVGL) return;
+  lvgl_port_lock(-1);
+
+  if (idleBox) lv_obj_clear_flag(idleBox, LV_OBJ_FLAG_HIDDEN);
+
+  lvgl_port_unlock();
+
+  updateIdlePromo();
+}
+
+static void hideIdleMode() {
+  idleModeActive = false;
+
+  if (!usarLVGL) return;
+  lvgl_port_lock(-1);
+
+  if (idleBox) lv_obj_add_flag(idleBox, LV_OBJ_FLAG_HIDDEN);
+
+  lvgl_port_unlock();
+}
+
+static void markUserActivity() {
+  lastUserActivityMs = millis();
+  hideIdleMode();
+}
+
+static void timer_idle_promo_cb(lv_timer_t* t) {
+  (void)t;
+  if (idleModeActive) {
+    updateIdlePromo();
+  }
+}
+
 /************ BLE CENTRAL HID (Keyboard) ************/
 // HID Service UUID = 0x1812
 static NimBLEUUID HID_SERVICE_UUID((uint16_t)0x1812);
@@ -965,7 +1044,7 @@ static void uiSetPrice(const String& priceOnly) {
   if (!usarLVGL || !lblPrice) return;
   if (priceOnly == prevPrice) return;
   lvgl_port_lock(-1);
-  lv_label_set_text_fmt(lblPrice, "%s Bs.", priceOnly.c_str());
+  lv_label_set_text_fmt(lblPrice, "%s MXN.", priceOnly.c_str());
   lvgl_port_unlock();
   prevPrice = priceOnly;
 }
@@ -1014,7 +1093,7 @@ static void clearProductUI() {
   uiSetDesc(curDesc);
   uiSetPrice(curPrice);
   uiSetPriceUsd("--.--");
-  uiSetIva("IVA: --.-- Bs.");
+  uiSetIva("IVA: --.-- MXN.");
   uiSetStatus(servicePaid ? "Listo. Escanee..." : "Servicio suspendido");
 }
 
@@ -1910,7 +1989,7 @@ static void httpWorkerTask(void* pv) {
       uiSetPrice("--.--");
       uiSetPriceUsd("--.--");
       uiSetRateUsd("--.--");
-      uiSetIva("IVA: --.-- Bs.");
+      uiSetIva("IVA: --.-- MXN.");
       scheduleClearIn5s();
       continue;
     }
@@ -1942,7 +2021,7 @@ static void httpWorkerTask(void* pv) {
       uiSetStatus("No encontrado / Error");
       uiSetPrice("0.00");
       uiSetPriceUsd("0.00");
-      uiSetIva("IVA: 0.00 Bs.");
+      uiSetIva("IVA: 0.00 MXN.");
       scheduleClearIn5s();
       continue;
     }
@@ -1959,9 +2038,9 @@ static void httpWorkerTask(void* pv) {
 
     char ivaText[64];
     if (taxPercent > 0.0) {
-      snprintf(ivaText, sizeof(ivaText), "IVA (%.0f%%): %s Bs.", taxPercent, bufIva);
+      snprintf(ivaText, sizeof(ivaText), "IVA (%.0f%%): %s MXN.", taxPercent, bufIva);
     } else {
-      snprintf(ivaText, sizeof(ivaText), "IVA: %s Bs.", bufIva);
+      snprintf(ivaText, sizeof(ivaText), "IVA: %s MXN.", bufIva);
     }
     uiSetIva(String(ivaText));
 
@@ -2564,7 +2643,7 @@ static void timer_api_cb(lv_timer_t* t) {
         uiSetPrice("--.--");
         uiSetPriceUsd("--.--");
         uiSetRateUsd("--.--");
-        uiSetIva("IVA: --.-- Bs.");
+        uiSetIva("IVA: --.-- MXN.");
       }
     }
   }
@@ -3087,9 +3166,36 @@ void setup() {
       lv_obj_set_style_text_color(lblCfg, lv_color_white(), 0);
       lv_obj_center(lblCfg);
 
+      // ---------- IDLE BOX ----------
+      idleBox = lv_obj_create(scr);
+      lv_obj_set_size(idleBox, LV_PCT(92), 80);
+      lv_obj_align(idleBox, LV_ALIGN_BOTTOM_MID, 0, -135);
+
+      lv_obj_set_style_bg_color(idleBox, lv_color_hex(0xEFF6FF), 0);
+      lv_obj_set_style_bg_opa(idleBox, LV_OPA_COVER, 0);
+      lv_obj_set_style_border_color(idleBox, lv_color_hex(0xBFDBFE), 0);
+      lv_obj_set_style_border_width(idleBox, 2, 0);
+      lv_obj_set_style_radius(idleBox, 12, 0);
+      lv_obj_set_style_pad_all(idleBox, 12, 0);
+      lv_obj_clear_flag(idleBox, LV_OBJ_FLAG_SCROLLABLE);
+
+      lblIdleTitle = lv_label_create(idleBox);
+      lv_label_set_text(lblIdleTitle, "Promocion");
+      lv_obj_set_style_text_font(lblIdleTitle, &font_mont_22, 0);
+      lv_obj_set_style_text_color(lblIdleTitle, lv_color_hex(0x1D4ED8), 0);
+      lv_obj_align(lblIdleTitle, LV_ALIGN_TOP_LEFT, 0, 0);
+
+      lblIdleBody = lv_label_create(idleBox);
+      lv_label_set_text(lblIdleBody, "Escanee un producto para ver precio y tasa BCV.");
+      lv_label_set_long_mode(lblIdleBody, LV_LABEL_LONG_WRAP);
+      lv_obj_set_width(lblIdleBody, LV_PCT(100));
+      lv_obj_set_style_text_font(lblIdleBody, &lv_font_montserrat_20, 0);
+      lv_obj_set_style_text_color(lblIdleBody, lv_color_hex(0x334155), 0);
+      lv_obj_align(lblIdleBody, LV_ALIGN_TOP_LEFT, 0, 35);
+
       // ---------- CARD PRINCIPAL ----------
       lv_obj_t* card = lv_obj_create(scr);
-      lv_obj_set_size(card, LV_PCT(92), 260);
+      lv_obj_set_size(card, LV_PCT(92), 190);
       lv_obj_align(card, LV_ALIGN_TOP_MID, 0, 70);
 
       lv_obj_set_style_bg_color(card, lv_color_white(), 0);
@@ -3153,33 +3259,33 @@ void setup() {
 
       // Precio Bs
       lblPrice = lv_label_create(scr);
-      lv_label_set_text(lblPrice, "--.-- Bs.");
+      lv_label_set_text(lblPrice, "--.-- MXN.");
       lv_obj_set_style_text_font(lblPrice, &font_mont_44, 0);
       lv_obj_set_style_text_color(lblPrice, lv_color_hex(0x111827), 0);
       lv_obj_align(lblPrice, LV_ALIGN_TOP_LEFT, 30, 378);
 
       // IVA debajo del precio
       lblIva = lv_label_create(scr);
-      lv_label_set_text(lblIva, "IVA: --.-- Bs.");
+      lv_label_set_text(lblIva, "IVA: --.-- MXN.");
       lv_obj_set_style_text_font(lblIva, &lv_font_montserrat_20, 0);
       lv_obj_set_style_text_color(lblIva, lv_color_hex(0x374151), 0);
       lv_obj_align(lblIva, LV_ALIGN_TOP_LEFT, 35, 435);
 
       // Precio USD
-      lv_obj_t* lblUsdTitle = lv_label_create(scr);
+      /*lv_obj_t* lblUsdTitle = lv_label_create(scr);
       lv_label_set_text(lblUsdTitle, "Precio USD:");
       lv_obj_set_style_text_font(lblUsdTitle, &font_mont_22, 0);
       lv_obj_set_style_text_color(lblUsdTitle, lv_color_hex(0x111827), 0);
-      lv_obj_align(lblUsdTitle, LV_ALIGN_TOP_LEFT, 330, 348);
+      lv_obj_align(lblUsdTitle, LV_ALIGN_TOP_LEFT, 330, 348);*/
 
-      lblPriceUsd = lv_label_create(scr);
+      /*lblPriceUsd = lv_label_create(scr);
       lv_label_set_text(lblPriceUsd, "--.-- $");
       lv_obj_set_style_text_font(lblPriceUsd, &font_mont_44, 0);
       lv_obj_set_style_text_color(lblPriceUsd, lv_color_hex(0x374151), 0);
-      lv_obj_align(lblPriceUsd, LV_ALIGN_TOP_LEFT, 330, 378);
+      lv_obj_align(lblPriceUsd, LV_ALIGN_TOP_LEFT, 330, 378);*/
 
       // Tasa USD
-      lv_obj_t* lblRateTitle = lv_label_create(scr);
+      /*lv_obj_t* lblRateTitle = lv_label_create(scr);
       lv_label_set_text(lblRateTitle, "Tasa USD BCV:");
       lv_obj_set_style_text_font(lblRateTitle, &font_mont_22, 0);
       lv_obj_set_style_text_color(lblRateTitle, lv_color_hex(0x111827), 0);
@@ -3189,7 +3295,7 @@ void setup() {
       lv_label_set_text(lblRateUsd, "--.-- Bs.");
       lv_obj_set_style_text_font(lblRateUsd, &font_mont_44, 0);
       lv_obj_set_style_text_color(lblRateUsd, lv_color_hex(0x374151), 0);
-      lv_obj_align(lblRateUsd, LV_ALIGN_TOP_LEFT, 560, 378);
+      lv_obj_align(lblRateUsd, LV_ALIGN_TOP_LEFT, 560, 378);*/
 
       // ---------- STATUS + DEVICE ----------
       lblStatus = lv_label_create(scr);
@@ -3362,7 +3468,7 @@ void setup() {
   timer_api = lv_timer_create(timer_api_cb, INTERVALO_API, NULL);
   timer_fw = lv_timer_create(timer_fw_cb, FW_CHECK_INTERVAL, NULL);
   timer_ui = lv_timer_create(timer_ui_cb, 3000, NULL);
-
+  timer_idle_promo = lv_timer_create(timer_idle_promo_cb, IDLE_ROTATE_MS, NULL);
   // ✅ Watchdog de advertising BLE (iOS BT toggle)
   //timer_ble_adv = lv_timer_create(timer_ble_adv_cb, 2000, NULL);
 
@@ -3385,6 +3491,11 @@ void loop() {
     delay(20);
     return;
   }
+
+  if (!idleModeActive && (millis() - lastUserActivityMs > IDLE_RETURN_MS)) {
+    clearProductUI();
+    showIdleMode();
+  }
   // Si estaba mostrando resultado, limpiar a los 5s
   if (resultShowing && (long)(millis() - resultUntilMs) >= 0) {
     resultShowing = false;
@@ -3406,6 +3517,7 @@ void loop() {
   }
 
   if (g_barcode_ready) {
+    markUserActivity();
     g_barcode_ready = false;
     String code = g_barcode_last;
     esp_task_wdt_reset();

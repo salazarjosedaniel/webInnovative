@@ -4,7 +4,7 @@ export default function handler(req, res) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
 
-  const { user, pass } = req.body;
+  const { user, pass, deviceID} = req.body;
 
   // Puedes cambiar esto por credenciales reales.
   const ADMIN_USER =  "admin";
