@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.innovative.ivisor.app-mergeDebugResources-38:/values-v18/values-v18.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\jsalazar\\.gradle\\caches\\transforms-3\\7ed5d9b6ec3e10bf78d3512c64302a37\\transformed\\appcompat-1.6.1\\res\\values-v18\\values-v18.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "48",
+                        "endOffsets": "99"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,82 @@
+[
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/drawable_ic_barcode.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/drawable/ic_barcode.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/layout_activity_main.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/drawable_ic_settings.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/drawable/ic_settings.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/drawable_ic_search.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/drawable/ic_search.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/drawable_bg_input.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/drawable/bg_input.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/layout_activity_config.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/layout/activity_config.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-debug-40:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.innovative.ivisor.app-main-42:/mipmap-xxxhdpi/ic_launcher_round.png"
+    }
+]

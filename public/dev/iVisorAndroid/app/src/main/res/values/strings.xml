@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">iVisor</string>
+    <string name="hint_codigo">Escanee o ingrese código…</string>
+    <string name="btn_buscar">Buscar</string>
+    <string name="btn_config">Configuración</string>
+    <string name="btn_conectar">CONECTAR</string>
+    <string name="label_codigo">CÓDIGO</string>
+    <string name="label_razon_social">RAZON SOCIAL</string>
+    <string name="label_rif">R.I.F</string>
+    <string name="label_precio">Precio:</string>
+    <string name="label_iva">I.V.A:</string>
+    <string name="label_total_bs">Total a Pagar Bs:</string>
+    <string name="label_total_usd">Total a Pagar $:</string>
+    <string name="msg_producto_no_encontrado">PRODUCTO NO ENCONTRADO</string>
+    <string name="msg_sin_informacion">SIN INFORMACIÓN</string>
+    <string name="config_title">iVisor — Configuración</string>
+</resources>

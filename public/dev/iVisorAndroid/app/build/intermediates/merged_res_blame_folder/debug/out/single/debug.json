@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.innovative.ivisor.app-merged_res-40:/layout_activity_config.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/layout/activity_config.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-merged_res-40:/layout_activity_main.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.innovative.ivisor.app-merged_res-40:/drawable_bg_input.xml.flat",
+        "source": "com.innovative.ivisor.app-main-42:/drawable/bg_input.xml"
+    }
+]

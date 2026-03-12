@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "WIHT0PGM4eNVsaZjFjJmQ0bWVcLwpDT/OBGO6dIg1RE=",
+  "Source": "iVisor.Api",
+  "BasePath": "_content/iVisor.Api",
+  "Mode": "Default",
+  "ManifestType": "Publish",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Equivalente a MainWindow.xaml del WPF.
+    Diseñado para pantalla horizontal (landscape) como visor de precios.
+    Secciones:
+      - Barra superior: campo código + botón buscar
+      - Panel izquierdo: imagen producto + código + descripción
+      - Panel derecho: precios (Precio, IVA, Total Bs, Total $)
+      - Barra inferior: razón social + RIF + logo empresa
+-->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:padding="8dp">
+
+    <!-- ═══════════════ BARRA SUPERIOR: Búsqueda ═══════════════ -->
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_barcode"
+        android:padding="4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvLabelCodigo"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="CÓDIGO"
+        android:textColor="@color/white"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:paddingHorizontal="10dp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/ivLogo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/ivLogo" />
+
+    <AutoCompleteTextView
+        android:id="@+id/etCodigo"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:hint="Escanee o ingrese código..."
+        android:imeOptions="actionSearch"
+        android:inputType="text"
+        android:maxLines="1"
+        android:textSize="16sp"
+        android:paddingHorizontal="12dp"
+        android:background="@drawable/bg_input"
+        app:layout_constraintStart_toEndOf="@id/tvLabelCodigo"
+        app:layout_constraintEnd_toStartOf="@id/btnBuscar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/ivLogo" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnBuscar"
+        android:layout_width="48dp"
+        android:layout_height="40dp"
+        app:icon="@drawable/ic_search"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        android:paddingHorizontal="0dp"
+        app:layout_constraintEnd_toStartOf="@id/btnConfig"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/ivLogo" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnConfig"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="48dp"
+        android:layout_height="40dp"
+        app:icon="@drawable/ic_settings"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
+        android:paddingHorizontal="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/ivLogo" />
+
+    <!-- Separador -->
+    <View
+        android:id="@+id/divider1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        android:layout_marginTop="4dp"
+        app:layout_constraintTop_toBottomOf="@id/ivLogo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ═══════════════ PANEL CENTRAL ═══════════════ -->
+
+    <!-- IZQUIERDA: imagen + código + descripción -->
+    <ImageView
+        android:id="@+id/ivProducto"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:scaleType="fitCenter"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider1" />
+
+    <TextView
+        android:id="@+id/tvDescripcion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/textPrimary"
+        android:maxLines="2"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintStart_toEndOf="@id/ivProducto"
+        app:layout_constraintEnd_toStartOf="@id/cardPrecios"
+        app:layout_constraintTop_toBottomOf="@id/divider1" />
+
+    <LinearLayout
+        android:id="@+id/rowCodigo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="6dp"
+        app:layout_constraintStart_toEndOf="@id/ivProducto"
+        app:layout_constraintTop_toBottomOf="@id/tvDescripcion">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Código:"
+            android:textSize="12sp"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/white"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp" />
+
+        <TextView
+            android:id="@+id/tvCodigo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingStart="8dp" />
+    </LinearLayout>
+
+    <!-- DERECHA: card de precios -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardPrecios"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Precio base -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Precio:"
+                    android:textSize="12sp"
+                    android:textColor="@color/textSecondary" />
+                <TextView
+                    android:id="@+id/tvPrecio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0,00"
+                    android:textSize="18sp"
+                    android:textColor="@color/textPrimary" />
+            </LinearLayout>
+
+            <!-- IVA -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="I.V.A:"
+                    android:textSize="12sp"
+                    android:textColor="@color/textSecondary" />
+                <TextView
+                    android:id="@+id/tvIva"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0,00"
+                    android:textSize="18sp"
+                    android:textColor="@color/textPrimary" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider"
+                android:layout_marginVertical="6dp" />
+
+            <!-- Total Bs -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Total a Pagar Bs:"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/textPrimary" />
+                <TextView
+                    android:id="@+id/tvTotalBs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0,00"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorPrimary" />
+            </LinearLayout>
+
+            <!-- Total $ (sólo visible si useFactor = true) -->
+            <LinearLayout
+                android:id="@+id/groupDolares"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp"
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Total a Pagar $:"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/textPrimary" />
+                <TextView
+                    android:id="@+id/tvTotalDolares"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0,00"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorAccent" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Grupo visible sólo cuando hay producto -->
+    <LinearLayout
+        android:id="@+id/groupProducto"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/cardPrecios"
+        app:layout_constraintTop_toBottomOf="@id/rowCodigo" />
+
+    <!-- Mensaje "no encontrado" -->
+    <TextView
+        android:id="@+id/tvNoEncontrado"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PRODUCTO NO ENCONTRADO"
+        android:textSize="18sp"
+        android:textColor="@color/error"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toEndOf="@id/ivProducto"
+        app:layout_constraintTop_toBottomOf="@id/rowCodigo" />
+
+    <!-- ProgressBar -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider1"
+        app:layout_constraintBottom_toTopOf="@id/divider2" />
+
+    <!-- ═══════════════ SEPARADOR ═══════════════ -->
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"
+        app:layout_constraintBottom_toTopOf="@id/barraEmpresa"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ═══════════════ BARRA INFERIOR: Empresa ═══════════════ -->
+    <LinearLayout
+        android:id="@+id/barraEmpresa"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp"
+        android:background="@color/barraEmpresa"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RAZON SOCIAL"
+            android:textSize="10sp"
+            android:textColor="@color/white"
+            android:background="@color/colorPrimary"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp" />
+
+        <TextView
+            android:id="@+id/tvRazonSocial"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="@color/textPrimary"
+            android:paddingStart="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="R.I.F"
+            android:textSize="10sp"
+            android:textColor="@color/white"
+            android:background="@color/colorPrimary"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:layout_marginStart="16dp" />
+
+        <TextView
+            android:id="@+id/tvRif"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="@color/textPrimary"
+            android:paddingStart="8dp"
+            android:layout_marginEnd="16dp" />
+
+        <ImageView
+            android:id="@+id/ivLogoEmpresa"
+            android:layout_width="80dp"
+            android:layout_height="44dp"
+            android:scaleType="fitEnd"
+            android:adjustViewBounds="true" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

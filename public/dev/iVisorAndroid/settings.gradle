@@ -1,0 +1,3 @@
+// settings.gradle — sin dependencyResolutionManagement para máxima compatibilidad
+rootProject.name = "iVisor"
+include ':app'
